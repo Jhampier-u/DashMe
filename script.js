@@ -95,12 +95,25 @@ function syncTracks() {
 }
 
 // ── Cover ──
-function loadCoverURL(url) {
+// Converts a blob/object URL to a base64 data URL so html2canvas can read it
+// on WebKit (iOS Safari) without triggering a cross-origin canvas taint error.
+function blobToBase64(url) {
+  return fetch(url)
+    .then(r => r.blob())
+    .then(blob => new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    }));
+}
+
+async function loadCoverURL(url) {
+  const src = url.startsWith('blob:') ? await blobToBase64(url) : url;
   const edImg = document.getElementById('editor-cover-img');
-  edImg.src = url; edImg.style.display = 'block';
+  edImg.src = src; edImg.style.display = 'block';
   document.getElementById('upload-hint').style.opacity = '0';
   const tImg = document.getElementById('t-cover-img');
-  tImg.src = url; tImg.style.display = 'block';
+  tImg.src = src; tImg.style.display = 'block';
   document.getElementById('t-cover-placeholder').style.display = 'none';
 }
 function handleFile(inp) { const f = inp.files[0]; if (f) loadCoverURL(URL.createObjectURL(f)); }
@@ -299,16 +312,32 @@ async function exportStory() {
 
   try {
     const canvas = await html2canvas(tmpl, {
-      scale: 1, useCORS: true, allowTaint: true,
+      scale: 1, useCORS: true, allowTaint: false,
       backgroundColor: null, logging: false, width: 1080, height: 1920,
     });
-    const a = document.createElement('a');
-    a.download = `story-${document.getElementById('i-artist').value || 'album'}-${Date.now()}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
+    const dataUrl  = canvas.toDataURL('image/png');
+    const filename = `story-${document.getElementById('i-artist').value || 'album'}-${Date.now()}.png`;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      // iOS Safari ignores the download attribute — open in a new tab so the
+      // user can long-press the image and tap "Guardar en Fotos".
+      const win = window.open('', '_blank');
+      win.document.write(
+        `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">` +
+        `<title>Guardar historia</title><style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;padding:16px;font-family:sans-serif;color:#fff;gap:12px}` +
+        `img{max-width:100%;border-radius:8px}p{font-size:13px;opacity:.7;text-align:center}</style></head>` +
+        `<body><img src="${dataUrl}"><p>Mantén presionada la imagen y elige<br><strong>"Guardar imagen"</strong></p></body></html>`
+      );
+      win.document.close();
+    } else {
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = dataUrl;
+      a.click();
+    }
   } catch (err) {
     console.error(err);
-    alert('Error al exportar. Revisa la consola.');
+    alert('Error al exportar: ' + err.message);
   } finally {
     tmpl.style.transform = '';
     tmpl.style.position  = 'absolute';
