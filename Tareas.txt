@@ -1,0 +1,79 @@
+UNTAP — Backlog de ideas
+========================
+
+Leyenda:  [ ] pendiente   [~] en scope actual   [x] hecho
+
+Scope actual (Pack A — Hábitos más inteligentes):
+  1. Regla de los 2 días
+  2. Anchor habit
+  3. Hábitos por días específicos
+  4. Implementation intentions
+
+
+🎯 1. Motivación inmediata (dopamina)
+[x] Sonido 8-bit: chime al marcar, fanfarria al subir de nivel, click suave en botones
+[ ] Confetti pixelado mejorado en hitos importantes
+[ ] Mensajes del aventurero (NPC narrador con stats reales)
+[ ] Quote del día con tu nombre embebido
+
+🛡️ 2. Mecánicas anti-rendición
+[x] Streak Shields (1-2 vidas/mes que perdonan un día perdido)
+[x] Hábito mínimo viable (versión "modo flojo" = 50% XP)
+[x] Regla de los 2 días ("Día crítico" si fallaste ayer)
+[x] Anchor habit (designar uno como ancla)
+[x] Implementation intentions ("Cuando X entonces hábito")
+
+🌱 3. Mundo vivo
+[ ] Day/night cycle real (fondo cambia con tu hora local)
+[ ] Estaciones del año (florece en mayo, nieva en diciembre)
+[x] Jardín que crece (cada hábito = una planta que crece con la racha)
+[ ] Casa del aventurero (habitación pixel decorable con XP)
+[ ] Avatar animado (sprite con frames idle/walk/celebrate)
+
+🏆 4. Logros y misiones
+[x] Misiones diarias auto-generadas (3 hábitos hoy / marcar antes 10am / etc → +XP)
+[ ] Misiones semanales
+[ ] Medallero (badges desbloqueables: Madrugador, Maratonista 30d, etc)
+[ ] Boss semanal (Goblin de la Procrastinación, etc)
+[ ] Eventos temporales (Semana de la lectura = 2x XP)
+
+🎨 5. Personalización y desbloqueos
+[ ] Tienda de cosméticos (monedas + skins/fondos/paletas)
+[ ] Cofres al subir de nivel (animación + reward aleatorio)
+[ ] Múltiples paletas intercambiables
+[ ] Clases del avatar (Mago / Guerrero / Bardo / Erudito)
+[ ] Skill tree (pasivas pequeñas)
+
+📊 6. Insights que sorprenden
+[ ] Correlación entre hábitos (ej. "los días que meditas, +73% ejercicio")
+[ ] Mejor hora del día
+[ ] Replay del año (estilo Spotify Wrapped)
+[ ] Reflexión diaria (3 líneas + mood)
+
+⏱️ 7. Productividad real
+[ ] Pomodoro integrado en tareas/proyectos
+[x] Hábitos por días específicos (lun-mié-vie)
+[ ] Subtareas con deadline + recordatorios
+[ ] Drag-and-drop en Kanban y árbol de proyectos
+[ ] Búsqueda global con /
+
+🤝 8. Conexión externa
+[ ] Compartir progreso (link público read-only)
+[ ] Modo co-op con un amigo
+[ ] Sync con Google Calendar
+[ ] Widget de escritorio
+
+🃏 9. Locas pero divertidas
+[ ] Random encounter al completar hábito (cofre misterioso)
+[ ] Bestiary (monstruos = rachas rotas que derrotas)
+[ ] Diario del aventurero (timeline auto + postcards semanales)
+[ ] Modo Hardcore (romper racha resta XP)
+
+🏠 Bonus para más adelante
+[ ] Casa del aventurero decorable + cofres al subir de nivel (loop de retención)
+
+
+Pendiente del fase 4 (deploy):
+[ ] Migrar SQLite → Postgres (Neon)
+[ ] Proteger con contraseña
+[ ] Deploy a Vercel

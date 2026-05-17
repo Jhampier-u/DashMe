@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+.env
+
+# SQLite (datos personales — no compartir)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
