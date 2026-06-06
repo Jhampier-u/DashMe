@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Juampe · Dev & Creador de Mundos Digitales ♡</title>
+<meta name="description" content="Portafolio de Juan Pedro Pesántez (Juampe) — Desarrollador Full-Stack, diseñador y creador de mundos digitales desde Cuenca, Ecuador." />
+<meta name="author" content="Juan Pedro Pesántez" />
+
+<!-- Open Graph -->
+<meta property="og:title" content="Juampe · Dev & Creador de Mundos Digitales" />
+<meta property="og:description" content="Full-Stack Developer · Diseñador · Partner @ AdvancedFlow.ai. Código que funciona + arte que inspira." />
+<meta property="og:type" content="website" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🌸</text></svg>" />
+</head>
+<body>
+
+<!-- ===== floating pixel sky ===== -->
+<div class="sky" aria-hidden="true">
+  <span class="floaty s1">✦</span>
+  <span class="floaty s2">★</span>
+  <span class="floaty s3">♡</span>
+  <span class="floaty s4">✦</span>
+  <span class="floaty s5">✿</span>
+  <span class="floaty s6">★</span>
+  <span class="floaty s7">♡</span>
+  <span class="floaty s8">✦</span>
+</div>
+
+<!-- ===== NAV ===== -->
+<header class="nav" id="nav">
+  <a href="#inicio" class="nav__logo">
+    <span class="pxheart" aria-hidden="true"></span>
+    <span>JUAMPE</span>
+  </a>
+  <button class="nav__burger" id="burger" aria-label="Menú">▤</button>
+  <nav class="nav__links" id="navLinks">
+    <a href="#inicio">Inicio</a>
+    <a href="#sobre-mi">Sobre mí</a>
+    <a href="#skills">Skills</a>
+    <a href="#proyectos">Proyectos</a>
+    <a href="#hobbies">Side Quests</a>
+    <a href="#contacto" class="nav__cta">Hablemos ♡</a>
+  </nav>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="inicio">
+  <div class="hero__grid">
+    <div class="hero__text">
+      <p class="hero__hi">¡Hola mundo! soy</p>
+      <h1 class="hero__name">Juan Pedro<br><span>Pesántez</span></h1>
+      <div class="hero__role">
+        <span class="hero__rolePrefix">&gt;</span>
+        <span id="typewriter"></span><span class="caret">█</span>
+      </div>
+      <p class="hero__blurb">
+        No me considero solo un programador, me considero un <b>arquitecto de experiencias</b>.
+        Vivo entre dos mundos que parecen opuestos pero son el mismo: la estructura matemática
+        del software y la libertad de la creatividad visual y sonora. ✨
+      </p>
+      <div class="hero__chips">
+        <span class="chip">🎂 20 años</span>
+        <span class="chip">📍 Cuenca, EC</span>
+        <span class="chip">🌐 Inglés C1</span>
+        <span class="chip">🚀 Partner @ AdvancedFlow.ai</span>
+      </div>
+      <div class="hero__cta">
+        <a href="#proyectos" class="btn btn--primary">▶ Ver mis proyectos</a>
+        <a href="#contacto" class="btn btn--ghost">✉ Contáctame</a>
+      </div>
+    </div>
+
+    <div class="hero__avatar">
+      <div class="avatar-card">
+        <div class="avatar-card__top">PLAYER 1 · LVL 20</div>
+        <!-- pixel avatar -->
+        <svg class="avatar" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-label="Avatar pixel art de Juampe">
+          <!-- headphone band -->
+          <rect x="4" y="1" width="8" height="1" fill="#7b5ea7"/>
+          <rect x="3" y="2" width="1" height="2" fill="#7b5ea7"/>
+          <rect x="12" y="2" width="1" height="2" fill="#7b5ea7"/>
+          <!-- hair -->
+          <rect x="4" y="2" width="8" height="2" fill="#4a3a52"/>
+          <rect x="3" y="4" width="2" height="2" fill="#4a3a52"/>
+          <rect x="11" y="4" width="2" height="2" fill="#4a3a52"/>
+          <!-- face -->
+          <rect x="4" y="4" width="8" height="6" fill="#ffe0c2"/>
+          <rect x="4" y="3" width="8" height="1" fill="#5a4660"/>
+          <!-- cheeks -->
+          <rect x="4" y="7" width="1" height="1" fill="#ff9ec7"/>
+          <rect x="11" y="7" width="1" height="1" fill="#ff9ec7"/>
+          <!-- eyes -->
+          <rect x="5" y="6" width="1" height="2" fill="#4a3a52"/>
+          <rect x="10" y="6" width="1" height="2" fill="#4a3a52"/>
+          <rect x="5" y="6" width="1" height="1" fill="#7fd4ff"/>
+          <rect x="10" y="6" width="1" height="1" fill="#7fd4ff"/>
+          <!-- smile -->
+          <rect x="6" y="8" width="4" height="1" fill="#d6457f"/>
+          <!-- headphone cups -->
+          <rect x="3" y="5" width="1" height="3" fill="#ff9ec7"/>
+          <rect x="12" y="5" width="1" height="3" fill="#ff9ec7"/>
+          <!-- body / hoodie -->
+          <rect x="4" y="10" width="8" height="4" fill="#a78bfa"/>
+          <rect x="3" y="11" width="1" height="3" fill="#a78bfa"/>
+          <rect x="12" y="11" width="1" height="3" fill="#a78bfa"/>
+          <rect x="7" y="10" width="2" height="3" fill="#c4b5fd"/>
+          <!-- collar -->
+          <rect x="6" y="10" width="1" height="1" fill="#8b6fd6"/>
+          <rect x="9" y="10" width="1" height="1" fill="#8b6fd6"/>
+        </svg>
+        <div class="avatar-card__bars">
+          <div class="statbar"><span>HP</span><i style="--w:96%"></i></div>
+          <div class="statbar mp"><span>MP</span><i style="--w:88%"></i></div>
+        </div>
+        <div class="avatar-card__class">CLASE: Full-Stack Mage 🪄</div>
+      </div>
+    </div>
+  </div>
+  <a href="#sobre-mi" class="hero__scroll" aria-label="Bajar">▼</a>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section class="section" id="sobre-mi">
+  <h2 class="section__title"><span class="px-star"></span> Sobre mí</h2>
+  <p class="section__sub">// la persona detrás del teclado</p>
+
+  <div class="about">
+    <div class="about__story reveal">
+      <p>
+        Hola, soy <b>Juampe</b>, estudiante de <b>Ingeniería en Ciencias de la Computación</b>,
+        apasionado por la tecnología, la ciencia y el aprendizaje constante. Soy de esas personas
+        que disfrutan tanto programando una aplicación como pasando horas explorando los misterios
+        del universo o leyendo sobre astrofísica.
+      </p>
+      <p>
+        Me entusiasma transformar ideas en proyectos funcionales y convertir problemas complejos
+        en soluciones elegantes. He participado en proyectos de desarrollo de aplicaciones, sistemas
+        de simulación, algoritmos, interfaces gráficas, sistemas con Arduino e investigaciones de IA
+        aplicada al desarrollo de software.
+      </p>
+      <p>
+        Actualmente soy socio en <b><a href="https://www.advancedflow.ai" target="_blank" rel="noopener">AdvancedFlow.ai</a></b>,
+        donde estoy a cargo de todos los negocios en <b>Cuenca, Ecuador</b> y lidero el departamento de
+        desarrollo web junto a mi equipo de trabajo, transformando la complejidad técnica en interfaces
+        minimalistas, intuitivas y eficientes.
+      </p>
+      <p class="about__creed">
+        Porque para mí, aprender no es una obligación: <b>es una aventura.</b> 🚀
+      </p>
+    </div>
+
+    <!-- RPG character sheet -->
+    <aside class="charsheet reveal">
+      <div class="charsheet__head">★ FICHA DE PERSONAJE ★</div>
+      <ul class="charsheet__list">
+        <li><span>NOMBRE</span><b>Juan Pedro P.</b></li>
+        <li><span>CLASE</span><b>Software Engineer</b></li>
+        <li><span>GREMIO</span><b>AdvancedFlow.ai</b></li>
+        <li><span>BASE</span><b>Cuenca · EC 🇪🇨</b></li>
+        <li><span>IDIOMA</span><b>ES nativo · EN C1</b></li>
+        <li><span>ALINEAMIENTO</span><b>Curioso Creativo</b></li>
+      </ul>
+      <div class="charsheet__stats">
+        <div class="rpgstat"><span>Lógica</span><i style="--w:92%"></i></div>
+        <div class="rpgstat"><span>Diseño</span><i style="--w:85%"></i></div>
+        <div class="rpgstat"><span>Creatividad</span><i style="--w:95%"></i></div>
+        <div class="rpgstat"><span>Resiliencia</span><i style="--w:90%"></i></div>
+        <div class="rpgstat"><span>Curiosidad</span><i style="--w:100%"></i></div>
+      </div>
+    </aside>
+  </div>
+
+  <blockquote class="quote reveal">
+    <span class="quote__mark">❝</span>
+    La tecnología me permite construir. La ciencia me permite comprender.
+    El arte me permite expresar. Y la curiosidad me impulsa a seguir explorando.
+  </blockquote>
+</section>
+
+<!-- ===== SKILLS ===== -->
+<section class="section section--alt" id="skills">
+  <h2 class="section__title"><span class="px-star"></span> Inventario de Skills</h2>
+  <p class="section__sub">// el equipamiento que llevo al campo</p>
+
+  <div class="skills">
+    <div class="skillcard reveal">
+      <h3>💻 Dev & QA</h3>
+      <p class="skillcard__lead">Backend robusto + frontend dinámico + control de calidad.</p>
+      <div class="bars">
+        <div class="bar"><label>Laravel / PHP</label><div class="bar__track"><i style="--w:90%"></i></div></div>
+        <div class="bar"><label>JavaScript / React</label><div class="bar__track"><i style="--w:88%"></i></div></div>
+        <div class="bar"><label>Java</label><div class="bar__track"><i style="--w:82%"></i></div></div>
+        <div class="bar"><label>C++ / Python</label><div class="bar__track"><i style="--w:80%"></i></div></div>
+        <div class="bar"><label>MySQL / PostgreSQL</label><div class="bar__track"><i style="--w:85%"></i></div></div>
+        <div class="bar"><label>Cypress (E2E QA)</label><div class="bar__track"><i style="--w:78%"></i></div></div>
+      </div>
+    </div>
+
+    <div class="skillcard reveal">
+      <h3>🎨 Diseño & Visual</h3>
+      <p class="skillcard__lead">Soporte visual e identidad para proyectos digitales.</p>
+      <div class="bars">
+        <div class="bar"><label>Illustrator</label><div class="bar__track"><i style="--w:35%"></i></div></div>
+        <div class="bar"><label>Photoshop</label><div class="bar__track"><i style="--w:38%"></i></div></div>
+        <div class="bar"><label>Branding / Identidad</label><div class="bar__track"><i style="--w:40%"></i></div></div>
+        <div class="bar"><label>Premiere / After Effects</label><div class="bar__track"><i style="--w:30%"></i></div></div>
+        <div class="bar"><label>UI / UX</label><div class="bar__track"><i style="--w:88%"></i></div></div>
+      </div>
+    </div>
+
+    <div class="skillcard reveal">
+      <h3>👥 Liderazgo & Soft</h3>
+      <p class="skillcard__lead">Gestión enfocada a resultados y manejo de la presión.</p>
+      <ul class="taglist">
+        <li>Liderazgo de equipos</li>
+        <li>Gestión de talento</li>
+        <li>Resolución de problemas</li>
+        <li>Resiliencia</li>
+        <li>Adaptabilidad</li>
+        <li>Pensamiento analítico</li>
+      </ul>
+    </div>
+
+    <div class="skillcard reveal">
+      <h3>📝 Comunicación & Productividad</h3>
+      <p class="skillcard__lead">Ventajas competitivas para entornos globales.</p>
+      <ul class="taglist">
+        <li>Inglés C1 (Cambridge)</li>
+        <li>Redacción técnica</li>
+        <li>Documentación</li>
+        <li>Excel avanzado</li>
+        <li>Teams / SharePoint</li>
+        <li>Office 365</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- tech marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span>Laravel</span><span>★</span><span>React</span><span>♡</span><span>Next.js</span><span>✦</span>
+      <span>TypeScript</span><span>★</span><span>PHP</span><span>♡</span><span>Java</span><span>✦</span>
+      <span>C++</span><span>★</span><span>Python</span><span>♡</span><span>MySQL</span><span>✦</span>
+      <span>PostgreSQL</span><span>★</span><span>Tailwind</span><span>♡</span><span>Docker</span><span>✦</span>
+      <span>Canvas API</span><span>★</span><span>Cypress</span><span>♡</span><span>Alpine.js</span><span>✦</span>
+      <!-- duplicate for seamless loop -->
+      <span>Laravel</span><span>★</span><span>React</span><span>♡</span><span>Next.js</span><span>✦</span>
+      <span>TypeScript</span><span>★</span><span>PHP</span><span>♡</span><span>Java</span><span>✦</span>
+      <span>C++</span><span>★</span><span>Python</span><span>♡</span><span>MySQL</span><span>✦</span>
+      <span>PostgreSQL</span><span>★</span><span>Tailwind</span><span>♡</span><span>Docker</span><span>✦</span>
+      <span>Canvas API</span><span>★</span><span>Cypress</span><span>♡</span><span>Alpine.js</span><span>✦</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROJECTS ===== -->
+<section class="section" id="proyectos">
+  <h2 class="section__title"><span class="px-star"></span> Mis Proyectos</h2>
+  <p class="section__sub">// cada uno es un mundo que construí desde cero</p>
+
+  <div class="filters" id="filters">
+    <button class="filter is-active" data-filter="all">Todos</button>
+    <button class="filter" data-filter="fullstack">Full-Stack</button>
+    <button class="filter" data-filter="frontend">Front-End</button>
+    <button class="filter" data-filter="pixel">Pixel Art</button>
+    <button class="filter" data-filter="design">Diseño</button>
+  </div>
+
+  <div class="projects" id="projects"><!-- rendered by JS --></div>
+</section>
+
+<!-- ===== HOBBIES / SIDE QUESTS ===== -->
+<section class="section section--alt" id="hobbies">
+  <h2 class="section__title"><span class="px-star"></span> Side Quests</h2>
+  <p class="section__sub">// lo que mantiene mi mente afilada y la creatividad fluyendo</p>
+
+  <div class="hobbies">
+    <article class="hobby reveal">
+      <div class="hobby__icon">🔭</div>
+      <h3>Astronomía & Astrofísica</h3>
+      <p>Me fascina cómo funciona el universo, de las partículas más pequeñas a las estructuras más grandes. Construyo mi propio plan de estudios para formarme de manera rigurosa.</p>
+    </article>
+    <article class="hobby reveal">
+      <div class="hobby__icon">🎹</div>
+      <h3>Música Indie-Electronic</h3>
+      <p>Produzco música indie-electronic y traduzco emociones al piano al más puro estilo synthpop. Mi meta: dominar el piano y la guitarra.</p>
+    </article>
+    <article class="hobby reveal">
+      <div class="hobby__icon">🃏</div>
+      <h3>TCG & Rol</h3>
+      <p>Apasionado de los juegos de cartas coleccionables y de rol: <b>Magic</b>, <b>Pokémon TCG</b> y <b>Dungeons & Dragons</b>. Estrategia, planificación y resolución de problemas en estado puro.</p>
+    </article>
+    <article class="hobby reveal">
+      <div class="hobby__icon">📚</div>
+      <h3>Filosofía, Historia & Ciencia</h3>
+      <p>Lectura, divulgación científica, filosofía e historia. Me encanta un buen libro o videoensayo sobre cultura pop y diseño.</p>
+    </article>
+    <article class="hobby reveal">
+      <div class="hobby__icon">🌱</div>
+      <h3>Aprendizaje Autodidacta</h3>
+      <p>Cursos, libros, documentales y podcasts sin parar. Creo que la educación no termina con la clase: es un proceso que dura toda la vida.</p>
+    </article>
+    <article class="hobby reveal">
+      <div class="hobby__icon">🗣️</div>
+      <h3>Idiomas & Comunicación</h3>
+      <p>El aprendizaje de idiomas y todo lo que me permita crecer intelectual y personalmente. Cada idioma es un mundo nuevo por explorar.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section class="section section--contact" id="contacto">
+  <div class="contact reveal">
+    <h2 class="contact__title">¿Construimos algo juntos? ♡</h2>
+    <p class="contact__sub">
+      Seguir expandiendo los límites de lo que se puede construir cuando la lógica
+      y la imaginación juegan en el mismo equipo. ¿Te apuntas?
+    </p>
+    <div class="contact__links">
+      <a class="btn btn--primary" href="https://github.com/Jhampier-u" target="_blank" rel="noopener">⌨ GitHub · Jhampier-u</a>
+      <a class="btn btn--ghost" href="https://www.advancedflow.ai" target="_blank" rel="noopener">🚀 AdvancedFlow.ai</a>
+      <a class="btn btn--ghost" href="https://gestion-turistica.onrender.com" target="_blank" rel="noopener">🌐 Demo · UDAExplore</a>
+    </div>
+    <p class="contact__hint">psst… prueba el <b>código Konami</b> ↑↑↓↓←→←→BA 🎮</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <span class="pxheart" aria-hidden="true"></span>
+  <p>Hecho con código, café y mucho cariño por <b>Juampe</b> · 2026</p>
+  <p class="footer__quote">"La diferencia entre el código y el arte es que el código tiene que funcionar. A mí me gusta hacer ambas cosas."</p>
+</footer>
+
+<!-- ===== LIGHTBOX / MODAL ===== -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal__overlay" data-close></div>
+  <div class="modal__box" role="dialog" aria-modal="true">
+    <button class="modal__close" data-close aria-label="Cerrar">✕</button>
+    <div class="modal__body" id="modalBody"><!-- filled by JS --></div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
