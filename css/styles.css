@@ -64,7 +64,11 @@ a{ color:inherit; text-decoration:none; }
 .floaty.s8{ left:60%; top:86%; color:var(--lav-deep); animation-delay:2.6s; font-size:14px;}
 @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(0);} 50%{ transform:translateY(-18px) rotate(12deg);} }
 
-/* ---------- pixel heart sprite (box-shadow art) ---------- */
+/* ---------- pixel heart (crisp SVG, predictable alignment) ---------- */
+.heart{ width:30px; height:auto; flex:none; image-rendering:pixelated; animation:beat 1.4s ease-in-out infinite; transform-origin:center; }
+.heart--big{ width:46px; display:block; margin:0 auto 24px; }
+
+/* ---------- legacy box-shadow heart (unused, kept for reference) ---------- */
 .pxheart{
   width:4px; height:4px; display:inline-block; margin-right:14px;
   background:transparent; transform:scale(2.2); transform-origin:left center; image-rendering:pixelated;
@@ -102,9 +106,8 @@ a{ color:inherit; text-decoration:none; }
 .nav__logo{
   display:flex; align-items:center;
   font-family:var(--font-px); font-size:15px; color:var(--magenta);
-  letter-spacing:1px; padding-left:4px;
+  letter-spacing:1px; gap:12px;
 }
-.nav__logo .pxheart{ margin-right:58px; }
 .nav__links{ display:flex; align-items:center; gap:6px; }
 .nav__links a{
   font-family:var(--font-vt); font-size:21px; padding:6px 12px; border-radius:10px;
