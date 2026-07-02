@@ -1,15 +1,12 @@
 import "server-only";
 
 /**
- * Global serialized rate limiter for outbound Spotify requests.
- *
- * No matter how many scanners, components or parallel server actions are
- * running, every Spotify call funnels through this single queue and waits
- * for a slot. Configured well below Spotify's documented 180 req/30s window
- * so that stacked workloads (stats scan + genre analysis + page fetches)
- * cannot collectively exceed it.
+ * Serialized min-interval throttle. NOT a token bucket: no permite ráfagas —
+ * cada release se espacia al menos `minIntervalMs` mediante una única cola FIFO,
+ * sin importar cuántos callers hagan `acquire()` a la vez. Se usa para mantener
+ * las llamadas salientes (Spotify, Last.fm) bajo la ventana rodante de cada API.
  */
-class TokenBucket {
+class IntervalThrottle {
   private queue: Array<() => void> = [];
   private processing = false;
   private lastReleased = 0;
@@ -46,15 +43,23 @@ function sleep(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
-// 4 requests/sec sustained = 120 req/30s, well under Spotify's 180 cap.
-// Brief bursts are fine because Spotify's window is rolling.
+// Spotify: 4 req/s sostenido = 120 req/30s, bajo el cap de 180.
 const SPOTIFY_MIN_INTERVAL_MS = 250;
+// Last.fm: ~4.5 req/s, bajo su guía de ~5 req/s por key. Cola propia para que
+// los 6 workers de géneros no se salten el límite (antes pegaban a pelo).
+const LASTFM_MIN_INTERVAL_MS = 220;
 
 declare global {
   // eslint-disable-next-line no-var
-  var __spotifyRateLimiter: TokenBucket | undefined;
+  var __spotifyRateLimiter: IntervalThrottle | undefined;
+  // eslint-disable-next-line no-var
+  var __lastfmRateLimiter: IntervalThrottle | undefined;
 }
 
 export const spotifyLimiter =
   globalThis.__spotifyRateLimiter ??
-  (globalThis.__spotifyRateLimiter = new TokenBucket(SPOTIFY_MIN_INTERVAL_MS));
+  (globalThis.__spotifyRateLimiter = new IntervalThrottle(SPOTIFY_MIN_INTERVAL_MS));
+
+export const lastfmLimiter =
+  globalThis.__lastfmRateLimiter ??
+  (globalThis.__lastfmRateLimiter = new IntervalThrottle(LASTFM_MIN_INTERVAL_MS));

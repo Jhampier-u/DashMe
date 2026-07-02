@@ -5,6 +5,9 @@ import "./globals.css";
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
+  // La estética depende de la itálica real de Fraunces; sin `style` next/font
+  // solo trae la romana y el navegador sintetiza una itálica falsa.
+  style: ["normal", "italic"],
   axes: ["SOFT", "WONK", "opsz"],
   display: "swap",
 });

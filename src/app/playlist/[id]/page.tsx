@@ -12,6 +12,7 @@ import {
 import { getTagsForTracks } from "@/lib/tag-actions";
 import TopBar from "@/components/TopBar";
 import PlaylistTracksTable from "@/components/PlaylistTracksTable";
+import { sanitizeDescription } from "@/lib/sanitize";
 
 export default async function PlaylistPage({
   params,
@@ -223,10 +224,9 @@ function DetailHeader({
             {playlist.name}
           </h1>
           {playlist.description && (
-            <p
-              className="font-serif italic text-cream-dim text-lg mt-6 max-w-2xl"
-              dangerouslySetInnerHTML={{ __html: playlist.description }}
-            />
+            <p className="font-serif italic text-cream-dim text-lg mt-6 max-w-2xl">
+              {sanitizeDescription(playlist.description)}
+            </p>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-6 mt-10 max-w-2xl">

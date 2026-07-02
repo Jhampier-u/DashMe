@@ -6,18 +6,34 @@ import Spotify from "next-auth/providers/spotify";
 // Spotify rejects new apps with localhost redirect URIs, so we patch the
 // outgoing token request body to use 127.0.0.1 — matching what was sent in
 // the authorize step and what's registered in the Spotify dashboard.
-const _origFetch = globalThis.fetch;
-globalThis.fetch = async function (input: any, init?: any) {
-  const url = typeof input === "string" ? input : input.url;
-  if (url?.includes("accounts.spotify.com/api/token") && init?.body) {
-    let body = init.body.toString();
-    if (body.includes("localhost")) {
-      body = body.replaceAll("localhost", "127.0.0.1");
-      init = { ...init, body };
+const FETCH_PATCHED = Symbol.for("ledger.spotifyTokenFetchPatched");
+type PatchedGlobal = typeof globalThis & { [FETCH_PATCHED]?: true };
+
+// Guard de idempotencia: sin él, cada recarga de HMR re-evalúa el módulo y
+// envuelve el fetch YA parcheado → wrappers anidados que se acumulan.
+if (!(globalThis as PatchedGlobal)[FETCH_PATCHED]) {
+  const origFetch = globalThis.fetch;
+  globalThis.fetch = async function (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ) {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url;
+    if (
+      url?.includes("accounts.spotify.com/api/token") &&
+      typeof init?.body === "string" &&
+      init.body.includes("localhost")
+    ) {
+      init = { ...init, body: init.body.replaceAll("localhost", "127.0.0.1") };
     }
-  }
-  return _origFetch(input, init);
-};
+    return origFetch(input, init);
+  };
+  (globalThis as PatchedGlobal)[FETCH_PATCHED] = true;
+}
 
 const SPOTIFY_SCOPES = [
   "user-read-private",
@@ -97,7 +113,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return token;
       } catch (e) {
         console.error("Token refresh failed", e);
-        return { ...token, error: "RefreshTokenError" };
+        // No propagar el accessToken caduco: quien no revise `error` usaría un
+        // token vencido y recibiría 401.
+        return { ...token, accessToken: undefined, error: "RefreshTokenError" };
       }
     },
     async session({ session, token }) {

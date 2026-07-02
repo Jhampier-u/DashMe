@@ -12,7 +12,11 @@ import {
 import { getArtistGenres } from "@/lib/genre-actions";
 import { getTagsForTracks } from "@/lib/tag-actions";
 import type { Tag } from "@/lib/tags";
-import type { PlaylistTrackItem, SpotifyPlaylist } from "@/lib/spotify";
+import {
+  playlistTrackTotal,
+  type PlaylistTrackItem,
+  type SpotifyPlaylist,
+} from "@/lib/spotify";
 import CreatePlaylistButton from "./CreatePlaylistDialog";
 import TagPicker from "./TagPicker";
 import TagBadge from "./TagBadge";
@@ -363,7 +367,7 @@ export default function PlaylistTracksTable({
   };
 
   // Visible tracks: apply duplicate and genre filters, preserve original index.
-  const visibleEntries = tracks
+  const visibleEntries = useMemo(() => tracks
     .map((item, i) => ({ item, index: i + 1 }))
     .filter(({ item }) => {
       const t = trackOf(item);
@@ -404,12 +408,24 @@ export default function PlaylistTracksTable({
       }
 
       return true;
-    });
+    }), [
+    tracks,
+    showOnlyDups,
+    dupAnalysis,
+    selectedGenres,
+    genreData,
+    selectedTagIds,
+    tagsByUri,
+  ]);
 
   // URIs of currently visible (filtered) tracks — used for "materialize filter".
-  const visibleUris = visibleEntries
-    .map((e) => trackOf(e.item)?.uri)
-    .filter((u): u is string => Boolean(u));
+  const visibleUris = useMemo(
+    () =>
+      visibleEntries
+        .map((e) => trackOf(e.item)?.uri)
+        .filter((u): u is string => Boolean(u)),
+    [visibleEntries],
+  );
 
   const activeGenresList = Array.from(selectedGenres);
   const activeTagNames = tagFilterChips
@@ -1170,7 +1186,7 @@ function PlaylistPicker({
                       {p.name}
                     </p>
                     <p className="label-mono text-mute mt-0.5">
-                      {(p.items?.total ?? 0).toLocaleString("es")} canciones
+                      {playlistTrackTotal(p).toLocaleString("es")} canciones
                     </p>
                   </div>
                   <span className="label-mono text-mute group-hover:text-acid transition-colors">

@@ -159,3 +159,12 @@ body::before {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-mute);
 }
+
+/* Respeta la preferencia de movimiento reducido (a11y / WCAG 2.2.2). */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .rise,
+  .fade-in {
+    animation: none;
+  }
+}

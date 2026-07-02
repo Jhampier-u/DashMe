@@ -26,10 +26,17 @@ export async function spotifyFetch<T>(
 
   const res = await fetch(`${SPOTIFY_API}${path}`, { ...init, headers });
 
-  // Retry on 429 (rate limit) and 5xx, but only if the wait is short.
-  if ((res.status === 429 || res.status >= 500) && attempt < 4) {
-    const retryAfterHeader = res.headers.get("Retry-After");
-    const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 0;
+  // Retry on 429 always; retry 5xx only for idempotent methods. A POST (add
+  // tracks, create playlist) may have been partially processed before the 5xx,
+  // so retrying it could duplicate tracks or create duplicate playlists.
+  const method = (init.method ?? "GET").toUpperCase();
+  const isIdempotent = method === "GET" || method === "PUT" || method === "DELETE";
+  const canRetry = res.status === 429 || (res.status >= 500 && isIdempotent);
+  if (canRetry && attempt < 4) {
+    const parsedRetryAfter = parseInt(res.headers.get("Retry-After") ?? "", 10);
+    // A non-numeric Retry-After (e.g. HTTP-date) must not become NaN, or the
+    // backoff collapses to setTimeout(NaN) === 0ms (hammering on retry).
+    const retryAfterSec = Number.isFinite(parsedRetryAfter) ? parsedRetryAfter : 0;
     // If Spotify wants us to wait more than 60s, give up and let the user know.
     const MAX_AUTO_WAIT_S = 60;
     if (retryAfterSec > MAX_AUTO_WAIT_S) {
@@ -77,12 +84,22 @@ export type SpotifyPlaylist = {
   name: string;
   description: string | null;
   images: { url: string }[] | null;
-  items: { href: string; total: number };
+  // Feb 2026 renombró la sub-colección a `items`. Algunos endpoints de LISTA
+  // podrían seguir devolviendo `tracks` — soportamos ambos vía el helper.
+  items?: { href: string; total: number };
+  tracks?: { href: string; total: number };
   owner: { id: string; display_name: string };
   public: boolean;
   collaborative: boolean;
   external_urls: { spotify: string };
 };
+
+/** Conteo de tracks tolerante al rename `tracks`→`items` de Spotify (Feb 2026). */
+export function playlistTrackTotal(
+  p: Pick<SpotifyPlaylist, "items" | "tracks">,
+): number {
+  return (p.items ?? p.tracks)?.total ?? 0;
+}
 
 export type Paged<T> = {
   items: T[];

@@ -1,12 +1,14 @@
 "use server";
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { tags as tagsTable, trackTags } from "@/db/schema";
 import { isValidTagColor, type Tag } from "./tags";
+import { requireSession } from "./require-session";
 
 /** Returns all tags with their track counts, ordered by most used first. */
 export async function listTags(): Promise<Tag[]> {
+  await requireSession();
   const rows = await db
     .select({
       id: tagsTable.id,
@@ -22,6 +24,7 @@ export async function listTags(): Promise<Tag[]> {
 }
 
 export async function createTag(name: string, color = "acid"): Promise<Tag> {
+  await requireSession();
   const trimmed = name.trim();
   if (!trimmed) throw new Error("El nombre no puede estar vacío");
   if (trimmed.length > 40) throw new Error("Máximo 40 caracteres");
@@ -47,8 +50,15 @@ export async function createTag(name: string, color = "acid"): Promise<Tag> {
 }
 
 export async function renameTag(id: number, name: string): Promise<void> {
+  await requireSession();
   const trimmed = name.trim();
   if (!trimmed) throw new Error("El nombre no puede estar vacío");
+  if (trimmed.length > 40) throw new Error("Máximo 40 caracteres");
+  const clash = await db
+    .select()
+    .from(tagsTable)
+    .where(and(eq(tagsTable.name, trimmed), ne(tagsTable.id, id)));
+  if (clash.length > 0) throw new Error("Ya existe un tag con ese nombre");
   await db
     .update(tagsTable)
     .set({ name: trimmed })
@@ -56,11 +66,13 @@ export async function renameTag(id: number, name: string): Promise<void> {
 }
 
 export async function setTagColor(id: number, color: string): Promise<void> {
+  await requireSession();
   if (!isValidTagColor(color)) throw new Error("Color inválido");
   await db.update(tagsTable).set({ color }).where(eq(tagsTable.id, id));
 }
 
 export async function deleteTag(id: number): Promise<void> {
+  await requireSession();
   // ON DELETE CASCADE handles track_tags, but be explicit just in case.
   await db.delete(trackTags).where(eq(trackTags.tagId, id));
   await db.delete(tagsTable).where(eq(tagsTable.id, id));
@@ -70,28 +82,33 @@ export async function deleteTag(id: number): Promise<void> {
 export async function getTagsForTracks(
   uris: string[],
 ): Promise<Record<string, Tag[]>> {
+  await requireSession();
   const out: Record<string, Tag[]> = {};
   if (uris.length === 0) return out;
 
-  const rows = await db
-    .select({
-      uri: trackTags.trackUri,
-      id: tagsTable.id,
-      name: tagsTable.name,
-      color: tagsTable.color,
-    })
-    .from(trackTags)
-    .innerJoin(tagsTable, eq(trackTags.tagId, tagsTable.id))
-    .where(inArray(trackTags.trackUri, uris));
+  // Chunk del IN(...) para no superar el límite de parámetros de SQLite.
+  const CHUNK = 500;
+  for (let i = 0; i < uris.length; i += CHUNK) {
+    const rows = await db
+      .select({
+        uri: trackTags.trackUri,
+        id: tagsTable.id,
+        name: tagsTable.name,
+        color: tagsTable.color,
+      })
+      .from(trackTags)
+      .innerJoin(tagsTable, eq(trackTags.tagId, tagsTable.id))
+      .where(inArray(trackTags.trackUri, uris.slice(i, i + CHUNK)));
 
-  for (const r of rows) {
-    if (!out[r.uri]) out[r.uri] = [];
-    out[r.uri].push({
-      id: r.id,
-      name: r.name,
-      color: r.color,
-      trackCount: 0,
-    });
+    for (const r of rows) {
+      if (!out[r.uri]) out[r.uri] = [];
+      out[r.uri].push({
+        id: r.id,
+        name: r.name,
+        color: r.color,
+        trackCount: 0,
+      });
+    }
   }
   return out;
 }
@@ -100,6 +117,7 @@ export async function applyTagToTracks(
   tagId: number,
   uris: string[],
 ): Promise<{ added: number }> {
+  await requireSession();
   if (uris.length === 0) return { added: 0 };
   const now = Date.now();
   const values = uris.map((uri) => ({
@@ -126,15 +144,19 @@ export async function removeTagFromTracks(
   tagId: number,
   uris: string[],
 ): Promise<void> {
+  await requireSession();
   if (uris.length === 0) return;
-  await db
-    .delete(trackTags)
-    .where(
-      and(
-        eq(trackTags.tagId, tagId),
-        inArray(trackTags.trackUri, uris),
-      ),
-    );
+  const CHUNK = 500;
+  for (let i = 0; i < uris.length; i += CHUNK) {
+    await db
+      .delete(trackTags)
+      .where(
+        and(
+          eq(trackTags.tagId, tagId),
+          inArray(trackTags.trackUri, uris.slice(i, i + CHUNK)),
+        ),
+      );
+  }
 }
 
 /** Sets the exact tag set for a single track (toggle UX). */
@@ -142,10 +164,15 @@ export async function setTagsForTrack(
   uri: string,
   tagIds: number[],
 ): Promise<void> {
-  await db.delete(trackTags).where(eq(trackTags.trackUri, uri));
-  if (tagIds.length === 0) return;
+  await requireSession();
   const now = Date.now();
-  await db.insert(trackTags).values(
-    tagIds.map((tagId) => ({ trackUri: uri, tagId, addedAt: now })),
-  );
+  // Atómico: si el insert fallara tras el delete, la canción quedaría sin tags.
+  db.transaction((tx) => {
+    tx.delete(trackTags).where(eq(trackTags.trackUri, uri)).run();
+    if (tagIds.length > 0) {
+      tx.insert(trackTags)
+        .values(tagIds.map((tagId) => ({ trackUri: uri, tagId, addedAt: now })))
+        .run();
+    }
+  });
 }

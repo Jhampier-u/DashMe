@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { mergePlaylists } from "@/lib/spotify-actions";
-import type { SpotifyPlaylist } from "@/lib/spotify";
+import { playlistTrackTotal, type SpotifyPlaylist } from "@/lib/spotify";
 
 export default function MergePlaylistsButton({
   playlists,
@@ -57,7 +57,7 @@ function Dialog({
   const totalTracks = useMemo(() => {
     let n = 0;
     for (const p of playlists) {
-      if (selected.has(p.id)) n += p.items?.total ?? 0;
+      if (selected.has(p.id)) n += playlistTrackTotal(p);
     }
     return n;
   }, [selected, playlists]);
@@ -101,7 +101,7 @@ function Dialog({
   };
 
   // Auto-suggest name when 2+ selected
-  useMemo(() => {
+  useEffect(() => {
     if (selected.size >= 2 && !name) {
       const names = playlists
         .filter((p) => selected.has(p.id))
@@ -188,7 +188,7 @@ function Dialog({
                         {p.name}
                       </p>
                       <p className="font-mono text-[10px] text-mute mt-0.5">
-                        {(p.items?.total ?? 0).toLocaleString("es")} canciones
+                        {playlistTrackTotal(p).toLocaleString("es")} canciones
                       </p>
                     </div>
                   </button>

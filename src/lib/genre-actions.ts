@@ -5,9 +5,14 @@ import { db } from "@/db";
 import { artists as artistsTable } from "@/db/schema";
 import { getArtistById } from "./spotify";
 import { getArtistTagsByName } from "./lastfm";
+import { requireSession } from "./require-session";
 
 const STALE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-// 6 workers ≈ 30 req/s sustained — well under Spotify's 180/30s window.
+// Los resultados vacíos (sin tags en Last.fm ni géneros en Spotify) también se
+// cachean, pero se reintentan antes — si no, los artistas genuinamente sin
+// género se re-consultaban en CADA análisis.
+const EMPTY_RETRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// La carga real recae en Last.fm (fuente primaria), regulada por `lastfmLimiter`.
 const PARALLELISM = 6;
 
 export type ArtistInput = { id: string; name: string };
@@ -23,6 +28,7 @@ export type ArtistInput = { id: string; name: string };
 export async function getArtistGenres(
   inputs: ArtistInput[],
 ): Promise<Record<string, string[]>> {
+  await requireSession();
   const out: Record<string, string[]> = {};
   if (inputs.length === 0) return out;
 
@@ -44,10 +50,10 @@ export async function getArtistGenres(
   const now = Date.now();
   const fresh = new Map<string, string[]>();
   for (const row of cached) {
-    const genres = JSON.parse(row.genres) as string[];
-    // Treat empty cached entries as stale — likely poisoned by an earlier
-    // failed run where Spotify or Last.fm returned nothing. Re-attempt.
-    if (now - row.updatedAt < STALE_MS && genres.length > 0) {
+    const genres = safeParseArray(row.genres);
+    // Con género: fresco 30 días. Vacío: se reintenta a los 7.
+    const ttl = genres.length > 0 ? STALE_MS : EMPTY_RETRY_MS;
+    if (now - row.updatedAt < ttl) {
       fresh.set(row.id, genres);
     }
   }
@@ -116,4 +122,14 @@ export async function getArtistGenres(
     out[a.id] = fresh.get(a.id) ?? [];
   }
   return out;
+}
+
+/** Parseo defensivo: una fila corrupta no debe tumbar todo el lookup. */
+function safeParseArray(json: string): string[] {
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? (v as string[]) : [];
+  } catch {
+    return [];
+  }
 }

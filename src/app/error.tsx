@@ -44,6 +44,10 @@ export default function GlobalError({
         ) : (
           <div className="space-y-4 font-serif text-cream-dim">
             <p className="italic">{error.message}</p>
+            <p className="font-mono text-xs text-mute">
+              Si acabas de hacer muchas operaciones seguidas, puede ser un límite
+              temporal de Spotify — espera un momento y pulsa Reintentar.
+            </p>
             {error.digest && (
               <p className="font-mono text-xs text-mute">
                 ID: {error.digest}

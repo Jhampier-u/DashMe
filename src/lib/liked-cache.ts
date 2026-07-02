@@ -3,6 +3,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { likedTracks } from "@/db/schema";
+import { requireSession } from "./require-session";
 
 export type CachedTrack = {
   uri: string;
@@ -18,6 +19,7 @@ export async function getCachedLikedTracks(): Promise<{
   tracks: CachedTrack[];
   scannedAt: number | null;
 }> {
+  await requireSession();
   const rows = await db
     .select()
     .from(likedTracks)
@@ -28,7 +30,7 @@ export async function getCachedLikedTracks(): Promise<{
   const tracks = rows.map<CachedTrack>((r) => ({
     uri: r.uri,
     name: r.name,
-    artists: JSON.parse(r.artistsJson) as { id: string; name: string }[],
+    artists: safeParseArtists(r.artistsJson),
     album: {
       id: r.albumId ?? "",
       name: r.albumName ?? "",
@@ -51,6 +53,7 @@ export async function getCachedLikedTracks(): Promise<{
 export async function saveLikedTracks(
   items: CachedTrack[],
 ): Promise<{ written: number }> {
+  await requireSession();
   if (items.length === 0) return { written: 0 };
   const now = Date.now();
   const CHUNK = 200;
@@ -93,5 +96,16 @@ export async function saveLikedTracks(
 }
 
 export async function clearLikedCache(): Promise<void> {
+  await requireSession();
   await db.delete(likedTracks);
+}
+
+/** Parseo defensivo: una fila corrupta no debe tumbar toda la lectura. */
+function safeParseArtists(json: string): { id: string; name: string }[] {
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
 }

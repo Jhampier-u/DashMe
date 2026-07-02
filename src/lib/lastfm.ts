@@ -1,3 +1,5 @@
+import { lastfmLimiter } from "./rate-limiter";
+
 const LASTFM_API = "https://ws.audioscrobbler.com/2.0/";
 const MAX_TAGS_PER_ARTIST = 6;
 // `artist.getInfo` doesn't include a `count` field on tags (only `getTopTags`
@@ -8,7 +10,8 @@ type LastfmTag = { name: string; count?: number };
 type LastfmArtistInfoResponse = {
   artist?: {
     name: string;
-    tags?: { tag: LastfmTag[] };
+    // Last.fm devuelve un array con varios tags, pero un objeto con uno solo.
+    tags?: { tag?: LastfmTag | LastfmTag[] };
   };
   error?: number;
   message?: string;
@@ -42,8 +45,10 @@ export async function getArtistTagsByName(name: string): Promise<string[]> {
   });
 
   try {
+    await lastfmLimiter.acquire();
     const res = await fetch(`${LASTFM_API}?${params}`, {
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
       console.warn(`[lastfm] HTTP ${res.status} for "${name}"`);
@@ -56,10 +61,12 @@ export async function getArtistTagsByName(name: string): Promise<string[]> {
       );
       return [];
     }
-    const tags = data.artist?.tags?.tag ?? [];
+    // Normaliza la forma array-u-objeto para que `.slice` nunca lance.
+    const raw = data.artist?.tags?.tag;
+    const tags = Array.isArray(raw) ? raw : raw ? [raw] : [];
     return tags
       .slice(0, MAX_TAGS_PER_ARTIST)
-      .map((t) => t.name.toLowerCase().trim())
+      .map((t) => t?.name?.toLowerCase().trim() ?? "")
       .filter((t) => t.length > 0 && !GENERIC_TAGS.has(t));
   } catch (e) {
     console.warn(`[lastfm] exception for "${name}":`, e);

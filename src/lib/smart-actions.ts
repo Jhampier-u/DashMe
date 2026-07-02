@@ -11,6 +11,7 @@ import {
 import { spotifyFetch } from "./spotify";
 import { getCachedLikedTracks } from "./liked-cache";
 import { evaluateRules, type SmartRules } from "./smart-rules";
+import { requireSession } from "./require-session";
 
 export type SmartPlaylist = {
   id: number;
@@ -45,6 +46,7 @@ function rowToSmart(row: typeof smartPlaylists.$inferSelect): SmartPlaylist {
 }
 
 export async function listSmartPlaylists(): Promise<SmartPlaylist[]> {
+  await requireSession();
   const rows = await db
     .select()
     .from(smartPlaylists)
@@ -55,6 +57,7 @@ export async function listSmartPlaylists(): Promise<SmartPlaylist[]> {
 export async function getSmartPlaylist(
   id: number,
 ): Promise<SmartPlaylist | null> {
+  await requireSession();
   const rows = await db
     .select()
     .from(smartPlaylists)
@@ -68,6 +71,7 @@ export async function createSmartPlaylist(input: {
   description?: string;
   rules: SmartRules;
 }): Promise<SmartPlaylist> {
+  await requireSession();
   const name = input.name.trim();
   if (!name) throw new Error("Nombre obligatorio");
   const now = Date.now();
@@ -93,6 +97,7 @@ export async function updateSmartPlaylist(
     rules?: SmartRules;
   },
 ): Promise<void> {
+  await requireSession();
   const set: Partial<typeof smartPlaylists.$inferInsert> = {
     updatedAt: Date.now(),
   };
@@ -112,6 +117,7 @@ export async function updateSmartPlaylist(
 }
 
 export async function deleteSmartPlaylist(id: number): Promise<void> {
+  await requireSession();
   await db.delete(smartPlaylists).where(eq(smartPlaylists.id, id));
   revalidatePath("/smart");
 }
@@ -131,6 +137,7 @@ export async function deleteSmartPlaylist(id: number): Promise<void> {
 export async function materializeSmartPlaylist(
   id: number,
 ): Promise<{ count: number; spotifyPlaylistId: string }> {
+  await requireSession();
   const smart = await getSmartPlaylist(id);
   if (!smart) throw new Error("Smart playlist no encontrada");
 
@@ -211,6 +218,12 @@ export async function materializeSmartPlaylist(
       }),
     });
     playlistId = created.id;
+    // Enlazar de inmediato: si un chunk posterior falla, el reintento reutiliza
+    // esta playlist en vez de crear otra huérfana.
+    await db
+      .update(smartPlaylists)
+      .set({ spotifyPlaylistId: playlistId, updatedAt: Date.now() })
+      .where(eq(smartPlaylists.id, id));
   }
 
   // 6. Replace contents.

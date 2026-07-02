@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { auth, signIn, signOut } from "@/auth";
-import { getMe, getAllMyPlaylists, type SpotifyPlaylist, type SpotifyUser } from "@/lib/spotify";
+import {
+  getMe,
+  getAllMyPlaylists,
+  playlistTrackTotal,
+  type SpotifyPlaylist,
+  type SpotifyUser,
+} from "@/lib/spotify";
+import { sanitizeDescription } from "@/lib/sanitize";
 import TopBar from "@/components/TopBar";
 import CreatePlaylistButton from "@/components/CreatePlaylistDialog";
 import MergePlaylistsButton from "@/components/MergePlaylistsDialog";
@@ -131,11 +138,11 @@ function Library({
   const owned = playlists.filter((p) => p.owner.id === me.id);
   const followed = playlists.filter((p) => p.owner.id !== me.id);
   const collab = playlists.filter((p) => p.collaborative);
-  const totalTracks = playlists.reduce((s, p) => s + (p.items?.total ?? 0), 0);
+  const totalTracks = playlists.reduce((s, p) => s + playlistTrackTotal(p), 0);
 
   // Pick a featured playlist: the user's owned playlist with the most tracks.
   const featured =
-    [...owned].sort((a, b) => (b.items?.total ?? 0) - (a.items?.total ?? 0))[0] ??
+    [...owned].sort((a, b) => playlistTrackTotal(b) - playlistTrackTotal(a))[0] ??
     playlists[0];
 
   // Filter the grid (featured stays at top regardless).
@@ -257,7 +264,7 @@ function Marquee() {
 
 function Featured({ playlist }: { playlist: SpotifyPlaylist }) {
   const cover = playlist.images?.[0]?.url;
-  const tracks = playlist.items?.total ?? 0;
+  const tracks = playlistTrackTotal(playlist);
   return (
     <section className="px-8 py-14 hairline-b bg-gradient-to-br from-ink via-ink to-ink-2/40">
       <div className="grid grid-cols-12 gap-8 items-center">
@@ -298,10 +305,9 @@ function Featured({ playlist }: { playlist: SpotifyPlaylist }) {
             </h2>
           </Link>
           {playlist.description && (
-            <p
-              className="font-serif italic text-cream-dim text-lg mt-5 max-w-xl line-clamp-3"
-              dangerouslySetInnerHTML={{ __html: playlist.description }}
-            />
+            <p className="font-serif italic text-cream-dim text-lg mt-5 max-w-xl line-clamp-3">
+              {sanitizeDescription(playlist.description)}
+            </p>
           )}
           <div className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
             <FeaturedStat label="Canciones" value={tracks.toLocaleString("es")} />
@@ -485,7 +491,7 @@ function PlaylistCard({
   ownedByMe: boolean;
 }) {
   const cover = playlist.images?.[0]?.url;
-  const tracks = playlist.items?.total ?? 0;
+  const tracks = playlistTrackTotal(playlist);
   const owner = playlist.owner.display_name || playlist.owner.id;
 
   const status = playlist.collaborative
