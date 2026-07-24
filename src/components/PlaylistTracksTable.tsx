@@ -12,11 +12,8 @@ import {
 import { getArtistGenres } from "@/lib/genre-actions";
 import { getTagsForTracks } from "@/lib/tag-actions";
 import type { Tag } from "@/lib/tags";
-import {
-  playlistTrackTotal,
-  type PlaylistTrackItem,
-  type SpotifyPlaylist,
-} from "@/lib/spotify";
+import type { PlaylistTrackItem, SpotifyPlaylist } from "@/lib/spotify";
+import { playlistTrackTotal } from "@/lib/playlist-utils";
 import CreatePlaylistButton from "./CreatePlaylistDialog";
 import TagPicker from "./TagPicker";
 import TagBadge from "./TagBadge";

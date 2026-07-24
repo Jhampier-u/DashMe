@@ -20,9 +20,9 @@ function chunked<T>(arr: T[], size = CHUNK): T[][] {
 }
 
 function invalidatePlaylist(id: string) {
-  revalidateTag(`playlist-${id}`);
-  revalidateTag(`playlist-${id}-items`);
-  revalidateTag("playlists-list");
+  revalidateTag(`playlist-${id}`, "max");
+  revalidateTag(`playlist-${id}-items`, "max");
+  revalidateTag("playlists-list", "max");
 }
 
 export async function removeTracksFromPlaylist(
@@ -175,7 +175,7 @@ export async function createPlaylist(
     }),
   });
 
-  revalidateTag("playlists-list");
+  revalidateTag("playlists-list", "max");
   if (input.redirectAfter) redirect(`/playlist/${playlist.id}`);
   return playlist;
 }

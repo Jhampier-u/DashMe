@@ -94,12 +94,10 @@ export type SpotifyPlaylist = {
   external_urls: { spotify: string };
 };
 
-/** Conteo de tracks tolerante al rename `tracks`→`items` de Spotify (Feb 2026). */
-export function playlistTrackTotal(
-  p: Pick<SpotifyPlaylist, "items" | "tracks">,
-): number {
-  return (p.items ?? p.tracks)?.total ?? 0;
-}
+// `playlistTrackTotal` se movió a `./playlist-utils` (módulo puro, sin
+// server-only) para que los componentes cliente puedan usarlo sin arrastrar
+// este módulo al bundle. Se re-exporta para no romper a los consumidores server.
+export { playlistTrackTotal } from "./playlist-utils";
 
 export type Paged<T> = {
   items: T[];

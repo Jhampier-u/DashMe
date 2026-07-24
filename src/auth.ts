@@ -133,7 +133,11 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
+// Auth.js v5: `next-auth/jwt` solo reexporta `@auth/core/jwt` (donde vive
+// `interface JWT`). Augmentar el reexport dispara TS2664 cuando el módulo
+// `next-auth` ya está importado + el plugin de Next; se augmenta el módulo
+// fuente y la ampliación se propaga a `next-auth/jwt` igual.
+declare module "@auth/core/jwt" {
   interface JWT {
     accessToken?: string;
     refreshToken?: string;

@@ -264,9 +264,9 @@ export async function materializeSmartPlaylist(
 
   revalidatePath("/smart");
   revalidatePath(`/smart/${id}`);
-  revalidateTag(`playlist-${playlistId}`);
-  revalidateTag(`playlist-${playlistId}-items`);
-  revalidateTag("playlists-list");
+  revalidateTag(`playlist-${playlistId}`, "max");
+  revalidateTag(`playlist-${playlistId}-items`, "max");
+  revalidateTag("playlists-list", "max");
 
   return { count: uris.length, spotifyPlaylistId: playlistId };
 }

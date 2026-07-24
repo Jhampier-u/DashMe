@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { mergePlaylists } from "@/lib/spotify-actions";
-import { playlistTrackTotal, type SpotifyPlaylist } from "@/lib/spotify";
+import type { SpotifyPlaylist } from "@/lib/spotify";
+import { playlistTrackTotal } from "@/lib/playlist-utils";
 
 export default function MergePlaylistsButton({
   playlists,
