@@ -164,7 +164,6 @@ function Library({
       <Marquee />
 
       <Stats
-        total={total}
         owned={owned.length}
         followed={followed.length}
         collab={collab.length}
@@ -437,13 +436,11 @@ function EditorialHeader({ total }: { total: number }) {
 /* ---------------------------------------------------------------- */
 
 function Stats({
-  total,
   owned,
   followed,
   collab,
   totalTracks,
 }: {
-  total: number;
   owned: number;
   followed: number;
   collab: number;

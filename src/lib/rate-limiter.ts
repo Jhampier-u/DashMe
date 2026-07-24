@@ -50,9 +50,7 @@ const SPOTIFY_MIN_INTERVAL_MS = 250;
 const LASTFM_MIN_INTERVAL_MS = 220;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __spotifyRateLimiter: IntervalThrottle | undefined;
-  // eslint-disable-next-line no-var
   var __lastfmRateLimiter: IntervalThrottle | undefined;
 }
 

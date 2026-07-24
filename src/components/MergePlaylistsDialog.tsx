@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { mergePlaylists } from "@/lib/spotify-actions";
 import type { SpotifyPlaylist } from "@/lib/spotify";
 import { playlistTrackTotal } from "@/lib/playlist-utils";
@@ -101,8 +101,12 @@ function Dialog({
     });
   };
 
-  // Auto-suggest name when 2+ selected
-  useEffect(() => {
+  // Auto-sugerir nombre al seleccionar 2+. Se ajusta el estado durante el
+  // render (patrón oficial de React para estado derivado de un cambio) en vez
+  // de useEffect + setState, que dispara renders en cascada.
+  const [prevSelected, setPrevSelected] = useState(selected);
+  if (selected !== prevSelected) {
+    setPrevSelected(selected);
     if (selected.size >= 2 && !name) {
       const names = playlists
         .filter((p) => selected.has(p.id))
@@ -110,8 +114,7 @@ function Dialog({
         .slice(0, 3);
       setName(names.join(" + "));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected]);
+  }
 
   return (
     <div

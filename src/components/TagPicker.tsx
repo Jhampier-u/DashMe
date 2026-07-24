@@ -181,7 +181,7 @@ export default function TagPicker({
                 disabled={pending}
                 className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40"
               >
-                <span className="label-mono">Crear "{search.trim()}"</span>
+                <span className="label-mono">Crear &quot;{search.trim()}&quot;</span>
                 <span className="font-mono text-sm">+</span>
               </button>
             </div>
@@ -201,7 +201,7 @@ export default function TagPicker({
           )}
           {!loading && filtered.length === 0 && search.trim() && !exactMatch && (
             <li className="px-6 py-6 text-center font-serif italic text-mute text-sm">
-              Ningún tag con ese nombre. Pulsa "Crear" arriba.
+              Ningún tag con ese nombre. Pulsa &quot;Crear&quot; arriba.
             </li>
           )}
           {filtered.map((tag) => {

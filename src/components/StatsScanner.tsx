@@ -27,7 +27,7 @@ type RawTrack = {
 
 export default function StatsScanner({ total }: { total: number }) {
   const [scanning, setScanning] = useState(false);
-  const [done, setDone] = useState(false);
+  const [, setDone] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total });
   const [tracks, setTracks] = useState<RawTrack[]>([]);
   const [cacheScannedAt, setCacheScannedAt] = useState<number | null>(null);

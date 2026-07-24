@@ -24,22 +24,32 @@ export default async function PlaylistPage({
 
   const { id } = await params;
 
-  let tracksError: { status?: number } | null = null;
-  let playlistError: (Error & { status?: number }) | null = null;
-  const [me, playlist, firstPage, myPlaylists] = await Promise.all([
+  const [me, playlistResult, tracksResult, myPlaylists] = await Promise.all([
     getMe(),
-    getPlaylist(id).catch((e) => {
-      console.error("[getPlaylist]", e);
-      playlistError = e;
-      return null;
-    }),
-    getPlaylistTracks(id, 100, 0).catch((e: { status?: number }) => {
-      console.error("[getPlaylistTracks]", e);
-      tracksError = e;
-      return { items: [] as PlaylistTrackItem[], total: 0, next: null };
-    }),
+    getPlaylist(id)
+      .then((data) => ({
+        data,
+        error: null as (Error & { status?: number }) | null,
+      }))
+      .catch((e: Error & { status?: number }) => {
+        console.error("[getPlaylist]", e);
+        return { data: null, error: e };
+      }),
+    getPlaylistTracks(id, 100, 0)
+      .then((page) => ({ page, error: null as { status?: number } | null }))
+      .catch((e: { status?: number }) => {
+        console.error("[getPlaylistTracks]", e);
+        return {
+          page: { items: [] as PlaylistTrackItem[], total: 0, next: null },
+          error: e,
+        };
+      }),
     getAllMyPlaylists().catch(() => []),
   ]);
+  const playlist = playlistResult.data;
+  const playlistError = playlistResult.error;
+  const firstPage = tracksResult.page;
+  const tracksError = tracksResult.error;
 
   if (!playlist) {
     // Re-throw so the global error.tsx renders a useful screen rather than 404.
