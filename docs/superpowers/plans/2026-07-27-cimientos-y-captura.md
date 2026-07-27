@@ -210,8 +210,11 @@ describe("normalizeName", () => {
   });
 
   it("trata igual las formas unicode compuesta y descompuesta", () => {
-    const compuesta = "Sigur Rós";
-    const descompuesta = "Sigur Rós";
+    // Escritas con escapes a propósito: las dos cadenas se ven idénticas en
+    // pantalla y cualquier editor puede normalizarlas, dejando el test vacío.
+    const compuesta = "Sigur R\u00F3s"; // ó precompuesta (NFC)
+    const descompuesta = "Sigur Ro\u0301s"; // o + acento combinante (NFD)
+    expect(compuesta).not.toBe(descompuesta);
     expect(normalizeName(compuesta)).toBe(normalizeName(descompuesta));
   });
 
