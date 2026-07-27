@@ -33,6 +33,35 @@ describe("normalizeName", () => {
   it("devuelve cadena vacía para entrada vacía", () => {
     expect(normalizeName("   ")).toBe("");
   });
+
+  it("normaliza variantes fullwidth mediante NFKD", () => {
+    // Texto CJK-adjacent puede traer letras latinas en ancho completo; deben
+    // producir la misma clave que sus equivalentes ASCII.
+    const fullwidth = "\uFF21\uFF22\uFF23";
+    expect(normalizeName(fullwidth)).toBe("abc");
+    expect(normalizeName(fullwidth)).toBe(normalizeName("ABC"));
+  });
+
+  it("descompone ligaduras tipográficas mediante NFKD", () => {
+    const conLigadura = "o\uFB01cina"; // ligadura “fi” (U+FB01)
+    expect(normalizeName(conLigadura)).toBe("oficina");
+  });
+
+  it("elimina caracteres de formato de ancho cero (Unicode Cf)", () => {
+    const conCeroAncho = "Slow\u200Bdive"; // espacio de ancho cero (U+200B)
+    expect(normalizeName(conCeroAncho)).toBe("slowdive");
+    expect(normalizeName(conCeroAncho)).toBe(normalizeName("Slowdive"));
+  });
+
+  it("conserva letras sin descomposición de compatibilidad (ß, Æ, Ø, Ł)", () => {
+    // Estas letras no tienen forma ASCII equivalente: deben sobrevivir a la
+    // normalización intactas (salvo el cambio de mayúscula a minúscula), no
+    // ser eliminadas ni sustituidas.
+    expect(normalizeName("Straße")).toBe("straße");
+    expect(normalizeName("Æon")).toBe("æon");
+    expect(normalizeName("Øystein")).toBe("øystein");
+    expect(normalizeName("Łukasz")).toBe("łukasz");
+  });
 });
 
 describe("claves compuestas", () => {

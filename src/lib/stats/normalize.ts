@@ -14,14 +14,23 @@ export const KEY_SEP = "\u001F";
 /**
  * Minúsculas, sin diacríticos, espacios colapsados.
  *
- * La descomposición NFD separa las marcas diacríticas del carácter base, de
- * modo que `\p{M}` puede eliminarlas: así "Beyoncé" y "Beyonce" —y también las
- * formas compuesta y descompuesta del mismo texto— producen la misma clave.
+ * La descomposición NFKD (de compatibilidad, no solo canónica) separa las
+ * marcas diacríticas del carácter base y además pliega variantes de
+ * compatibilidad —como las letras fullwidth ("ＡＢＣ") o ligaduras
+ * tipográficas ("ﬁ")— a su forma básica, de modo que `\p{M}` puede
+ * eliminar las marcas resultantes: así "Beyoncé" y "Beyonce" —y también
+ * las formas compuesta y descompuesta del mismo texto— producen la misma
+ * clave. También se eliminan los caracteres de formato invisibles
+ * (categoría `\p{Cf}`, p. ej. espacios de ancho cero) que de otro modo
+ * pasarían desapercibidos y falsearían la clave. Letras sin descomposición
+ * de compatibilidad —como "ß", "Æ", "Ø" o "Ł"— no tienen un
+ * equivalente ASCII y se conservan tal cual, solo con el cambio de
+ * mayúsculas a minúsculas: esto es intencional, no un defecto pendiente.
  */
 export function normalizeName(value: string): string {
   return value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
+    .normalize("NFKD")
+    .replace(/[\p{M}\p{Cf}]/gu, "")
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
