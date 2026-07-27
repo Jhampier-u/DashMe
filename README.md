@@ -135,7 +135,21 @@ este fork de Next no consigue derivar el origen de la petición por sí solo.
 Con la app corriendo, crea la tarea programada (PowerShell como administrador):
 
 ```powershell
-schtasks /Create /TN "Voidtify captura" /SC MINUTE /MO 20 /TR "curl.exe -s -X POST -H \"x-cron-secret: EL_SECRETO\" http://127.0.0.1:3000/api/cron/capture" /F
+schtasks /Create /TN "Voidtify captura" /SC MINUTE /MO 20 /TR "C:\Voidtify\scripts\capture.cmd" /F
+```
+
+La tarea apunta a `scripts/capture.cmd`, que lee `CRON_SECRET` de `.env.local` y hace la petición. Es deliberado no meter el `curl` directamente en `/TR`: el parser de `schtasks` rompe con comillas anidadas y acaba interpretando el secreto como un argumento suelto. Además así el secreto no queda escrito en la definición de la tarea.
+
+Para probarla al momento:
+
+```powershell
+schtasks /Run /TN "Voidtify captura"
+```
+
+O ejecutar el script directamente, sin pasar por el programador:
+
+```powershell
+.\scripts\capture.cmd
 ```
 
 ### En un VPS
