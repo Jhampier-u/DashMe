@@ -9,6 +9,36 @@ import Spotify from "next-auth/providers/spotify";
 const FETCH_PATCHED = Symbol.for("ledger.spotifyTokenFetchPatched");
 type PatchedGlobal = typeof globalThis & { [FETCH_PATCHED]?: true };
 
+/**
+ * Reescribe `localhost` por `127.0.0.1` en el cuerpo del intercambio de token.
+ *
+ * Spotify exige que el `redirect_uri` del canje sea idéntico al usado al
+ * autorizar. Como Auth.js construye el suyo con `localhost` (ver PUBLIC_ORIGIN
+ * más abajo) y nosotros autorizamos con la IP de loopback, sin esto el canje
+ * falla con `invalid_grant: Invalid redirect URI`.
+ *
+ * El cuerpo llega como `URLSearchParams`, no como cadena — la versión anterior
+ * de este parche solo contemplaba cadenas y por eso nunca llegaba a actuar.
+ */
+function rewriteLoopback(body: BodyInit | null | undefined): {
+  body: BodyInit | null | undefined;
+  changed: boolean;
+} {
+  if (typeof body === "string" && body.includes("localhost")) {
+    return { body: body.replaceAll("localhost", "127.0.0.1"), changed: true };
+  }
+  if (body instanceof URLSearchParams) {
+    const texto = body.toString();
+    if (texto.includes("localhost")) {
+      return {
+        body: new URLSearchParams(texto.replaceAll("localhost", "127.0.0.1")),
+        changed: true,
+      };
+    }
+  }
+  return { body, changed: false };
+}
+
 // Guard de idempotencia: sin él, cada recarga de HMR re-evalúa el módulo y
 // envuelve el fetch YA parcheado → wrappers anidados que se acumulan.
 if (!(globalThis as PatchedGlobal)[FETCH_PATCHED]) {
@@ -23,13 +53,26 @@ if (!(globalThis as PatchedGlobal)[FETCH_PATCHED]) {
         : input instanceof URL
           ? input.href
           : input.url;
-    if (
-      url?.includes("accounts.spotify.com/api/token") &&
-      typeof init?.body === "string" &&
-      init.body.includes("localhost")
-    ) {
-      init = { ...init, body: init.body.replaceAll("localhost", "127.0.0.1") };
+
+    if (url?.includes("accounts.spotify.com/api/token")) {
+      // El cuerpo puede venir en `init` o dentro de un `Request`.
+      if (init?.body != null) {
+        const { body, changed } = rewriteLoopback(init.body);
+        if (changed) init = { ...init, body };
+      } else if (input instanceof Request) {
+        const texto = await input.clone().text();
+        if (texto.includes("localhost")) {
+          const headers = new Headers(input.headers);
+          return origFetch(
+            new Request(input, {
+              body: texto.replaceAll("localhost", "127.0.0.1"),
+              headers,
+            }),
+          );
+        }
+      }
     }
+
     return origFetch(input, init);
   };
   (globalThis as PatchedGlobal)[FETCH_PATCHED] = true;
