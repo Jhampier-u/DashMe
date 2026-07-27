@@ -2977,7 +2977,7 @@ Nota sobre los días de cada preset: bajan de 28/182/365 a 27/181/364 porque aho
 - [ ] **Step 4: Ejecutar el test para verificar que pasa**
 
 Run: `npm test -- range`
-Expected: PASS, 19 tests.
+Expected: PASS, 18 tests.
 
 - [ ] **Step 5: Verificar tipos, lint y suite completa**
 
@@ -2989,6 +2989,232 @@ Expected: sin errores; ningún otro test roto.
 ```bash
 git add src/lib/stats/range.ts tests/range.test.ts
 git commit -m "fix: rangos alineados al día local en vez de a epochs UTC"
+```
+
+---
+
+## Task 18: Endurecer el esquema
+
+Surge de la revisión de calidad de la Task 6. Se hace **ahora, con la tabla vacía**, porque el primer punto cambia una restricción de columna y hacerlo con 300 000 filas dentro obliga a reconstruir la tabla.
+
+**Files:**
+- Modify: `src/db/schema-sql.ts`
+- Modify: `src/db/schema.ts`
+- Modify: `tests/schema.test.ts`
+- Create: `tests/schema-parity.test.ts`
+
+- [ ] **Step 1: Test que exige el CHECK sobre `source`**
+
+Añade a `tests/schema.test.ts`, dentro del `describe("esquema")`:
+
+```ts
+  it("rechaza un valor de source fuera de 'live' e 'import'", () => {
+    const { sqlite } = createTestDb();
+    const insertar = sqlite.prepare(`
+      INSERT INTO streams
+        (ts, ms_played, track_name, artist_name, track_key, artist_key,
+         local_date, local_hour, source, dedup_key)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const fila = (source: string, dedup: string) => [
+      1_700_000_000_000, 210_000, "Alison", "Slowdive",
+      "slowdivealison", "slowdive", "2023-11-14", 15, source, dedup,
+    ];
+
+    // Los dos valores legítimos entran.
+    expect(() => insertar.run(...fila("live", "a"))).not.toThrow();
+    expect(() => insertar.run(...fila("import", "b"))).not.toThrow();
+
+    // El borrado de la regla "el dump manda" busca source = 'live' exacto.
+    // Una variante de mayúsculas o con espacios rompería la deduplicación en
+    // silencio, así que la base tiene que rechazarla.
+    expect(() => insertar.run(...fila("Live", "c"))).toThrow(/CHECK/);
+    expect(() => insertar.run(...fila("live ", "d"))).toThrow(/CHECK/);
+    expect(() => insertar.run(...fila("", "e"))).toThrow(/CHECK/);
+  });
+```
+
+- [ ] **Step 2: Ejecutar y verificar que falla**
+
+Run: `npm test -- schema`
+Expected: FAIL — las tres inserciones inválidas no lanzan, porque no existe el `CHECK`.
+
+- [ ] **Step 3: Añadir el CHECK**
+
+En `src/db/schema-sql.ts`, dentro de `CREATE TABLE IF NOT EXISTS streams`, sustituye:
+
+```sql
+    source        TEXT NOT NULL,
+```
+
+por:
+
+```sql
+    source        TEXT NOT NULL CHECK (source IN ('live', 'import')),
+```
+
+**Aviso sobre bases existentes:** `CREATE TABLE IF NOT EXISTS` no modifica una tabla que ya exista. Si ya arrancaste la app y `data/ledger.db` tiene la tabla `streams` sin el `CHECK`, seguirá sin él. Como todavía no hay ninguna fila, la forma limpia de aplicarlo es borrar solo esa tabla y dejar que se recree al siguiente arranque:
+
+```bash
+node -e "const D=require('better-sqlite3');const d=new D('data/ledger.db');const n=d.prepare('SELECT COUNT(*) AS n FROM streams').get().n;if(n>0){console.error('ABORTADO: la tabla tiene '+n+' filas');process.exit(1)}d.exec('DROP TABLE streams');console.log('streams eliminada; se recreará con el CHECK al arrancar')"
+```
+
+El guardia de `COUNT(*)` es deliberado: si alguna vez se ejecuta cuando ya hay escuchas capturadas, aborta en vez de destruirlas.
+
+- [ ] **Step 4: Reflejar el CHECK en Drizzle**
+
+En `src/db/schema.ts`, la columna `source` de `streams` pasa a documentar la restricción. Drizzle no genera el `CHECK` (el DDL es la fuente de verdad aquí), así que basta el comentario:
+
+```ts
+    /** 'live' | 'import'. Restringido por CHECK en el DDL: el borrado de D2
+     *  depende de que el valor sea exactamente 'live'. */
+    source: text("source").notNull(),
+```
+
+- [ ] **Step 5: Ejecutar y verificar que pasa**
+
+Run: `npm test -- schema`
+Expected: PASS.
+
+- [ ] **Step 6: Test de paridad entre el DDL y Drizzle**
+
+Crea `tests/schema-parity.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { getTableConfig } from "drizzle-orm/sqlite-core";
+import * as schema from "@/db/schema";
+import { createTestDb } from "./helpers/test-db";
+
+type ColumnaSqlite = {
+  name: string;
+  notnull: number;
+  pk: number;
+};
+
+/**
+ * El esquema está descrito dos veces: como DDL en `schema-sql.ts` (lo que
+ * ejecuta SQLite) y como definiciones de Drizzle en `schema.ts` (lo que ve
+ * TypeScript). Nada obliga a que coincidan, y una columna añadida en un solo
+ * lado compila, pasa los demás tests y falla al insertar.
+ */
+describe("paridad entre el DDL y las definiciones de Drizzle", () => {
+  const tablas = Object.values(schema).filter(
+    (v): v is Parameters<typeof getTableConfig>[0] =>
+      typeof v === "object" && v !== null && getTableConfigSeguro(v) !== null,
+  );
+
+  it("encuentra tablas que comparar", () => {
+    expect(tablas.length).toBeGreaterThanOrEqual(11);
+  });
+
+  it("cada tabla de Drizzle tiene las mismas columnas que el DDL", () => {
+    const { sqlite } = createTestDb();
+    const problemas: string[] = [];
+
+    for (const tabla of tablas) {
+      const config = getTableConfig(tabla);
+      const enSqlite = sqlite
+        .prepare(`PRAGMA table_info(${config.name})`)
+        .all() as ColumnaSqlite[];
+
+      if (enSqlite.length === 0) {
+        problemas.push(`${config.name}: no existe en el DDL`);
+        continue;
+      }
+
+      const nombresSqlite = new Set(enSqlite.map((c) => c.name));
+      const nombresDrizzle = new Set(config.columns.map((c) => c.name));
+
+      for (const n of nombresDrizzle) {
+        if (!nombresSqlite.has(n)) {
+          problemas.push(`${config.name}.${n}: en Drizzle pero no en el DDL`);
+        }
+      }
+      for (const n of nombresSqlite) {
+        if (!nombresDrizzle.has(n)) {
+          problemas.push(`${config.name}.${n}: en el DDL pero no en Drizzle`);
+        }
+      }
+
+      // La nulabilidad también tiene que coincidir: una columna NOT NULL en SQL
+      // y opcional en Drizzle deja pasar inserciones que la base rechazará.
+      for (const col of config.columns) {
+        const sqliteCol = enSqlite.find((c) => c.name === col.name);
+        if (!sqliteCol) continue;
+        // Una PRIMARY KEY INTEGER es implícitamente NOT NULL en SQLite aunque
+        // `notnull` valga 0, así que se excluye de la comparación.
+        if (sqliteCol.pk === 1) continue;
+        const sqlNotNull = sqliteCol.notnull === 1;
+        if (sqlNotNull !== col.notNull) {
+          problemas.push(
+            `${config.name}.${col.name}: NOT NULL difiere ` +
+              `(DDL=${sqlNotNull}, Drizzle=${col.notNull})`,
+          );
+        }
+      }
+    }
+
+    expect(problemas).toEqual([]);
+  });
+});
+
+/** `getTableConfig` lanza si el valor no es una tabla; esto lo convierte en null. */
+function getTableConfigSeguro(v: unknown) {
+  try {
+    return getTableConfig(v as Parameters<typeof getTableConfig>[0]);
+  } catch {
+    return null;
+  }
+}
+```
+
+- [ ] **Step 7: Ejecutar el test de paridad**
+
+Run: `npm test -- schema-parity`
+Expected: PASS. Si falla, **no ajustes el test**: el fallo significa que el DDL y Drizzle han divergido de verdad, y lo que hay que arreglar es la divergencia.
+
+Para comprobar que el test detecta lo que dice detectar, añade temporalmente una columna en `schema.ts` que no exista en el DDL, ejecuta el test, confirma que falla señalando esa columna, y deshaz el cambio.
+
+- [ ] **Step 8: Tipar shuffle y skipped como booleanos**
+
+En `src/db/schema.ts`, sustituye:
+
+```ts
+    shuffle: integer("shuffle"),
+    skipped: integer("skipped"),
+```
+
+por:
+
+```ts
+    /** NULL en filas `live`: recently-played no informa de esto. */
+    shuffle: integer("shuffle", { mode: "boolean" }),
+    /** NULL en filas `live`. Las estadísticas de skips solo usan `import`. */
+    skipped: integer("skipped", { mode: "boolean" }),
+```
+
+Drizzle sigue almacenando 0/1/NULL, así que el DDL no cambia; lo que cambia es que TypeScript los ve como `boolean | null` en vez de `number | null`, y desaparece la clase de errores `=== 1` contra `=== true` en el código de estadísticas que aún no existe.
+
+Añade también el comentario que falta en los dos campos hermanos:
+
+```ts
+    /** NULL en filas `live`. */
+    reasonStart: text("reason_start"),
+    /** NULL en filas `live`. */
+    reasonEnd: text("reason_end"),
+```
+
+- [ ] **Step 9: Verificar todo**
+
+Run: `npx tsc --noEmit && npm run lint && npm test`
+Expected: sin errores, toda la suite en verde.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add src/db/schema-sql.ts src/db/schema.ts tests/schema.test.ts tests/schema-parity.test.ts
+git commit -m "feat: CHECK en source, test de paridad DDL/Drizzle y booleanos tipados"
 ```
 
 ---
