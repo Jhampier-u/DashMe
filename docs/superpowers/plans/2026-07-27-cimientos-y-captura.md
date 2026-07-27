@@ -3375,8 +3375,41 @@ git commit -m "fix: restar días de calendario en los presets, no milisegundos"
 Surge de la revisión de calidad de la Task 7. Se hace **antes** de la Task 14, porque el endpoint del cron tiene que ramificar según el tipo de error y retrofitear eso después cuesta más.
 
 **Files:**
+- Create: `tests/stubs/server-only.ts`
+- Modify: `vitest.config.ts`
 - Modify: `src/lib/spotify-core.ts`
 - Test: `tests/spotify-core.test.ts` (nuevo)
+
+- [ ] **Step 0: Permitir testear módulos con `server-only`**
+
+Este es el primer test que importa un módulo de servidor, y falla antes de ejecutar nada:
+
+```
+Error: Cannot find package 'server-only' imported from src/lib/spotify-core.ts
+```
+
+`server-only` no es una dependencia instalada: solo existe dentro del bundle compilado de Next, que tiene un atajo de resolución propio. Vitest corre en Node puro y no lo encuentra.
+
+**No se instala el paquete de npm.** El `server-only` real lanza una excepción al importarse fuera de un contexto de servidor, así que instalarlo cambiaría el fallo de "no encontrado" a "excepción al cargar". Se resuelve con un alias a un módulo vacío: la directiva es una salvaguarda **del bundler** —impedir que el módulo acabe en un bundle de cliente— y esa preocupación no existe en un test de Node.
+
+Crea `tests/stubs/server-only.ts`:
+
+```ts
+// Stub vacío para los tests.
+//
+// `server-only` no es un paquete instalado: solo existe dentro del bundler de
+// Next. Es un centinela de build que impide que un módulo de servidor acabe en
+// un bundle de cliente — una garantía del empaquetado, no del runtime. En Node
+// no hay bundle de cliente que proteger, así que resolverlo a nada es correcto
+// y no debilita ninguna comprobación real.
+export {};
+```
+
+Y en `vitest.config.ts`, dentro de `resolve.alias`, añade la entrada junto a la de `@`:
+
+```ts
+      "server-only": path.resolve(__dirname, "tests/stubs/server-only.ts"),
+```
 
 - [ ] **Step 1: Escribir el test**
 
