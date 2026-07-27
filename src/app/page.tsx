@@ -62,7 +62,7 @@ export default async function Home() {
               href="/habits"
               style={{
                 display: "inline-block",
-                background: "var(--m-series)",
+                background: "var(--m-series-strong)",
                 color: "#fff",
                 borderRadius: 8,
                 padding: "9px 16px",

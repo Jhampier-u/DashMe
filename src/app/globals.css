@@ -40,14 +40,19 @@
 
   --m-ink: #f2f2f5;
   --m-ink-2: #a8a8b4;
-  --m-ink-3: #75757f;
+  /*
+    --m-ink-3, --m-crit y --m-series-strong están fijados por contraste AA
+    (medidos sobre --m-surface): no los "afines" a ojo sin recalcular.
+  */
+  --m-ink-3: #8a8a95;
 
   --m-series: #3987e5;
+  --m-series-strong: #2a6fc4;
   --m-track: rgba(255, 255, 255, 0.09);
 
   --m-good: #0ca30c;
   --m-warn: #fab219;
-  --m-crit: #d03b3b;
+  --m-crit: #e26060;
 
   --m-radius: 10px;
   --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
