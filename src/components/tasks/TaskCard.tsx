@@ -4,9 +4,7 @@ import { useTransition } from "react";
 import type { TaskRow, TaskStatus } from "@/lib/tasks";
 import { updateTaskStatus, deleteTask } from "@/app/actions";
 import { emitStatusChange } from "@/lib/events";
-import { useConfirm } from "./PixelConfirm";
-
-type Props = { task: TaskRow };
+import { useConfirm } from "@/components/PixelConfirm";
 
 const NEXT: Record<TaskStatus, TaskStatus | null> = {
   TODO: "IN_PROGRESS",
@@ -19,7 +17,22 @@ const PREV: Record<TaskStatus, TaskStatus | null> = {
   DONE: "IN_PROGRESS",
 };
 
-export function TaskCard({ task }: Props) {
+const MOVE_BUTTON = {
+  width: 26,
+  height: 26,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 6,
+  border: "1px solid var(--m-line)",
+  background: "var(--m-elevated)",
+  color: "var(--m-ink-2)",
+  fontSize: 11,
+  cursor: "pointer",
+  fontFamily: "inherit",
+} as const;
+
+export function TaskCard({ task }: { task: TaskRow }) {
   const [pending, startTransition] = useTransition();
   const { confirm, dialog } = useConfirm();
 
@@ -43,59 +56,59 @@ export function TaskCard({ task }: Props) {
 
   const next = NEXT[task.status];
   const prev = PREV[task.status];
+  const done = task.status === "DONE";
 
   return (
     <div
-      className="p-3 pixel-edge-tight flex flex-col gap-2"
       style={{
-        background: "var(--color-bg-deep)",
+        background: "var(--m-surface)",
+        border: "1px solid var(--m-line)",
+        borderRadius: 9,
+        padding: 12,
         opacity: pending ? 0.5 : 1,
-        textDecoration: task.status === "DONE" ? "line-through" : "none",
       }}
     >
-      <div className="text-base text-[var(--color-ink)]">{task.title}</div>
+      <div
+        style={{
+          fontSize: 13.5,
+          color: done ? "var(--m-ink-2)" : "var(--m-ink)",
+          textDecoration: done ? "line-through" : "none",
+        }}
+      >
+        {task.title}
+      </div>
       {task.description ? (
-        <div className="text-sm text-[var(--color-ink-soft)]">{task.description}</div>
+        <div style={{ fontSize: 12, color: "var(--m-ink-3)", marginTop: 5 }}>
+          {task.description}
+        </div>
       ) : null}
-      <div className="flex gap-1 mt-1">
+
+      <div style={{ display: "flex", gap: 5, marginTop: 10 }}>
         <button
           type="button"
           onClick={() => move(prev)}
           disabled={!prev || pending}
-          className="pixel-button font-display text-[0.55rem] px-2 py-1 flex-1"
-          style={{
-            background: prev ? "var(--color-surface)" : "var(--color-bg)",
-            color: "var(--color-ink)",
-            boxShadow: "0 0 0 2px var(--color-border)",
-            opacity: prev ? 1 : 0.3,
-          }}
+          style={{ ...MOVE_BUTTON, opacity: prev ? 1 : 0.3 }}
+          aria-label={`Mover ${task.title} hacia atrás`}
         >
-          ◄
+          ←
         </button>
         <button
           type="button"
           onClick={() => move(next)}
           disabled={!next || pending}
-          className="pixel-button font-display text-[0.55rem] px-2 py-1 flex-1"
-          style={{
-            background: next ? "var(--color-mint-dark)" : "var(--color-bg)",
-            color: "var(--color-ink)",
-            boxShadow: "0 0 0 2px var(--color-border)",
-            opacity: next ? 1 : 0.3,
-          }}
+          style={{ ...MOVE_BUTTON, opacity: next ? 1 : 0.3 }}
+          aria-label={`Mover ${task.title} hacia adelante`}
         >
-          ►
+          →
         </button>
+        <span style={{ flex: 1 }} />
         <button
           type="button"
           onClick={remove}
           disabled={pending}
-          className="pixel-button font-display text-[0.55rem] px-2 py-1"
-          style={{
-            background: "var(--color-pink-dark)",
-            color: "var(--color-ink)",
-            boxShadow: "0 0 0 2px var(--color-border)",
-          }}
+          style={{ ...MOVE_BUTTON, color: "var(--m-crit)" }}
+          aria-label={`Borrar ${task.title}`}
         >
           ✕
         </button>
