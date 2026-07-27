@@ -28,6 +28,55 @@
   --color-sky-dark: #7898c0;
 }
 
+/*
+  Tokens del lenguaje moderno. Conviven con los pixel de arriba mientras
+  quedan pantallas por migrar; los antiguos se retiran con la última.
+*/
+:root {
+  --m-page: #0f0f13;
+  --m-surface: #17171d;
+  --m-elevated: #1e1e26;
+  --m-line: rgba(255, 255, 255, 0.09);
+
+  --m-ink: #f2f2f5;
+  --m-ink-2: #a8a8b4;
+  --m-ink-3: #75757f;
+
+  --m-series: #3987e5;
+  --m-track: rgba(255, 255, 255, 0.09);
+
+  --m-good: #0ca30c;
+  --m-warn: #fab219;
+  --m-crit: #d03b3b;
+
+  --m-radius: 10px;
+  --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.m-root {
+  font-family: var(--m-font);
+  color: var(--m-ink);
+  background: var(--m-page);
+}
+
+.m-card {
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-radius);
+  padding: 18px;
+}
+
+.m-label {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--m-ink-3);
+}
+
+.m-num {
+  font-variant-numeric: tabular-nums;
+}
+
 @theme inline {
   --color-bg-deep: var(--color-bg-deep);
   --color-bg: var(--color-bg);
