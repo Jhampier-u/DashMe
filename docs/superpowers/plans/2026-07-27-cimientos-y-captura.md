@@ -3221,6 +3221,155 @@ git commit -m "feat: CHECK en source, test de paridad DDL/Drizzle y booleanos ti
 
 ---
 
+## Task 19: Quitar el horario de verano de la aritmética de presets
+
+Surge de la revisión de calidad de la Task 17, que reprodujo el fallo.
+
+`desdePreset` hace `localParts(ahora - days * DIA_MS, timeZone)`: resta milisegundos fijos y **después** convierte a fecha local. Si esa resta cruza un cambio de hora, el resultado cae un día antes o después del que corresponde. Con `ahora = 2026-01-01T22:00:00Z` y el preset `6m` en `Europe/Madrid`, da `2025-07-05` cuando la resta de días de calendario da `2025-07-04`.
+
+Hoy es inofensivo porque `STATS_TZ=America/Guayaquil` y Ecuador no observa horario de verano. Deja de serlo en cuanto alguien cambie la zona — y el mensaje de error de `resolveTimeZone` sugiere literalmente `Europe/Madrid` como ejemplo, invitando al fallo que el código no soporta.
+
+**El arreglo elimina la zona horaria de la resta.** Se convierte a fecha local primero, y se restan días sobre la fecha de calendario, donde el horario de verano no existe.
+
+**Files:**
+- Modify: `src/lib/stats/range.ts`
+- Modify: `src/lib/stats/local-time.ts` (solo el ejemplo del mensaje de error)
+- Modify: `tests/range.test.ts`
+
+- [ ] **Step 1: Test que expone el fallo**
+
+Añade a `tests/range.test.ts` un bloque nuevo:
+
+```ts
+describe("zonas con horario de verano", () => {
+  // El preset debe caer en el mismo día de calendario que se obtiene restando
+  // días sobre la fecha local, no restando milisegundos sobre el instante.
+  function restaDeCalendario(localDate: string, days: number): string {
+    const [y, m, d] = localDate.split("-").map(Number);
+    const v = new Date(Date.UTC(y, m - 1, d) - days * 86_400_000);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${v.getUTCFullYear()}-${p(v.getUTCMonth() + 1)}-${p(v.getUTCDate())}`;
+  }
+
+  it("no se desplaza al cruzar un cambio de hora en Madrid", () => {
+    // 2026-01-01T22:00:00Z son las 23:00 del 1 de enero en Madrid (CET, +1).
+    // Restar 181 días en milisegundos cruza el cambio a CEST y cae un día tarde.
+    const ahora = Date.UTC(2026, 0, 1, 22, 0, 0);
+    const r = parseRange({ preset: "6m" }, ahora, "Europe/Madrid");
+
+    expect(r.toDate).toBe("2026-01-01");
+    expect(r.fromDate).toBe(restaDeCalendario("2026-01-01", 181));
+    expect(r.fromDate).toBe("2025-07-04");
+  });
+
+  it("no se desplaza en Santiago, que cambia la hora en sentido opuesto", () => {
+    const ahora = Date.UTC(2026, 6, 1, 3, 0, 0);
+    const r = parseRange({ preset: "6m" }, ahora, "America/Santiago");
+    expect(r.fromDate).toBe(restaDeCalendario(r.toDate, 181));
+  });
+
+  it("los presets cubren los días prometidos en cualquier zona", () => {
+    const dias = (r: { fromDate: string; toDate: string }) =>
+      Math.round(
+        (Date.parse(`${r.toDate}T12:00:00Z`) -
+          Date.parse(`${r.fromDate}T12:00:00Z`)) /
+          86_400_000,
+      ) + 1;
+
+    for (const tz of ["Europe/Madrid", "America/Santiago", "Pacific/Auckland"]) {
+      // Se recorre un año entero de instantes para atrapar cualquier cruce.
+      for (let dia = 0; dia < 365; dia += 7) {
+        const ahora = Date.UTC(2026, 0, 1, 22, 0, 0) + dia * 86_400_000;
+        expect(dias(parseRange({ preset: "4w" }, ahora, tz))).toBe(28);
+        expect(dias(parseRange({ preset: "6m" }, ahora, tz))).toBe(182);
+        expect(dias(parseRange({ preset: "year" }, ahora, tz))).toBe(365);
+      }
+    }
+  });
+});
+```
+
+- [ ] **Step 2: Ejecutar y verificar que falla**
+
+Run: `npm test -- range`
+Expected: FAIL en los tests de Madrid y de cobertura de días, con `fromDate` desplazado un día.
+
+- [ ] **Step 3: Restar sobre la fecha de calendario**
+
+En `src/lib/stats/range.ts`, añade este helper junto a `diaValido`:
+
+```ts
+/**
+ * Resta días a una fecha 'YYYY-MM-DD' devolviendo otra fecha 'YYYY-MM-DD'.
+ *
+ * Opera sobre la fecha de calendario, no sobre un instante, así que el horario
+ * de verano no interviene: un día de calendario siempre son 24 h en esta
+ * aritmética porque no hay zona horaria de por medio. Restar milisegundos al
+ * instante y convertir después desplaza el resultado un día cuando la resta
+ * cruza un cambio de hora.
+ */
+function restarDias(fecha: string, dias: number): string {
+  const [y, m, d] = fecha.split("-").map(Number);
+  const v = new Date(Date.UTC(y, m - 1, d) - dias * DIA_MS);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${v.getUTCFullYear()}-${p(v.getUTCMonth() + 1)}-${p(v.getUTCDate())}`;
+}
+```
+
+Y sustituye el cuerpo de `desdePreset` por:
+
+```ts
+function desdePreset(
+  preset: PresetId,
+  ahora: number,
+  timeZone: string,
+): StatsRange {
+  const { label, days } = PRESETS[preset];
+  // Primero se pasa a día local, y solo después se restan días de calendario.
+  const toDate = localParts(ahora, timeZone).localDate;
+
+  return {
+    fromDate: days === null ? INICIO_DE_LOS_TIEMPOS : restarDias(toDate, days),
+    toDate,
+    label,
+    preset,
+  };
+}
+```
+
+- [ ] **Step 4: Arreglar el ejemplo que invita al fallo**
+
+En `src/lib/stats/local-time.ts`, el mensaje de error de `resolveTimeZone` propone `Europe/Madrid`. Ya no es un ejemplo peligroso una vez arreglada la aritmética, pero conviene que sugiera la zona real del proyecto. Sustituye:
+
+```ts
+        "p. ej. STATS_TZ=Europe/Madrid",
+```
+
+por:
+
+```ts
+        "p. ej. STATS_TZ=America/Guayaquil",
+```
+
+- [ ] **Step 5: Ejecutar y verificar que pasa**
+
+Run: `npm test -- range`
+Expected: PASS.
+
+- [ ] **Step 6: Verificar todo**
+
+Run: `npx tsc --noEmit && npm run lint && npm test`
+Expected: sin errores, toda la suite en verde.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/lib/stats/range.ts src/lib/stats/local-time.ts tests/range.test.ts
+git commit -m "fix: restar días de calendario en los presets, no milisegundos"
+```
+
+---
+
 ## Verificación final
 
 - [ ] **Todos los tests pasan**
