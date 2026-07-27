@@ -167,7 +167,6 @@ src/
     schema.ts              # Drizzle schemas
 
   auth.ts                # Auth.js config (Spotify provider)
-  proxy.ts               # localhost → 127.0.0.1 redirect
 ```
 
 ---
