@@ -3099,10 +3099,12 @@ type ColumnaSqlite = {
  * lado compila, pasa los demás tests y falla al insertar.
  */
 describe("paridad entre el DDL y las definiciones de Drizzle", () => {
+  // Filtro simple + cast, y no un predicado de tipo: `(v): v is ...` no
+  // type-checkea contra el tipo unión de `Object.values(schema)` y dispara
+  // TS2677. El comportamiento en tiempo de ejecución es el mismo.
   const tablas = Object.values(schema).filter(
-    (v): v is Parameters<typeof getTableConfig>[0] =>
-      typeof v === "object" && v !== null && getTableConfigSeguro(v) !== null,
-  );
+    (v) => typeof v === "object" && v !== null && getTableConfigSeguro(v) !== null,
+  ) as Parameters<typeof getTableConfig>[0][];
 
   it("encuentra tablas que comparar", () => {
     expect(tablas.length).toBeGreaterThanOrEqual(11);
