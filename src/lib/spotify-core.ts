@@ -4,6 +4,26 @@ import { spotifyLimiter } from "./rate-limiter";
 const SPOTIFY_API = "https://api.spotify.com/v1";
 
 /**
+ * Error de la Web API con el status HTTP accesible.
+ *
+ * Existe como clase y no como objeto con propiedades añadidas por cast porque
+ * hay dos consumidores con necesidades distintas: una página que solo muestra
+ * el mensaje, y el cron de captura, que debe decidir si registra el fallo o lo
+ * reintenta más tarde. Ramificar con `instanceof` es fiable; comprobar la
+ * forma de un objeto casteado, no.
+ */
+export class SpotifyApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly retryAfterSec?: number,
+  ) {
+    super(message);
+    this.name = "SpotifyApiError";
+  }
+}
+
+/**
  * Núcleo HTTP contra la Web API: rate limiter global, backoff y reintentos.
  *
  * Recibe el access token como argumento en vez de leerlo de la sesión, de modo
@@ -11,11 +31,19 @@ const SPOTIFY_API = "https://api.spotify.com/v1";
  * cron sin cookie (`spotifyFetchHeadless`). Sin esta separación, la lógica de
  * reintentos habría que duplicarla.
  */
-export async function spotifyRequest<T>(
+export function spotifyRequest<T>(
   accessToken: string,
   path: string,
   init: RequestInit = {},
-  attempt = 0,
+): Promise<T> {
+  return doRequest<T>(accessToken, path, init, 0);
+}
+
+async function doRequest<T>(
+  accessToken: string,
+  path: string,
+  init: RequestInit,
+  attempt: number,
 ): Promise<T> {
   const isMutation = init.method && init.method !== "GET";
   const headers: Record<string, string> = {
@@ -47,12 +75,11 @@ export async function spotifyRequest<T>(
     const MAX_AUTO_WAIT_S = 60;
     if (retryAfterSec > MAX_AUTO_WAIT_S) {
       const minutes = Math.ceil(retryAfterSec / 60);
-      const err = new Error(
+      throw new SpotifyApiError(
         `Spotify rate limit: ${minutes} min de espera. Intenta más tarde.`,
-      ) as Error & { status?: number; retryAfterSec?: number };
-      err.status = 429;
-      err.retryAfterSec = retryAfterSec;
-      throw err;
+        429,
+        retryAfterSec,
+      );
     }
     const backoffMs = Math.max(
       retryAfterSec * 1000,
@@ -62,16 +89,12 @@ export async function spotifyRequest<T>(
       `[spotify] ${res.status} on ${path}. Retrying in ${backoffMs}ms (attempt ${attempt + 1}/4)…`,
     );
     await new Promise((r) => setTimeout(r, backoffMs));
-    return spotifyRequest<T>(accessToken, path, init, attempt + 1);
+    return doRequest<T>(accessToken, path, init, attempt + 1);
   }
 
   if (!res.ok) {
     const text = await res.text();
-    const err = new Error(`Spotify ${res.status}: ${text}`) as Error & {
-      status?: number;
-    };
-    err.status = res.status;
-    throw err;
+    throw new SpotifyApiError(`Spotify ${res.status}: ${text}`, res.status);
   }
 
   if (res.status === 204) return undefined as T;
