@@ -150,11 +150,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       if (account) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.expiresAt = (account.expires_at ?? 0) * 1000;
+
+        // Persistir el refresh token para que el cron pueda operar sin cookie.
+        // El import es dinámico a propósito: `@/db` arrastra better-sqlite3
+        // (módulo nativo) y no debe acabar en ningún bundle que no sea Node.
+        // Un fallo aquí no debe impedir el login: la app sigue funcionando por
+        // navegador y /ajustes avisará de que la captura no está configurada.
+        if (account.refresh_token) {
+          try {
+            const { saveCredentials } = await import("@/lib/credentials");
+            await saveCredentials({
+              spotifyUserId:
+                (profile as { id?: string } | undefined)?.id ?? "me",
+              refreshToken: account.refresh_token,
+              accessToken: account.access_token ?? null,
+              expiresAt: (account.expires_at ?? 0) * 1000,
+            });
+          } catch (e) {
+            console.error("[auth] no se pudieron guardar las credenciales", e);
+          }
+        }
+
         return token;
       }
 
