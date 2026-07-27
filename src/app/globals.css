@@ -53,6 +53,9 @@
   --m-good: #0ca30c;
   --m-warn: #fab219;
   --m-crit: #e26060;
+  /* Fondo destructivo con texto blanco: 5,27:1. --m-crit es para texto, no
+     llega a contraste como fondo. */
+  --m-crit-strong: #c33a3a;
 
   --m-radius: 10px;
   --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
