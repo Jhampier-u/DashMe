@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getHomeMetrics } from "@/lib/home";
-import { getHabitsWithTodayStatus, getPlayerLevelInfo } from "@/lib/habits";
+import { getPlayerLevelInfo } from "@/lib/habits";
 import { getTodayQuests } from "@/lib/quests";
 import { MAX_SHIELDS } from "@/lib/level";
 import { TodayCard } from "@/components/home/TodayCard";
@@ -18,9 +18,8 @@ const DATE_FORMAT = new Intl.DateTimeFormat("es", {
 });
 
 export default async function Home() {
-  const [metrics, habits, player, quests] = await Promise.all([
+  const [metrics, player, quests] = await Promise.all([
     getHomeMetrics(),
-    getHabitsWithTodayStatus(),
     getPlayerLevelInfo(),
     getTodayQuests(),
   ]);
@@ -33,11 +32,6 @@ export default async function Home() {
     scheduled: day.scheduled,
     shielded: day.shielded,
   }));
-
-  const longest = habits.reduce(
-    (best, h) => (h.streak > (best?.streak ?? 0) ? h : best),
-    null as (typeof habits)[number] | null,
-  );
 
   // Intl devuelve "lunes, 27 de julio". Solo se sube la primera letra: con
   // `text-transform: capitalize` saldría "Lunes, 27 De Julio".
@@ -52,7 +46,7 @@ export default async function Home() {
           <span style={{ fontSize: 13, color: "var(--m-ink-3)" }}>{today}</span>
         </div>
 
-        {habits.length === 0 ? (
+        {metrics.habitCount === 0 ? (
           <div className="m-card" style={{ textAlign: "center", padding: 40 }}>
             <p style={{ fontSize: 16, marginBottom: 6 }}>Aún no tienes hábitos.</p>
             <p style={{ fontSize: 13, color: "var(--m-ink-2)", marginBottom: 20 }}>
@@ -86,6 +80,7 @@ export default async function Home() {
               <TodayCard
                 done={metrics.today.done}
                 scheduled={metrics.today.scheduled}
+                partial={metrics.today.partial}
                 pending={metrics.today.pending}
               />
               <div style={{ gridColumn: "span 1", minWidth: 0 }}>
@@ -94,7 +89,7 @@ export default async function Home() {
             </div>
 
             <MetricTiles
-              streak={longest && longest.streak > 0 ? { days: longest.streak, habitName: longest.name } : null}
+              streak={metrics.longestStreak}
               best={metrics.best}
               level={player.level}
               xp={player.xp}

@@ -9,10 +9,12 @@ import type { PendingHabit } from "@/lib/home";
 type Props = {
   done: number;
   scheduled: number;
+  /** Cuántos de los cumplidos de hoy lo fueron en modo mínimo. */
+  partial: number;
   pending: PendingHabit[];
 };
 
-export function TodayCard({ done, scheduled, pending }: Props) {
+export function TodayCard({ done, scheduled, partial, pending }: Props) {
   const [busy, startTransition] = useTransition();
   const critical = pending.filter((h) => h.critical);
 
@@ -42,6 +44,11 @@ export function TodayCard({ done, scheduled, pending }: Props) {
           <div style={{ fontSize: 12.5, color: "var(--m-ink-2)", marginTop: 6 }}>
             {scheduled === 0 ? "hoy no toca ningún hábito" : "hábitos de hoy"}
           </div>
+          {partial > 0 ? (
+            <div style={{ fontSize: 11.5, color: "var(--m-ink-2)", marginTop: 4 }}>
+              {partial === 1 ? "1 en modo mínimo" : `${partial} en modo mínimo`}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -97,7 +104,7 @@ export function TodayCard({ done, scheduled, pending }: Props) {
         </div>
       ) : scheduled > 0 ? (
         <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--m-line)", fontSize: 12.5, color: "var(--m-good)" }}>
-          Día completo.
+          {partial > 0 ? "Día completo, con mínimos." : "Día completo."}
         </div>
       ) : null}
     </div>

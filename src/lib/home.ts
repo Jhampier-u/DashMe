@@ -1,6 +1,6 @@
 import { prisma } from "./prisma";
 import { addDays, dayKey, normalizeDayKey } from "./day";
-import { isCriticalDay, isScheduledOn } from "./streak";
+import { computeStreak, isCriticalDay, isScheduledOn } from "./streak";
 import {
   bestWeekday,
   buildHabitSpecs,
@@ -25,11 +25,17 @@ export type PendingHabit = {
 };
 
 export type HomeMetrics = {
+  /** Cuántos hábitos existen, para decidir el estado vacío. */
+  habitCount: number;
   today: {
     scheduled: number;
     done: number;
+    /** Cuántos de los cumplidos de hoy lo fueron en modo mínimo. */
+    partial: number;
     pending: PendingHabit[];
   };
+  /** La racha viva más larga, si hay alguna. */
+  longestStreak: { days: number; habitName: string } | null;
   series: DayCompliance[];
   mean: (number | null)[];
   delta: PeriodDelta | null;
@@ -80,17 +86,38 @@ export async function getHomeMetrics(): Promise<HomeMetrics> {
     set.add(entry.day.getTime());
   }
 
-  const doneToday = new Set(
-    entries
-      .filter((e) => e.day.getTime() === today.getTime() && !e.shielded)
-      .map((e) => e.habitId),
-  );
+  // Registros de hoy no cubiertos por escudo: id de hábito -> ¿fue parcial?
+  // Se necesita el valor de `partial`, no solo si está hecho, porque el
+  // titular de "Hoy" debe matizar cuántos de los cumplidos fueron en modo
+  // mínimo (la gráfica ya los cuenta al 50%).
+  const todayDoneMap = new Map<string, boolean>();
+  for (const entry of entries) {
+    if (entry.day.getTime() === today.getTime() && !entry.shielded) {
+      todayDoneMap.set(entry.habitId, entry.partial);
+    }
+  }
+  const doneToday = new Set(todayDoneMap.keys());
   const scheduledToday = habits.filter((h) => isScheduledOn(h.schedule, today));
 
+  // Racha viva más larga entre todos los hábitos, reutilizando el mismo
+  // calendario y las mismas claves que usa la tarjeta de hábito individual.
+  // Los hábitos vienen ordenados por createdAt ascendente, así que en un
+  // empate gana el primero (comparación estrictamente mayor).
+  let longestStreak: { days: number; habitName: string } | null = null;
+  for (const h of habits) {
+    const keys = keysByHabit.get(h.id) ?? new Set<number>();
+    const streak = computeStreak(h.schedule, keys, today);
+    if (streak > 0 && (longestStreak === null || streak > longestStreak.days)) {
+      longestStreak = { days: streak, habitName: h.name };
+    }
+  }
+
   return {
+    habitCount: habits.length,
     today: {
       scheduled: scheduledToday.length,
       done: scheduledToday.filter((h) => doneToday.has(h.id)).length,
+      partial: scheduledToday.filter((h) => todayDoneMap.get(h.id) === true).length,
       pending: scheduledToday
         .filter((h) => !doneToday.has(h.id))
         .map((h) => {
@@ -102,6 +129,7 @@ export async function getHomeMetrics(): Promise<HomeMetrics> {
           };
         }),
     },
+    longestStreak,
     series,
     mean,
     delta: periodDelta(series, COMPARISON_DAYS),
