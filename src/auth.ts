@@ -35,6 +35,20 @@ if (!(globalThis as PatchedGlobal)[FETCH_PATCHED]) {
   (globalThis as PatchedGlobal)[FETCH_PATCHED] = true;
 }
 
+// Auth.js v5 beta sobre este fork de Next no consigue derivar el origen de la
+// petición: `parseUrl` cae a su valor por defecto `http://localhost:3000/api/auth`
+// y manda ese `redirect_uri` a Spotify. Ni AUTH_URL, ni NEXTAUTH_URL, ni la
+// cabecera Host lo corrigen (comprobado los tres). Y Spotify rechaza `localhost`
+// en apps nuevas: solo admite la IP de loopback.
+//
+// Se fija explícitamente. `AUTH_URL` puede venir con o sin la ruta base, así que
+// se normaliza a solo el origen.
+const PUBLIC_ORIGIN = (process.env.AUTH_URL ?? "http://127.0.0.1:3000")
+  .replace(/\/api\/auth\/?$/, "")
+  .replace(/\/$/, "");
+
+const SPOTIFY_REDIRECT_URI = `${PUBLIC_ORIGIN}/api/auth/callback/spotify`;
+
 const SPOTIFY_SCOPES = [
   "user-read-private",
   "user-read-email",
@@ -84,7 +98,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       checks: ["state"],
       authorization: {
         url: "https://accounts.spotify.com/authorize",
-        params: { scope: SPOTIFY_SCOPES },
+        // `redirect_uri` explícito: sin él Auth.js envía su default con
+        // `localhost`, que Spotify rechaza. Ver PUBLIC_ORIGIN arriba.
+        params: { scope: SPOTIFY_SCOPES, redirect_uri: SPOTIFY_REDIRECT_URI },
       },
       token: "https://accounts.spotify.com/api/token",
       userinfo: "https://api.spotify.com/v1/me",
