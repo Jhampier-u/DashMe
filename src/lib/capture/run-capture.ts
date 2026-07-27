@@ -65,23 +65,23 @@ async function guardarEstado(campos: {
  * siempre.
  */
 export async function runCapture(manual = false): Promise<CaptureResult> {
-  const estado = await leerEstado();
-
-  if (
-    !manual &&
-    estado?.lastRunAt &&
-    Date.now() - estado.lastRunAt < MIN_ENTRE_EJECUCIONES_MS
-  ) {
-    return {
-      status: "omitida",
-      inserted: 0,
-      fetched: 0,
-      snapshots: 0,
-      message: "Otra ejecución acaba de correr.",
-    };
-  }
-
   try {
+    const estado = await leerEstado();
+
+    if (
+      !manual &&
+      estado?.lastRunAt &&
+      Date.now() - estado.lastRunAt < MIN_ENTRE_EJECUCIONES_MS
+    ) {
+      return {
+        status: "omitida",
+        inserted: 0,
+        fetched: 0,
+        snapshots: 0,
+        message: "Otra ejecución acaba de correr.",
+      };
+    }
+
     const timeZone = resolveTimeZone(process.env);
 
     const params = new URLSearchParams({ limit: String(LIMITE) });
@@ -107,17 +107,25 @@ export async function runCapture(manual = false): Promise<CaptureResult> {
     const maxTs = filas.reduce((max, f) => (f.ts > max ? f.ts : max), 0);
     const nuevoCursor = maxTs > 0 ? maxTs : (estado?.lastPlayedAt ?? null);
 
-    // Si vinieron 50 items y TODOS eran nuevos, es probable que se hayan
-    // perdido escuchas entre esta ejecución y la anterior: la ventana de la
-    // API son 50 pistas y puede haberse desbordado.
-    const hayHueco = items.length === LIMITE && inserted === filas.length && filas.length > 0;
+    // Un hueco significa que la ventana de 50 se desbordó entre dos ejecuciones.
+    // En la primera, sin cursor previo, todo lo que devuelve Spotify es nuevo por
+    // definición: eso es una carga inicial, no una pérdida. Sin esta condición la
+    // alerta se enciende el primer día y no se apaga nunca.
+    const primeraEjecucion = !estado?.lastPlayedAt;
+    const hayHueco =
+      !primeraEjecucion &&
+      items.length === LIMITE &&
+      inserted === filas.length &&
+      filas.length > 0;
 
     await guardarEstado({
       lastPlayedAt: nuevoCursor,
       lastRunStatus: hayHueco ? "gap" : "ok",
       lastRunInserted: inserted,
       lastError: null,
-      ...(hayHueco ? { gapSuspectedAt: Date.now() } : {}),
+      // Se limpia en una ejecución sana: si no, la primera alerta legítima
+      // quedaría encendida de forma permanente y dejaría de significar nada.
+      gapSuspectedAt: hayHueco ? Date.now() : null,
     });
 
     return {
@@ -128,7 +136,13 @@ export async function runCapture(manual = false): Promise<CaptureResult> {
     };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    await guardarEstado({ lastRunStatus: "error", lastError: message });
+    // Si además falla el guardado del error, no se propaga: perderíamos el
+    // error original y el cron recibiría una traza en vez de un resultado.
+    try {
+      await guardarEstado({ lastRunStatus: "error", lastError: message });
+    } catch (e2) {
+      console.error("[captura] no se pudo registrar el error", e2);
+    }
     return { status: "error", inserted: 0, fetched: 0, snapshots: 0, message };
   }
 }
