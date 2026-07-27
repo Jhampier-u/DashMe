@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { VT323, Press_Start_2P } from "next/font/google";
 import "./globals.css";
-import { NavBar } from "@/components/NavBar";
+import { AppShell } from "@/components/shell/AppShell";
 import { AchievementToast } from "@/components/AchievementToast";
 import { SoundEffects } from "@/components/SoundEffects";
 
@@ -32,11 +32,10 @@ export default function RootLayout({
       lang="es"
       className={`${vt323.variable} ${pressStart.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">
-        <NavBar />
+      <body className="min-h-full">
         <AchievementToast />
         <SoundEffects />
-        <div className="flex-1">{children}</div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

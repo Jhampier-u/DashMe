@@ -53,6 +53,9 @@
   --m-good: #0ca30c;
   --m-warn: #fab219;
   --m-crit: #e26060;
+  /* Fondo destructivo con texto blanco: 5,27:1. --m-crit es para texto, no
+     llega a contraste como fondo. */
+  --m-crit-strong: #c33a3a;
 
   --m-radius: 10px;
   --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -103,14 +106,27 @@
 
 html,
 body {
-  background: var(--color-bg-deep);
-  color: var(--color-ink);
+  background: var(--m-page);
+  color: var(--m-ink);
 }
 
 body {
+  font-family: var(--m-font);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/*
+  Las reglas de la estética pixel. Estaban en `body`, donde también afectaban a
+  las pantallas ya migradas: su texto se pintaba sin suavizado. Las aplica
+  PageShell, así que cubren de una vez las pantallas que aún no se han migrado.
+*/
+.pixel-page {
   font-family: var(--font-vt323), monospace;
   font-size: 1.25rem;
   line-height: 1.4;
+  color: var(--color-ink);
+  background: var(--color-bg-deep);
   image-rendering: pixelated;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: grayscale;

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export default function ErrorPage({
   error,
@@ -14,32 +16,25 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <main className="max-w-xl mx-auto px-4 py-16">
-      <div className="pixel-window text-center">
-        <div className="text-6xl mb-4">💥</div>
-        <h2 className="font-display text-[0.8rem] tracking-widest text-[var(--color-pink)] mb-3">
-          ALGO SE ROMPIÓ
+    <main style={{ maxWidth: 460, margin: "0 auto", padding: "64px 16px" }}>
+      <Card style={{ textAlign: "center", padding: 32 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+          Algo se rompió
         </h2>
-        <p className="text-[var(--color-ink-soft)] text-lg mb-2">
-          El aventurero tropezó con una piedra.
+        <p style={{ fontSize: 13.5, color: "var(--m-ink-2)", marginBottom: 6 }}>
+          No hemos podido cargar esta pantalla.
         </p>
         {error.digest ? (
-          <p className="text-[var(--color-ink-dim)] text-sm mb-5">
+          <p style={{ fontSize: 12, color: "var(--m-ink-3)", marginBottom: 20 }}>
             Código: {error.digest}
           </p>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => unstable_retry()}
-          className="pixel-button pixel-edge font-display uppercase text-[0.65rem] tracking-wider px-4 py-3"
-          style={{
-            background: "var(--color-mint)",
-            color: "var(--color-bg-deep)",
-          }}
-        >
+        ) : (
+          <div style={{ height: 14 }} />
+        )}
+        <Button variant="primary" onClick={() => unstable_retry()}>
           Reintentar
-        </button>
-      </div>
+        </Button>
+      </Card>
     </main>
   );
 }
