@@ -96,4 +96,30 @@ describe("seedStreams", () => {
     expect(f.artist_key).toBe("beyonce");
     expect(f.track_key).toBe("beyonce\u001Fhalo");
   });
+
+  it("respeta un null explícito en vez de aplicar el valor por defecto", () => {
+    const { sqlite } = createTestDb();
+    seedStreams(sqlite, [stream({ albumName: null, trackUri: null })]);
+    const f = sqlite
+      .prepare("SELECT album_name, album_key, track_uri FROM streams")
+      .get() as {
+      album_name: string | null;
+      album_key: string | null;
+      track_uri: string | null;
+    };
+    expect(f.album_name).toBeNull();
+    expect(f.album_key).toBeNull();
+    expect(f.track_uri).toBeNull();
+  });
+
+  it("usa track_key en el dedup_key cuando no hay uri", () => {
+    const { sqlite } = createTestDb();
+    seedStreams(sqlite, [
+      stream({ ts: 4242, trackUri: null, artistName: "Duster", trackName: "Gold Dust" }),
+    ]);
+    const f = sqlite.prepare("SELECT dedup_key FROM streams").get() as {
+      dedup_key: string;
+    };
+    expect(f.dedup_key).toBe("4242:duster\u001Fgold dust");
+  });
 });
