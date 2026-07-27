@@ -77,3 +77,29 @@ export function complianceSeries(
   }
   return out;
 }
+
+/**
+ * Media móvil de la ventana que termina en cada punto. Los huecos no cuentan;
+ * si la ventana entera es hueco, el resultado también lo es.
+ */
+export function rollingMean(
+  values: (number | null)[],
+  window: number,
+): (number | null)[] {
+  return values.map((_, i) => {
+    const slice = values
+      .slice(Math.max(0, i - window + 1), i + 1)
+      .filter((v): v is number => v !== null);
+    if (slice.length === 0) return null;
+    return slice.reduce((a, b) => a + b, 0) / slice.length;
+  });
+}
+
+/** Cumplimiento medio de los días que tenían algo programado. */
+export function averageRate(days: DayCompliance[]): number | null {
+  const rates = days
+    .map((d) => d.rate)
+    .filter((v): v is number => v !== null);
+  if (rates.length === 0) return null;
+  return rates.reduce((a, b) => a + b, 0) / rates.length;
+}

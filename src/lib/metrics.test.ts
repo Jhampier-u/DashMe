@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { dayKeyFromISO } from "./day";
-import { complianceSeries, type HabitSpec, type LogEntry } from "./metrics";
+import {
+  averageRate,
+  complianceSeries,
+  rollingMean,
+  type HabitSpec,
+  type LogEntry,
+} from "./metrics";
 
 const key = (iso: string) => dayKeyFromISO(iso)!;
 const DAILY = "1111111";
@@ -98,5 +104,41 @@ describe("complianceSeries", () => {
     expect(days.map((d) => d.date)).toEqual([
       "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23",
     ]);
+  });
+});
+
+describe("rollingMean", () => {
+  it("promedia la ventana que termina en cada punto", () => {
+    expect(rollingMean([1, 2, 3, 4], 2)).toEqual([1, 1.5, 2.5, 3.5]);
+  });
+
+  it("usa los datos disponibles mientras la ventana no está llena", () => {
+    expect(rollingMean([2, 4], 7)).toEqual([2, 3]);
+  });
+
+  it("ignora los huecos sin romper la media", () => {
+    expect(rollingMean([1, null, 3], 3)).toEqual([1, 1, 2]);
+  });
+
+  it("devuelve null cuando la ventana entera es hueco", () => {
+    expect(rollingMean([null, null], 2)).toEqual([null, null]);
+  });
+});
+
+describe("averageRate", () => {
+  it("promedia solo los días con algo programado", () => {
+    expect(
+      averageRate([
+        { date: "a", scheduled: 2, done: 1, shielded: 0, rate: 0.5 },
+        { date: "b", scheduled: 0, done: 0, shielded: 0, rate: null },
+        { date: "c", scheduled: 1, done: 1, shielded: 0, rate: 1 },
+      ]),
+    ).toBe(0.75);
+  });
+
+  it("devuelve null si no hay ningún día con datos", () => {
+    expect(
+      averageRate([{ date: "a", scheduled: 0, done: 0, shielded: 0, rate: null }]),
+    ).toBeNull();
   });
 });
