@@ -53,6 +53,9 @@ data/
 Thumbs.db
 desktop.ini
 
+# Brainstorming visual companion (mockups locales)
+.superpowers/
+
 # Editor
 .vscode/
 .idea/
