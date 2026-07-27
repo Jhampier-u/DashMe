@@ -39,14 +39,17 @@ export default async function Home() {
     null as (typeof habits)[number] | null,
   );
 
-  const today = DATE_FORMAT.format(new Date());
+  // Intl devuelve "lunes, 27 de julio". Solo se sube la primera letra: con
+  // `text-transform: capitalize` saldría "Lunes, 27 De Julio".
+  const formatted = DATE_FORMAT.format(new Date());
+  const today = formatted.charAt(0).toUpperCase() + formatted.slice(1);
 
   return (
     <main className="m-root" style={{ minHeight: "100%", padding: "20px 16px 48px" }}>
       <div style={{ maxWidth: 1040, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>Untap</span>
-          <span style={{ fontSize: 13, color: "var(--m-ink-3)", textTransform: "capitalize" }}>{today}</span>
+          <span style={{ fontSize: 13, color: "var(--m-ink-3)" }}>{today}</span>
         </div>
 
         {habits.length === 0 ? (
