@@ -23,17 +23,24 @@ export function SoundToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="pixel-button font-display text-[0.55rem] sm:text-[0.6rem] tracking-wider px-2 sm:px-3 py-2 flex items-center gap-1"
       style={{
-        background: muted ? "var(--color-surface)" : "var(--color-mint)",
-        color: muted ? "var(--color-ink)" : "var(--color-bg-deep)",
-        boxShadow: "0 0 0 3px var(--color-border)",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 30,
+        height: 30,
+        borderRadius: 7,
+        background: "transparent",
+        border: "1px solid var(--m-line)",
+        color: "var(--m-ink-2)",
+        fontSize: 13,
+        cursor: "pointer",
       }}
-      title={muted ? "Activar sonidos 8-bit" : "Silenciar"}
+      title={muted ? "Activar sonidos" : "Silenciar"}
       aria-label={muted ? "Activar sonidos" : "Silenciar sonidos"}
       aria-pressed={!muted}
     >
-      <span className="text-base">{muted ? "🔇" : "🔊"}</span>
+      {muted ? "🔇" : "🔊"}
     </button>
   );
 }
