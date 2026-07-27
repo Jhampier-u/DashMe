@@ -87,3 +87,20 @@ export function localDayRange(now: Date = new Date()): { start: Date; end: Date 
 export function weekdayOf(key: Date): number {
   return key.getUTCDay();
 }
+
+const DAY_MONTH = new Intl.DateTimeFormat("es", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/**
+ * Etiqueta corta de una clave de día ("27 jul").
+ *
+ * El `timeZone: "UTC"` no es decorativo: la clave ya representa la fecha local
+ * del usuario, así que formatearla en el huso del navegador la correría un día
+ * en cualquier offset negativo.
+ */
+export function formatDayLabel(iso: string): string {
+  return DAY_MONTH.format(new Date(`${iso}T00:00:00Z`));
+}

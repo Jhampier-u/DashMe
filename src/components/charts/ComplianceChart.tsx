@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { areaPath, linePath, scaleLinear, segments, type Point } from "@/lib/chart";
+import { formatDayLabel } from "@/lib/day";
 
 export type ChartPoint = {
   date: string;
@@ -17,12 +18,6 @@ export type ChartPoint = {
 const W = 560;
 const H = 190;
 const PAD = { left: 32, right: 14, top: 12, bottom: 26 };
-
-const FORMATTER = new Intl.DateTimeFormat("es", { day: "numeric", month: "short" });
-
-function label(iso: string): string {
-  return FORMATTER.format(new Date(`${iso}T00:00:00Z`));
-}
 
 export function ComplianceChart({ points }: { points: ChartPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -127,7 +122,7 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
         ) : null}
 
         <text x={PAD.left} y={H - 6} fontSize={10} fill="var(--m-ink-3)">
-          {label(points[0].date)}
+          {formatDayLabel(points[0].date)}
         </text>
         <text x={W - PAD.right} y={H - 6} fontSize={10} fill="var(--m-ink-3)" textAnchor="end">
           hoy
@@ -151,7 +146,7 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
             whiteSpace: "nowrap",
           }}
         >
-          <strong style={{ fontSize: 12.5 }}>{label(active.date)}</strong>
+          <strong style={{ fontSize: 12.5 }}>{formatDayLabel(active.date)}</strong>
           <br />
           {active.mean === null ? "Sin datos" : `Media 7d: ${Math.round(active.mean * 100)}%`}
           <br />
