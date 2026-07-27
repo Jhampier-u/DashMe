@@ -3592,6 +3592,135 @@ git commit -m "refactor: error tipado y attempt privado en el núcleo HTTP"
 
 ---
 
+## Task 22: No marcar hueco en la primera ejecución
+
+Detectado al probar la Task 14 contra la cuenta real: la primera ejecución devolvió `status: "gap"`.
+
+Según la heurística es correcto —llegaron 50 items y todos se insertaron— pero **no hubo pérdida de escuchas**: era la primera vez, sin cursor previo, así que todo lo que devolvió Spotify era necesariamente nuevo. La heurística confunde "primera carga" con "se desbordó la ventana".
+
+Importa porque `gapSuspectedAt` se escribe y nunca se limpia. El panel de salud de la Task 15 mostraría una alerta de posible pérdida de datos desde el primer día y de forma permanente — que es la forma más rápida de enseñar a alguien a ignorar las alertas.
+
+**Files:**
+- Modify: `src/lib/capture/run-capture.ts`
+
+- [ ] **Step 1: Condicionar la detección a que exista cursor previo**
+
+En `runCapture`, la línea que calcula el hueco es:
+
+```ts
+    const hayHueco = items.length === LIMITE && inserted === filas.length && filas.length > 0;
+```
+
+Sustitúyela por:
+
+```ts
+    // Un hueco significa que la ventana de 50 se desbordó entre dos ejecuciones.
+    // En la primera, sin cursor previo, todo lo que devuelve Spotify es nuevo por
+    // definición: eso es una carga inicial, no una pérdida. Sin esta condición la
+    // alerta se enciende el primer día y no se apaga nunca.
+    const primeraEjecucion = !estado?.lastPlayedAt;
+    const hayHueco =
+      !primeraEjecucion &&
+      items.length === LIMITE &&
+      inserted === filas.length &&
+      filas.length > 0;
+```
+
+- [ ] **Step 2: Limpiar la marca cuando una ejecución va bien**
+
+`gapSuspectedAt` se escribe pero nunca se borra, así que una alerta legítima también quedaría encendida para siempre. En la llamada a `guardarEstado` de la ruta de éxito, sustituye:
+
+```ts
+      ...(hayHueco ? { gapSuspectedAt: Date.now() } : {}),
+```
+
+por:
+
+```ts
+      // Se limpia en una ejecución sana: si no, la primera alerta legítima
+      // quedaría encendida de forma permanente y dejaría de significar nada.
+      gapSuspectedAt: hayHueco ? Date.now() : null,
+```
+
+- [ ] **Step 2b: Cerrar las dos vías por las que `runCapture` sí puede lanzar**
+
+Detectado en la revisión de la Task 12. El contrato de esta función es que los errores se registran y se devuelven, nunca se lanzan — el cron necesita un resultado, no una traza. Pero quedan dos huecos:
+
+1. `leerEstado()` se llama **antes** del `try`. Si esa lectura falla, la excepción escapa sin registrar nada.
+2. Si `guardarEstado()` falla dentro del `catch`, esa segunda excepción también escapa, y encima sustituye al error original, que se pierde.
+
+Mueve la lectura del estado dentro del `try`. La estructura pasa a ser:
+
+```ts
+export async function runCapture(manual = false): Promise<CaptureResult> {
+  try {
+    const estado = await leerEstado();
+
+    if (
+      !manual &&
+      estado?.lastRunAt &&
+      Date.now() - estado.lastRunAt < MIN_ENTRE_EJECUCIONES_MS
+    ) {
+      return {
+        status: "omitida",
+        inserted: 0,
+        fetched: 0,
+        snapshots: 0,
+        message: "Otra ejecución acaba de correr.",
+      };
+    }
+
+    const timeZone = resolveTimeZone(process.env);
+    // …resto del cuerpo sin cambios…
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    // Si además falla el guardado del error, no se propaga: perderíamos el
+    // error original y el cron recibiría una traza en vez de un resultado.
+    try {
+      await guardarEstado({ lastRunStatus: "error", lastError: message });
+    } catch (e2) {
+      console.error("[captura] no se pudo registrar el error", e2);
+    }
+    return { status: "error", inserted: 0, fetched: 0, snapshots: 0, message };
+  }
+}
+```
+
+**No cambies nada más del cuerpo:** ni el cursor, ni la heurística de hueco (más allá de lo del Step 1), ni las llamadas a `spotifyFetchHeadless`, `mapRecentlyPlayed` o `insertStreams`.
+
+- [ ] **Step 3: Corregir el estado ya guardado**
+
+La base real ya tiene una fila con `last_run_status = 'gap'` y `gap_suspected_at` puesto, por la ejecución de prueba de la Task 14. Limpiarla:
+
+```bash
+node -e "const D=require('better-sqlite3');const d=new D('data/ledger.db');const r=d.prepare(\"UPDATE capture_state SET gap_suspected_at = NULL, last_run_status = 'ok' WHERE id = 1 AND last_run_status = 'gap'\").run();console.log('filas corregidas:',r.changes)"
+```
+
+Es la única escritura autorizada sobre `data/ledger.db` en todo el plan, y toca solo la fila de estado — no las escuchas.
+
+- [ ] **Step 4: Verificar**
+
+Run: `npx tsc --noEmit && npm run lint && npm test`
+Expected: sin errores, 76 tests.
+
+Y comprobar que una ejecución nueva ya no marca hueco:
+
+```bash
+SECRET=$(grep '^CRON_SECRET=' .env.local | cut -d= -f2)
+sleep 31 && curl -s -X POST -H "x-cron-secret: $SECRET" http://127.0.0.1:3000/api/cron/capture
+```
+
+Expected: `"status":"ok"`, y `gap_suspected_at` a `NULL` en la base.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/lib/capture/run-capture.ts
+git commit -m "fix: no marcar hueco en la primera ejecución de captura"
+```
+
+---
+
 ## Verificación final
 
 - [ ] **Todos los tests pasan**
