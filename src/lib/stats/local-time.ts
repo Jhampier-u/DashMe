@@ -46,7 +46,7 @@ export function resolveTimeZone(env: Record<string, string | undefined>): string
   if (!tz) {
     throw new Error(
       "STATS_TZ no está definida. Añádela a .env.local con una zona IANA, " +
-        "p. ej. STATS_TZ=Europe/Madrid",
+        "p. ej. STATS_TZ=America/Guayaquil",
     );
   }
   try {

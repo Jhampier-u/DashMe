@@ -72,19 +72,33 @@ function diaValido(valor: string): string | null {
   return `${y}-${mes}-${d}`;
 }
 
+/**
+ * Resta días a una fecha 'YYYY-MM-DD' devolviendo otra fecha 'YYYY-MM-DD'.
+ *
+ * Opera sobre la fecha de calendario, no sobre un instante, así que el horario
+ * de verano no interviene: un día de calendario siempre son 24 h en esta
+ * aritmética porque no hay zona horaria de por medio. Restar milisegundos al
+ * instante y convertir después desplaza el resultado un día cuando la resta
+ * cruza un cambio de hora.
+ */
+function restarDias(fecha: string, dias: number): string {
+  const [y, m, d] = fecha.split("-").map(Number);
+  const v = new Date(Date.UTC(y, m - 1, d) - dias * DIA_MS);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${v.getUTCFullYear()}-${p(v.getUTCMonth() + 1)}-${p(v.getUTCDate())}`;
+}
+
 function desdePreset(
   preset: PresetId,
   ahora: number,
   timeZone: string,
 ): StatsRange {
   const { label, days } = PRESETS[preset];
+  // Primero se pasa a día local, y solo después se restan días de calendario.
   const toDate = localParts(ahora, timeZone).localDate;
 
   return {
-    fromDate:
-      days === null
-        ? INICIO_DE_LOS_TIEMPOS
-        : localParts(ahora - days * DIA_MS, timeZone).localDate,
+    fromDate: days === null ? INICIO_DE_LOS_TIEMPOS : restarDias(toDate, days),
     toDate,
     label,
     preset,

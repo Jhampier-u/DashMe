@@ -141,3 +141,50 @@ describe("entradas inválidas", () => {
     }
   });
 });
+
+describe("zonas con horario de verano", () => {
+  // El preset debe caer en el mismo día de calendario que se obtiene restando
+  // días sobre la fecha local, no restando milisegundos sobre el instante.
+  function restaDeCalendario(localDate: string, days: number): string {
+    const [y, m, d] = localDate.split("-").map(Number);
+    const v = new Date(Date.UTC(y, m - 1, d) - days * 86_400_000);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${v.getUTCFullYear()}-${p(v.getUTCMonth() + 1)}-${p(v.getUTCDate())}`;
+  }
+
+  it("no se desplaza al cruzar un cambio de hora en Madrid", () => {
+    // 2026-01-01T22:00:00Z son las 23:00 del 1 de enero en Madrid (CET, +1).
+    // Restar 181 días en milisegundos cruza el cambio a CEST y cae un día tarde.
+    const ahora = Date.UTC(2026, 0, 1, 22, 0, 0);
+    const r = parseRange({ preset: "6m" }, ahora, "Europe/Madrid");
+
+    expect(r.toDate).toBe("2026-01-01");
+    expect(r.fromDate).toBe(restaDeCalendario("2026-01-01", 181));
+    expect(r.fromDate).toBe("2025-07-04");
+  });
+
+  it("no se desplaza en Santiago, que cambia la hora en sentido opuesto", () => {
+    const ahora = Date.UTC(2026, 6, 1, 3, 0, 0);
+    const r = parseRange({ preset: "6m" }, ahora, "America/Santiago");
+    expect(r.fromDate).toBe(restaDeCalendario(r.toDate, 181));
+  });
+
+  it("los presets cubren los días prometidos en cualquier zona", () => {
+    const dias = (r: { fromDate: string; toDate: string }) =>
+      Math.round(
+        (Date.parse(`${r.toDate}T12:00:00Z`) -
+          Date.parse(`${r.fromDate}T12:00:00Z`)) /
+          86_400_000,
+      ) + 1;
+
+    for (const tz of ["Europe/Madrid", "America/Santiago", "Pacific/Auckland"]) {
+      // Se recorre un año entero de instantes para atrapar cualquier cruce.
+      for (let dia = 0; dia < 365; dia += 7) {
+        const ahora = Date.UTC(2026, 0, 1, 22, 0, 0) + dia * 86_400_000;
+        expect(dias(parseRange({ preset: "4w" }, ahora, tz))).toBe(28);
+        expect(dias(parseRange({ preset: "6m" }, ahora, tz))).toBe(182);
+        expect(dias(parseRange({ preset: "year" }, ahora, tz))).toBe(365);
+      }
+    }
+  });
+});
