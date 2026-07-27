@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import { dayKeyFromISO } from "./day";
 import {
   averageRate,
+  bestWeekday,
   complianceSeries,
+  periodDelta,
   rollingMean,
+  type DayCompliance,
   type HabitSpec,
   type LogEntry,
 } from "./metrics";
@@ -140,5 +143,63 @@ describe("averageRate", () => {
     expect(
       averageRate([{ date: "a", scheduled: 0, done: 0, shielded: 0, rate: null }]),
     ).toBeNull();
+  });
+});
+
+function day(date: string, rate: number | null): DayCompliance {
+  return {
+    date,
+    scheduled: rate === null ? 0 : 1,
+    done: rate ?? 0,
+    shielded: 0,
+    rate,
+  };
+}
+
+describe("periodDelta", () => {
+  it("compara el último periodo con el anterior", () => {
+    const days = [
+      ...Array.from({ length: 2 }, (_, i) => day(`2026-07-0${i + 1}`, 0.5)),
+      ...Array.from({ length: 2 }, (_, i) => day(`2026-07-0${i + 3}`, 0.8)),
+    ];
+    expect(periodDelta(days, 2)).toEqual({
+      current: 0.8,
+      previous: 0.5,
+      deltaPoints: 30,
+    });
+  });
+
+  it("omite la comparación si no hay periodo anterior", () => {
+    const days = [day("2026-07-01", 0.6), day("2026-07-02", 0.6)];
+    expect(periodDelta(days, 2)).toEqual({
+      current: 0.6,
+      previous: null,
+      deltaPoints: null,
+    });
+  });
+
+  it("devuelve null si el periodo actual no tiene datos", () => {
+    expect(periodDelta([day("2026-07-01", null)], 2)).toBeNull();
+  });
+});
+
+describe("bestWeekday", () => {
+  it("elige el día de la semana con mejor tasa media", () => {
+    // 2026-07-20 lunes, 2026-07-21 martes, 2026-07-27 lunes
+    const days = [
+      day("2026-07-20", 0.4),
+      day("2026-07-21", 0.9),
+      day("2026-07-27", 0.6),
+    ];
+    expect(bestWeekday(days)).toEqual({ weekday: 2, rate: 0.9 });
+  });
+
+  it("promedia las repeticiones del mismo día de la semana", () => {
+    const days = [day("2026-07-20", 0.4), day("2026-07-27", 1)];
+    expect(bestWeekday(days)).toEqual({ weekday: 1, rate: 0.7 });
+  });
+
+  it("devuelve null sin datos", () => {
+    expect(bestWeekday([day("2026-07-20", null)])).toBeNull();
   });
 });

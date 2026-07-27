@@ -103,3 +103,54 @@ export function averageRate(days: DayCompliance[]): number | null {
   if (rates.length === 0) return null;
   return rates.reduce((a, b) => a + b, 0) / rates.length;
 }
+
+export type PeriodDelta = {
+  current: number;
+  previous: number | null;
+  /** Diferencia en puntos porcentuales, redondeada. */
+  deltaPoints: number | null;
+};
+
+/**
+ * Compara los últimos `periodDays` días con los `periodDays` anteriores.
+ * Se usan 28 días (cuatro semanas exactas) para que ambos periodos tengan la
+ * misma composición de días de la semana.
+ */
+export function periodDelta(
+  days: DayCompliance[],
+  periodDays: number,
+): PeriodDelta | null {
+  const current = averageRate(days.slice(-periodDays));
+  if (current === null) return null;
+
+  const previous = averageRate(days.slice(-periodDays * 2, -periodDays));
+  return {
+    current,
+    previous,
+    deltaPoints:
+      previous === null ? null : Math.round((current - previous) * 100),
+  };
+}
+
+export type WeekdayRate = { weekday: number; rate: number };
+
+/** Día de la semana (0=domingo) con mejor tasa media de cumplimiento. */
+export function bestWeekday(days: DayCompliance[]): WeekdayRate | null {
+  const sums = new Array(7).fill(0);
+  const counts = new Array(7).fill(0);
+
+  for (const d of days) {
+    if (d.rate === null) continue;
+    const weekday = new Date(`${d.date}T00:00:00Z`).getUTCDay();
+    sums[weekday] += d.rate;
+    counts[weekday] += 1;
+  }
+
+  let best: WeekdayRate | null = null;
+  for (let weekday = 0; weekday < 7; weekday++) {
+    if (counts[weekday] === 0) continue;
+    const rate = sums[weekday] / counts[weekday];
+    if (!best || rate > best.rate) best = { weekday, rate };
+  }
+  return best;
+}
