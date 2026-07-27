@@ -5,13 +5,16 @@ import { getMe } from "@/lib/spotify";
 import { parseRange } from "@/lib/stats/range";
 import { resolveTimeZone, localParts } from "@/lib/stats/local-time";
 import { getTotals } from "@/lib/stats/totals";
-import { getTopArtists, getTopTracks } from "@/lib/stats/tops";
-import { getByHour } from "@/lib/stats/time";
+import { getTopArtists, getTopTracks, getTopAlbums } from "@/lib/stats/tops";
+import { getByHour, getByWeekday, getByMonth } from "@/lib/stats/time";
 import { getStreaks } from "@/lib/stats/streaks";
 import TopBar from "@/components/TopBar";
 import RangePicker from "@/components/stats/RangePicker";
+import StatTiles from "@/components/stats/StatTiles";
 import TopList from "@/components/stats/TopList";
-import HourHistogram from "@/components/stats/HourHistogram";
+import HourClock from "@/components/stats/HourClock";
+import WeekdayBars from "@/components/stats/WeekdayBars";
+import MonthlyChart from "@/components/stats/MonthlyChart";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +25,14 @@ export const dynamic = "force-dynamic";
  */
 function ahoraMs(): number {
   return Date.now();
+}
+
+/** Minutos a "N h M min", o solo minutos si no llega a la hora. */
+function duracion(ms: number): string {
+  const minutos = Math.round(ms / 60000);
+  if (minutos < 60) return `${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  return `${horas.toLocaleString("es")} h ${minutos % 60} min`;
 }
 
 export default async function Portada({
@@ -38,48 +49,92 @@ export default async function Portada({
   const range = parseRange(params, ahora, timeZone);
   const hoy = localParts(ahora, timeZone).localDate;
 
-  const [me, totals, artistas, canciones, horas, rachas] = await Promise.all([
-    getMe(),
-    getTotals(db, range),
-    getTopArtists(db, range, "plays", 10),
-    getTopTracks(db, range, "plays", 10),
-    getByHour(db, range),
-    getStreaks(db, hoy),
-  ]);
+  const [me, totals, artistas, canciones, albumes, horas, semana, meses, rachas] =
+    await Promise.all([
+      getMe(),
+      getTotals(db, range),
+      getTopArtists(db, range, "plays", 10),
+      getTopTracks(db, range, "plays", 10),
+      getTopAlbums(db, range, "plays", 10),
+      getByHour(db, range),
+      getByWeekday(db, range),
+      getByMonth(db, range),
+      getStreaks(db, hoy),
+    ]);
 
   const minutos = Math.round(totals.msTotal / 60000);
+  const vacio = totals.reproducciones === 0;
 
   return (
     <main className="min-h-screen flex flex-col">
       <TopBar me={me} active="portada" />
 
-      <section className="px-8 py-6 hairline-b">
+      <section className="px-8 py-5 hairline-b">
         <RangePicker range={range} />
       </section>
 
-      <section className="px-8 py-16 hairline-b">
-        <p className="label-mono text-acid mb-6">{range.label}</p>
-        <p
-          className="display num-tabular text-[clamp(3.5rem,14vw,11rem)] text-acid leading-none"
-          style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
-        >
-          {minutos.toLocaleString("es")}
-        </p>
-        <p className="font-serif italic text-lg text-cream-dim mt-4">
-          minutos · {totals.reproducciones.toLocaleString("es")} reproducciones ·{" "}
-          {totals.artistas.toLocaleString("es")} artistas ·{" "}
-          {totals.diasActivos.toLocaleString("es")} días con música
-        </p>
-        {rachas.actual > 0 && (
-          <p className="label-mono text-mute mt-4">
-            Racha actual: {rachas.actual} días · Máxima: {rachas.maxima}
-          </p>
-        )}
+      {/* ---------------- Cifra protagonista ---------------- */}
+      <section className="px-8 pt-16 pb-12 hairline-b">
+        <div className="grid grid-cols-12 gap-6 items-end">
+          <div className="col-span-12 lg:col-span-7 fade-in">
+            <p className="label-mono text-acid mb-6">{range.label}</p>
+            <p
+              className="display num-tabular text-[clamp(4rem,15vw,12rem)] text-acid leading-[0.82]"
+              style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
+            >
+              {minutos.toLocaleString("es")}
+            </p>
+            <p className="font-serif italic text-xl text-cream-dim mt-6">
+              minutos de música
+              {totals.diasActivos > 0 && (
+                <> repartidos en {totals.diasActivos.toLocaleString("es")} días</>
+              )}
+            </p>
+          </div>
+
+          <div
+            className="col-span-12 lg:col-span-5 flex justify-center lg:justify-end fade-in"
+            style={{ animationDelay: "120ms" }}
+          >
+            <HourClock buckets={horas} />
+          </div>
+        </div>
       </section>
 
-      {totals.reproducciones === 0 ? (
-        <section className="px-8 py-16">
-          <p className="font-serif italic text-xl text-cream-dim max-w-lg">
+      {/* ---------------- Cifras secundarias ---------------- */}
+      <section className="hairline-b">
+        <StatTiles
+          tiles={[
+            {
+              label: "Reproducciones",
+              valor: totals.reproducciones.toLocaleString("es"),
+            },
+            {
+              label: "Artistas",
+              valor: totals.artistas.toLocaleString("es"),
+              nota: `${totals.canciones.toLocaleString("es")} canciones`,
+            },
+            {
+              label: "Racha actual",
+              valor: `${rachas.actual}`,
+              nota: `máxima ${rachas.maxima} días`,
+              acento: rachas.actual > 0,
+            },
+            {
+              label: "Tiempo total",
+              valor: duracion(totals.msTotal),
+              nota:
+                totals.msTotal > 86_400_000
+                  ? `${(totals.msTotal / 86_400_000).toFixed(1)} días seguidos`
+                  : undefined,
+            },
+          ]}
+        />
+      </section>
+
+      {vacio ? (
+        <section className="px-8 py-24">
+          <p className="font-serif italic text-2xl text-cream-dim max-w-xl leading-relaxed">
             Todavía no hay escuchas en este rango. La captura guarda lo que
             suene a partir de ahora; cuando importes tu histórico de Spotify
             aparecerá aquí todo lo anterior.
@@ -87,7 +142,13 @@ export default async function Portada({
         </section>
       ) : (
         <>
-          <section className="px-8 py-12 hairline-b grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* ---------------- Evolución ---------------- */}
+          <section className="px-8 py-12 hairline-b fade-in">
+            <MonthlyChart buckets={meses} />
+          </section>
+
+          {/* ---------------- Rankings ---------------- */}
+          <section className="px-8 py-12 hairline-b grid grid-cols-1 lg:grid-cols-3 gap-10">
             <TopList
               titulo="Artistas"
               entradas={artistas}
@@ -98,10 +159,18 @@ export default async function Portada({
               entradas={canciones}
               vacio="Nada en este rango."
             />
+            <TopList
+              titulo="Álbumes"
+              entradas={albumes}
+              vacio="Nada en este rango."
+            />
           </section>
 
+          {/* ---------------- Semana ---------------- */}
           <section className="px-8 py-12 hairline-b">
-            <HourHistogram buckets={horas} />
+            <div className="max-w-2xl">
+              <WeekdayBars buckets={semana} />
+            </div>
           </section>
         </>
       )}

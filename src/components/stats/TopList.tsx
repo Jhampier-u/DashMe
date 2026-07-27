@@ -1,11 +1,21 @@
-type Entrada = { key: string; name: string; plays: number; ms: number };
+type Entrada = {
+  key: string;
+  name: string;
+  plays: number;
+  ms: number;
+  artistName?: string;
+};
 
 /**
- * Muestra siempre las dos cifras, reproducciones y minutos.
+ * Ranking con la proporción dibujada detrás de cada fila.
  *
- * Un ranking ordenado solo por una de ellas induce a error: un artista de temas
- * largos gana por tiempo y pierde por número de escuchas, y quien vea una sola
- * columna no sabrá por qué está donde está.
+ * Los números solos no dicen si el primero arrasa o gana por poco. La barra de
+ * fondo convierte la lista en un gráfico sin ocupar más sitio ni añadir un
+ * elemento nuevo que leer.
+ *
+ * Se muestran siempre reproducciones y minutos: un artista de temas largos
+ * ordena distinto según cuál se mire, y enseñar solo uno dejaría al lector sin
+ * poder explicarse el orden que está viendo.
  */
 export default function TopList({
   titulo,
@@ -16,6 +26,8 @@ export default function TopList({
   entradas: Entrada[];
   vacio: string;
 }) {
+  const max = Math.max(1, ...entradas.map((e) => e.plays));
+
   return (
     <section>
       <p className="label-mono text-mute mb-4">{titulo}</p>
@@ -27,16 +39,35 @@ export default function TopList({
           {entradas.map((e, i) => (
             <li
               key={e.key}
-              className="flex items-baseline justify-between gap-4 py-2 hairline-b"
+              className="relative flex items-baseline justify-between gap-4 px-2 py-2.5 hairline-b overflow-hidden fade-in"
+              style={{ animationDelay: `${i * 40}ms` }}
             >
-              <span className="flex items-baseline gap-3 min-w-0">
-                <span className="label-mono text-mute num-tabular">
+              <span
+                aria-hidden
+                className="absolute inset-y-0 left-0 bg-acid/10"
+                style={{ width: `${(e.plays / max) * 100}%` }}
+              />
+
+              <span className="relative flex items-baseline gap-3 min-w-0">
+                <span
+                  className={`label-mono num-tabular ${
+                    i === 0 ? "text-acid" : "text-mute"
+                  }`}
+                >
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="truncate">{e.name}</span>
+                <span className="truncate">
+                  {e.name}
+                  {e.artistName && (
+                    <span className="text-mute"> · {e.artistName}</span>
+                  )}
+                </span>
               </span>
-              <span className="label-mono text-mute num-tabular whitespace-nowrap">
-                {e.plays} · {Math.round(e.ms / 60000)} min
+
+              <span className="relative label-mono text-mute num-tabular whitespace-nowrap">
+                {e.plays.toLocaleString("es")}
+                <span className="text-rule"> / </span>
+                {Math.round(e.ms / 60000).toLocaleString("es")}m
               </span>
             </li>
           ))}
