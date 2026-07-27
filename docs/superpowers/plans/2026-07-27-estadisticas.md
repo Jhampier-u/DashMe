@@ -276,16 +276,24 @@ let contador = 0;
 
 export function stream(over: SeedStream = {}): Required<SeedStream> {
   contador += 1;
+
+  // `!== undefined` y no `??` en los campos que admiten null: `??` trata un
+  // null explícito como ausente y devuelve el valor por defecto, así que
+  // `stream({ albumName: null })` produciría una fila *con* álbum. El test que
+  // quisiera comprobar el caso nulo pasaría probando otra cosa.
   return {
     ts: over.ts ?? 1_700_000_000_000 + contador * 1000,
     msPlayed: over.msPlayed ?? 210_000,
-    trackUri: over.trackUri ?? `spotify:track:seed${contador}`,
+    trackUri:
+      over.trackUri !== undefined
+        ? over.trackUri
+        : `spotify:track:seed${contador}`,
     trackName: over.trackName ?? "Alison",
     artistName: over.artistName ?? "Slowdive",
-    albumName: over.albumName ?? "Souvlaki",
+    albumName: over.albumName !== undefined ? over.albumName : "Souvlaki",
     localDate: over.localDate ?? "2026-03-15",
     localHour: over.localHour ?? 15,
-    skipped: over.skipped ?? null,
+    skipped: over.skipped !== undefined ? over.skipped : null,
     source: over.source ?? "live",
   };
 }
