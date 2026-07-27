@@ -9,6 +9,7 @@ import {
   mapRecentlyPlayed,
   type RecentlyPlayedResponse,
 } from "./map-recently-played";
+import { capturarTopsSiToca } from "./top-snapshots";
 
 const FILA = 1;
 const LIMITE = 50;
@@ -20,6 +21,7 @@ export type CaptureResult = {
   status: "ok" | "gap" | "omitida" | "error";
   inserted: number;
   fetched: number;
+  snapshots: number;
   message?: string;
 };
 
@@ -74,6 +76,7 @@ export async function runCapture(manual = false): Promise<CaptureResult> {
       status: "omitida",
       inserted: 0,
       fetched: 0,
+      snapshots: 0,
       message: "Otra ejecución acaba de correr.",
     };
   }
@@ -92,6 +95,14 @@ export async function runCapture(manual = false): Promise<CaptureResult> {
     const items = respuesta.items ?? [];
     const filas = mapRecentlyPlayed(items, timeZone);
     const inserted = await insertStreams(db, filas);
+
+    // Un fallo aquí no debe tumbar la captura de escuchas, que es lo urgente.
+    let snapshots = 0;
+    try {
+      snapshots = await capturarTopsSiToca();
+    } catch (e) {
+      console.warn("[captura] no se pudieron guardar los tops", e);
+    }
 
     const maxTs = filas.reduce((max, f) => (f.ts > max ? f.ts : max), 0);
     const nuevoCursor = maxTs > 0 ? maxTs : (estado?.lastPlayedAt ?? null);
@@ -113,11 +124,12 @@ export async function runCapture(manual = false): Promise<CaptureResult> {
       status: hayHueco ? "gap" : "ok",
       inserted,
       fetched: items.length,
+      snapshots,
     };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     await guardarEstado({ lastRunStatus: "error", lastError: message });
-    return { status: "error", inserted: 0, fetched: 0, message };
+    return { status: "error", inserted: 0, fetched: 0, snapshots: 0, message };
   }
 }
 
