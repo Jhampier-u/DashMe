@@ -7,7 +7,14 @@ export default function TopBar({
   active,
 }: {
   me: SpotifyUser;
-  active?: "index" | "library" | "tags" | "smart" | "stats" | "ajustes";
+  active?:
+    | "portada"
+    | "biblioteca"
+    | "library"
+    | "tags"
+    | "smart"
+    | "stats"
+    | "ajustes";
 }) {
   return (
     <header className="px-8 py-5 flex items-center justify-between hairline-b sticky top-0 bg-ink/85 backdrop-blur-md z-50">
@@ -20,20 +27,20 @@ export default function TopBar({
         </Link>
         <span className="label-mono text-mute hidden sm:inline">·</span>
         <nav className="hidden sm:flex items-center gap-5">
-          <NavLink href="/" active={active === "index"}>
-            Índice
+          <NavLink href="/" active={active === "portada"}>
+            Portada
+          </NavLink>
+          <NavLink href="/biblioteca" active={active === "biblioteca"}>
+            Biblioteca
           </NavLink>
           <NavLink href="/library" active={active === "library"}>
-            Biblioteca
+            Liked
           </NavLink>
           <NavLink href="/tags" active={active === "tags"}>
             Tags
           </NavLink>
           <NavLink href="/smart" active={active === "smart"}>
             Smart
-          </NavLink>
-          <NavLink href="/stats" active={active === "stats"}>
-            Stats
           </NavLink>
           <NavLink href="/ajustes" active={active === "ajustes"}>
             Ajustes
