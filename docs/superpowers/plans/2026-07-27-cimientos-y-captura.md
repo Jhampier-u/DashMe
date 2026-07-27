@@ -3370,6 +3370,195 @@ git commit -m "fix: restar días de calendario en los presets, no milisegundos"
 
 ---
 
+## Task 21: Error tipado y `attempt` privado en el núcleo HTTP
+
+Surge de la revisión de calidad de la Task 7. Se hace **antes** de la Task 14, porque el endpoint del cron tiene que ramificar según el tipo de error y retrofitear eso después cuesta más.
+
+**Files:**
+- Modify: `src/lib/spotify-core.ts`
+- Test: `tests/spotify-core.test.ts` (nuevo)
+
+- [ ] **Step 1: Escribir el test**
+
+Crea `tests/spotify-core.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { SpotifyApiError } from "@/lib/spotify-core";
+
+describe("SpotifyApiError", () => {
+  it("conserva status y retryAfterSec", () => {
+    const e = new SpotifyApiError("límite alcanzado", 429, 120);
+    expect(e.status).toBe(429);
+    expect(e.retryAfterSec).toBe(120);
+  });
+
+  it("permite omitir retryAfterSec", () => {
+    const e = new SpotifyApiError("no encontrado", 404);
+    expect(e.status).toBe(404);
+    expect(e.retryAfterSec).toBeUndefined();
+  });
+
+  it("es reconocible con instanceof y sigue siendo un Error", () => {
+    const e: unknown = new SpotifyApiError("x", 500);
+    expect(e).toBeInstanceOf(SpotifyApiError);
+    expect(e).toBeInstanceOf(Error);
+  });
+
+  it("expone el nombre para que aparezca en los logs", () => {
+    expect(new SpotifyApiError("x", 500).name).toBe("SpotifyApiError");
+  });
+
+  it("conserva el mensaje", () => {
+    expect(new SpotifyApiError("mensaje concreto", 500).message).toBe(
+      "mensaje concreto",
+    );
+  });
+});
+```
+
+- [ ] **Step 2: Ejecutar y verificar que falla**
+
+Run: `npm test -- spotify-core`
+Expected: FAIL — `SpotifyApiError` no está exportado.
+
+- [ ] **Step 3: Añadir la clase de error**
+
+En `src/lib/spotify-core.ts`, justo después del `import` y la constante `SPOTIFY_API`, añade:
+
+```ts
+/**
+ * Error de la Web API con el status HTTP accesible.
+ *
+ * Existe como clase y no como objeto con propiedades añadidas por cast porque
+ * hay dos consumidores con necesidades distintas: una página que solo muestra
+ * el mensaje, y el cron de captura, que debe decidir si registra el fallo o lo
+ * reintenta más tarde. Ramificar con `instanceof` es fiable; comprobar la
+ * forma de un objeto casteado, no.
+ */
+export class SpotifyApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly retryAfterSec?: number,
+  ) {
+    super(message);
+    this.name = "SpotifyApiError";
+  }
+}
+```
+
+- [ ] **Step 4: Usarla en los dos puntos donde se lanza**
+
+Sustituye el bloque del límite de espera:
+
+```ts
+    if (retryAfterSec > MAX_AUTO_WAIT_S) {
+      const minutes = Math.ceil(retryAfterSec / 60);
+      const err = new Error(
+        `Spotify rate limit: ${minutes} min de espera. Intenta más tarde.`,
+      ) as Error & { status?: number; retryAfterSec?: number };
+      err.status = 429;
+      err.retryAfterSec = retryAfterSec;
+      throw err;
+    }
+```
+
+por:
+
+```ts
+    if (retryAfterSec > MAX_AUTO_WAIT_S) {
+      const minutes = Math.ceil(retryAfterSec / 60);
+      throw new SpotifyApiError(
+        `Spotify rate limit: ${minutes} min de espera. Intenta más tarde.`,
+        429,
+        retryAfterSec,
+      );
+    }
+```
+
+Y el bloque de respuesta no correcta:
+
+```ts
+  if (!res.ok) {
+    const text = await res.text();
+    const err = new Error(`Spotify ${res.status}: ${text}`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
+  }
+```
+
+por:
+
+```ts
+  if (!res.ok) {
+    const text = await res.text();
+    throw new SpotifyApiError(`Spotify ${res.status}: ${text}`, res.status);
+  }
+```
+
+- [ ] **Step 5: Hacer privado el parámetro `attempt`**
+
+`attempt` es un detalle de la recursión y no debe formar parte de la firma pública. Renombra la función actual a `doRequest`, quítale el `export`, y añade encima el punto de entrada exportado:
+
+```ts
+/**
+ * Petición a la Web API con rate limiting y reintentos.
+ *
+ * Recibe el access token como argumento en vez de leerlo de la sesión, de modo
+ * que sirve tanto a las peticiones con sesión (`spotifyFetch`) como a las del
+ * cron sin cookie (`spotifyFetchHeadless`). Sin esta separación, la lógica de
+ * reintentos habría que duplicarla.
+ */
+export function spotifyRequest<T>(
+  accessToken: string,
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  return doRequest<T>(accessToken, path, init, 0);
+}
+
+async function doRequest<T>(
+  accessToken: string,
+  path: string,
+  init: RequestInit,
+  attempt: number,
+): Promise<T> {
+```
+
+La llamada recursiva del final pasa a ser `doRequest<T>(accessToken, path, init, attempt + 1)`.
+
+**No cambies nada más del cuerpo:** ni el orden del rate limiter, ni el conjunto de métodos idempotentes, ni el tope de 4 intentos, ni la fórmula del backoff.
+
+- [ ] **Step 6: Ejecutar y verificar que pasa**
+
+Run: `npm test -- spotify-core`
+Expected: PASS, 5 tests.
+
+- [ ] **Step 7: Verificar que nada más se rompió**
+
+Run: `npx tsc --noEmit && npm run lint && npm test`
+Expected: sin errores; toda la suite en verde.
+
+Comprueba también que ningún consumidor pasaba un cuarto argumento:
+
+```bash
+grep -rn "spotifyRequest(" src/ | grep -v "spotify-core.ts"
+```
+
+Expected: solo llamadas de tres argumentos.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add src/lib/spotify-core.ts tests/spotify-core.test.ts
+git commit -m "refactor: error tipado y attempt privado en el núcleo HTTP"
+```
+
+---
+
 ## Verificación final
 
 - [ ] **Todos los tests pasan**
