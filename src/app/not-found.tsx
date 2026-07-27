@@ -1,27 +1,21 @@
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { buttonStyle } from "@/components/ui/Button";
 
 export default function NotFound() {
   return (
-    <main className="max-w-xl mx-auto px-4 py-16">
-      <div className="pixel-window text-center">
-        <div className="text-6xl mb-4 untap-bobble inline-block">🗺️</div>
-        <h2 className="font-display text-[0.8rem] tracking-widest text-[var(--color-peach)] mb-3">
-          ZONA NO EXPLORADA
+    <main style={{ maxWidth: 460, margin: "0 auto", padding: "64px 16px" }}>
+      <Card style={{ textAlign: "center", padding: 32 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+          Esta página no existe
         </h2>
-        <p className="text-[var(--color-ink-soft)] text-lg mb-6">
-          Esta página no existe en el mapa.
+        <p style={{ fontSize: 13.5, color: "var(--m-ink-2)", marginBottom: 20 }}>
+          El enlace que has seguido no lleva a ninguna parte.
         </p>
-        <Link
-          href="/"
-          className="pixel-button pixel-edge font-display uppercase text-[0.65rem] tracking-wider px-4 py-3 inline-block"
-          style={{
-            background: "var(--color-mint)",
-            color: "var(--color-bg-deep)",
-          }}
-        >
+        <Link href="/" style={buttonStyle("primary")}>
           Volver al inicio
         </Link>
-      </div>
+      </Card>
     </main>
   );
 }
