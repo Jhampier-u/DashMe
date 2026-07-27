@@ -489,6 +489,8 @@ git commit -m "feat: conversión de instantes UTC a fecha y hora local"
 
 ## Task 4: Rangos de fechas
 
+> ⚠️ **Superada por la Task 17.** Esta tarea se implementó tal cual (commit `424fec7`) y la revisión de código encontró tres defectos: un fallo de cadena de prototipos, y dos problemas de diseño —límites en UTC contra datos en hora local, y presets rodantes contra rangos alineados a día—. La Task 17 la rehace sobre fechas locales. Se conserva aquí como registro de lo que se construyó y por qué cambió; **no la implementes de nuevo.**
+
 **Files:**
 - Create: `src/lib/stats/range.ts`
 - Test: `tests/range.test.ts`
@@ -2658,6 +2660,310 @@ Expected: el total de escuchas capturadas ha subido sin que hayas pulsado nada.
 ```bash
 git add README.md
 git commit -m "docs: documentar la captura de escuchas y su tarea programada"
+```
+
+---
+
+## Task 17: Rehacer los rangos sobre días locales
+
+Sustituye por completo a la Task 4. Implementa la decisión **D9** del documento de diseño.
+
+Tres defectos que arregla, todos confirmados ejecutando código en la revisión:
+
+1. **Cadena de prototipos.** `preset in PRESETS` deja pasar `"constructor"`, `"toString"`, `"__proto__"`. `PRESETS["constructor"]` resuelve a `Object`, se desestructura a `{label: undefined, days: undefined}` y produce `from: NaN`. Ese `NaN` se enlaza como `NULL` en SQLite, así que `BETWEEN NULL AND x` no coincide con nada: página vacía, sin error, contradiciendo la promesa del propio módulo de caer siempre al preset por defecto.
+2. **Límites en UTC contra datos en hora local.** `desde=2019-03-01` producía `2019-03-01T00:00:00Z` = 28 de febrero a las 19:00 en `America/Guayaquil`. Un rango de un día cubría cinco horas del día anterior y perdía las cinco últimas del día pedido.
+3. **Desbordamiento de calendario.** `Date.UTC(2019, 1, 30)` no da `NaN`: desborda al 2 de marzo. `?desde=2019-02-30` devolvía una etiqueta que decía "2019-02-30" y un rango que empezaba el 2 de marzo.
+
+**Files:**
+- Modify: `src/lib/stats/range.ts` (reescritura completa)
+- Modify: `tests/range.test.ts` (reescritura completa)
+
+- [ ] **Step 1: Reescribir el test**
+
+Sustituye por completo el contenido de `tests/range.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { parseRange, PRESETS } from "@/lib/stats/range";
+
+// 2026-07-27T12:00:00Z. En America/Guayaquil (UTC-5) son las 07:00 del día 27.
+const AHORA = Date.UTC(2026, 6, 27, 12, 0, 0);
+const TZ = "America/Guayaquil";
+
+describe("presets", () => {
+  it("por defecto devuelve las últimas 4 semanas en días locales", () => {
+    const r = parseRange({}, AHORA, TZ);
+    expect(r.toDate).toBe("2026-07-27");
+    expect(r.fromDate).toBe("2026-06-29");
+    expect(r.preset).toBe("4w");
+    expect(r.label).toBe(PRESETS["4w"].label);
+  });
+
+  it("resuelve el preset de 6 meses", () => {
+    const r = parseRange({ preset: "6m" }, AHORA, TZ);
+    expect(r.toDate).toBe("2026-07-27");
+    expect(r.fromDate).toBe("2026-01-26");
+    expect(r.preset).toBe("6m");
+  });
+
+  it("el preset histórico empieza en 1970", () => {
+    const r = parseRange({ preset: "all" }, AHORA, TZ);
+    expect(r.fromDate).toBe("1970-01-01");
+    expect(r.toDate).toBe("2026-07-27");
+  });
+
+  it("usa el día local, no el día UTC", () => {
+    // 2026-07-27T02:00:00Z son las 21:00 del día 26 en Guayaquil.
+    const madrugada = Date.UTC(2026, 6, 27, 2, 0, 0);
+    expect(parseRange({}, madrugada, TZ).toDate).toBe("2026-07-26");
+    expect(parseRange({}, madrugada, "UTC").toDate).toBe("2026-07-27");
+  });
+});
+
+describe("rangos personalizados", () => {
+  it("acepta un rango explícito y lo devuelve tal cual", () => {
+    const r = parseRange({ desde: "2019-03-01", hasta: "2019-07-31" }, AHORA, TZ);
+    expect(r.fromDate).toBe("2019-03-01");
+    expect(r.toDate).toBe("2019-07-31");
+    expect(r.preset).toBe("custom");
+  });
+
+  it("tiene prioridad sobre el preset", () => {
+    const r = parseRange(
+      { preset: "6m", desde: "2019-03-01", hasta: "2019-03-31" },
+      AHORA,
+      TZ,
+    );
+    expect(r.preset).toBe("custom");
+  });
+
+  it("intercambia las fechas si vienen al revés", () => {
+    const r = parseRange({ desde: "2019-07-31", hasta: "2019-03-01" }, AHORA, TZ);
+    expect(r.fromDate).toBe("2019-03-01");
+    expect(r.toDate).toBe("2019-07-31");
+  });
+
+  it("la etiqueta refleja el rango real, no la entrada cruda", () => {
+    const r = parseRange({ desde: "2019-07-31", hasta: "2019-03-01" }, AHORA, TZ);
+    expect(r.label).toBe("2019-03-01 → 2019-07-31");
+  });
+
+  it("admite un rango de un solo día", () => {
+    const r = parseRange({ desde: "2019-03-01", hasta: "2019-03-01" }, AHORA, TZ);
+    expect(r.fromDate).toBe("2019-03-01");
+    expect(r.toDate).toBe("2019-03-01");
+  });
+});
+
+describe("entradas inválidas", () => {
+  it("cae al preset por defecto si las fechas no tienen el formato", () => {
+    expect(parseRange({ desde: "no-es-fecha", hasta: "tampoco" }, AHORA, TZ).preset)
+      .toBe("4w");
+  });
+
+  it("rechaza una fecha que no existe en el calendario", () => {
+    // Date.UTC(2019, 1, 30) desborda silenciosamente al 2 de marzo.
+    expect(parseRange({ desde: "2019-02-30", hasta: "2019-03-31" }, AHORA, TZ).preset)
+      .toBe("4w");
+    expect(parseRange({ desde: "2019-13-01", hasta: "2019-12-31" }, AHORA, TZ).preset)
+      .toBe("4w");
+    expect(parseRange({ desde: "2019-04-31", hasta: "2019-05-31" }, AHORA, TZ).preset)
+      .toBe("4w");
+  });
+
+  it("acepta el 29 de febrero en año bisiesto", () => {
+    const r = parseRange({ desde: "2020-02-29", hasta: "2020-03-01" }, AHORA, TZ);
+    expect(r.preset).toBe("custom");
+    expect(r.fromDate).toBe("2020-02-29");
+  });
+
+  it("rechaza el 29 de febrero en año no bisiesto", () => {
+    expect(parseRange({ desde: "2019-02-29", hasta: "2019-03-01" }, AHORA, TZ).preset)
+      .toBe("4w");
+  });
+
+  it("ignora un rango con solo una de las dos fechas", () => {
+    expect(parseRange({ desde: "2019-03-01" }, AHORA, TZ).preset).toBe("4w");
+    expect(parseRange({ hasta: "2019-03-01" }, AHORA, TZ).preset).toBe("4w");
+  });
+
+  it("cae al preset por defecto si el preset no existe", () => {
+    expect(parseRange({ preset: "inventado" }, AHORA, TZ).preset).toBe("4w");
+  });
+
+  it("no deja pasar claves heredadas del prototipo", () => {
+    // `preset in PRESETS` las dejaba pasar y producía from: NaN, label: undefined.
+    for (const clave of ["constructor", "toString", "hasOwnProperty", "valueOf"]) {
+      const r = parseRange({ preset: clave }, AHORA, TZ);
+      expect(r.preset).toBe("4w");
+      expect(r.label).toBe(PRESETS["4w"].label);
+      expect(r.fromDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+});
+```
+
+- [ ] **Step 2: Ejecutar el test para verificar que falla**
+
+Run: `npm test -- range`
+Expected: FAIL. Los tests nuevos esperan `fromDate`/`toDate` y un tercer parámetro; la implementación actual devuelve `from`/`to` numéricos.
+
+- [ ] **Step 3: Reescribir la implementación**
+
+Sustituye por completo el contenido de `src/lib/stats/range.ts`:
+
+```ts
+/**
+ * Resolución de rangos temporales.
+ *
+ * Todas las consultas de estadísticas reciben un `StatsRange`. Los presets y el
+ * rango libre producen la misma estructura, así que "mis top artistas entre
+ * marzo y julio de 2019" no es un caso especial: es el caso general con otras
+ * fechas.
+ *
+ * Los límites son **fechas locales inclusivas** ('YYYY-MM-DD' en STATS_TZ), no
+ * marcas de tiempo epoch, y las consultas filtran por la columna `local_date`.
+ * Filtrar por `ts` en UTC desplazaba cada extremo cinco horas respecto al día
+ * local del usuario, y hacía que un preset y un rango manual equivalente
+ * devolvieran cifras distintas. Ver D9 en el documento de diseño.
+ *
+ * Módulo puro: sin `server-only`, sin base de datos.
+ */
+import { localParts } from "./local-time";
+
+export type PresetId = "4w" | "6m" | "year" | "all";
+
+export type StatsRange = {
+  /** 'YYYY-MM-DD' en STATS_TZ, inclusiva. */
+  fromDate: string;
+  /** 'YYYY-MM-DD' en STATS_TZ, inclusiva. */
+  toDate: string;
+  label: string;
+  preset: PresetId | "custom";
+};
+
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+/** Cota inferior del preset histórico. Anterior a cualquier escucha posible. */
+const INICIO_DE_LOS_TIEMPOS = "1970-01-01";
+
+export const PRESETS: Record<PresetId, { label: string; days: number | null }> = {
+  "4w": { label: "Últimas 4 semanas", days: 27 },
+  "6m": { label: "Últimos 6 meses", days: 181 },
+  year: { label: "Último año", days: 364 },
+  all: { label: "Histórico", days: null },
+};
+
+const PRESET_POR_DEFECTO: PresetId = "4w";
+
+export type RangeParams = {
+  preset?: string;
+  desde?: string;
+  hasta?: string;
+};
+
+/**
+ * Valida 'YYYY-MM-DD', incluyendo que la fecha exista en el calendario.
+ *
+ * La comprobación de ida y vuelta es imprescindible: `Date.UTC(2019, 1, 30)` no
+ * devuelve `NaN`, desborda silenciosamente al 2 de marzo. Sin ella, un rango
+ * mostraría una etiqueta que no corresponde con los datos consultados.
+ */
+function diaValido(valor: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor.trim());
+  if (!m) return null;
+
+  const [, y, mes, d] = m;
+  const v = new Date(Date.UTC(Number(y), Number(mes) - 1, Number(d)));
+
+  if (
+    v.getUTCFullYear() !== Number(y) ||
+    v.getUTCMonth() !== Number(mes) - 1 ||
+    v.getUTCDate() !== Number(d)
+  ) {
+    return null;
+  }
+
+  return `${y}-${mes}-${d}`;
+}
+
+function desdePreset(
+  preset: PresetId,
+  ahora: number,
+  timeZone: string,
+): StatsRange {
+  const { label, days } = PRESETS[preset];
+  const toDate = localParts(ahora, timeZone).localDate;
+
+  return {
+    fromDate:
+      days === null
+        ? INICIO_DE_LOS_TIEMPOS
+        : localParts(ahora - days * DIA_MS, timeZone).localDate,
+    toDate,
+    label,
+    preset,
+  };
+}
+
+/**
+ * Un rango explícito (ambas fechas válidas) tiene prioridad sobre el preset.
+ * Cualquier entrada inválida cae al preset por defecto en vez de lanzar: estos
+ * valores vienen de la URL y el usuario puede escribir cualquier cosa.
+ */
+export function parseRange(
+  params: RangeParams,
+  ahora: number,
+  timeZone: string,
+): StatsRange {
+  if (params.desde && params.hasta) {
+    const a = diaValido(params.desde);
+    const b = diaValido(params.hasta);
+
+    if (a !== null && b !== null) {
+      const fromDate = a <= b ? a : b;
+      const toDate = a <= b ? b : a;
+      return {
+        fromDate,
+        toDate,
+        // La etiqueta refleja el rango ya normalizado, no la entrada cruda:
+        // mostrar lo que el usuario tecleó cuando difiere de lo consultado es
+        // precisamente el fallo que esta reescritura elimina.
+        label: `${fromDate} → ${toDate}`,
+        preset: "custom",
+      };
+    }
+  }
+
+  const preset = params.preset;
+  // `hasOwnProperty` y no `in`: `in` recorre la cadena de prototipos, así que
+  // `?preset=constructor` pasaba el filtro y `PRESETS[preset]` resolvía a
+  // `Object`, produciendo un rango con `label: undefined`.
+  if (preset && Object.prototype.hasOwnProperty.call(PRESETS, preset)) {
+    return desdePreset(preset as PresetId, ahora, timeZone);
+  }
+
+  return desdePreset(PRESET_POR_DEFECTO, ahora, timeZone);
+}
+```
+
+Nota sobre los días de cada preset: bajan de 28/182/365 a 27/181/364 porque ahora ambos extremos son **inclusivos**. "Últimas 4 semanas" debe cubrir 28 días contando hoy, así que retrocede 27.
+
+- [ ] **Step 4: Ejecutar el test para verificar que pasa**
+
+Run: `npm test -- range`
+Expected: PASS, 16 tests.
+
+- [ ] **Step 5: Verificar tipos, lint y suite completa**
+
+Run: `npx tsc --noEmit && npm run lint && npm test`
+Expected: sin errores; ningún otro test roto.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/lib/stats/range.ts tests/range.test.ts
+git commit -m "fix: rangos alineados al día local en vez de a epochs UTC"
 ```
 
 ---

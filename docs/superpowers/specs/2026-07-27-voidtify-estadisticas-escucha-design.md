@@ -107,6 +107,31 @@ Los archivos se colocan en `data/import/`. Evita el límite de body de las Serve
 
 Con ~300 000 filas e índices adecuados, SQLite resuelve estas agregaciones en milisegundos. No se construyen rollups ni vistas materializadas hasta que exista un problema medido.
 
+### D9 — Los rangos se expresan y filtran en días locales, no en epochs
+
+*(Decisión tomada durante la implementación, tras detectarse el fallo en revisión de código. Sustituye el diseño original de la Task 4.)*
+
+`StatsRange` no lleva marcas de tiempo epoch, sino dos fechas locales inclusivas:
+
+```ts
+type StatsRange = {
+  fromDate: string;   // 'YYYY-MM-DD' en STATS_TZ, inclusiva
+  toDate: string;     // 'YYYY-MM-DD' en STATS_TZ, inclusiva
+  label: string;
+  preset: PresetId | "custom";
+};
+```
+
+Y todas las consultas filtran `WHERE local_date BETWEEN :fromDate AND :toDate`, aprovechando que la comparación lexicográfica de `YYYY-MM-DD` coincide con el orden cronológico y que el índice `streams_local_date_idx` ya existe.
+
+**El problema que resuelve.** El diseño original construía los límites con `Date.UTC` y filtraba por `ts`. Pero cada fila guarda `local_date` en la zona del usuario (`America/Guayaquil`, UTC−5). Pedir `desde=2019-03-01` producía `2019-03-01T00:00:00Z`, que en hora local son las **19:00 del 28 de febrero**: un "rango de un día" cubría cinco horas del día anterior y se dejaba fuera las cinco últimas del día pedido. Exactamente la clase de desfase silencioso que D4 existe para evitar, reintroducida por la puerta de atrás.
+
+**El segundo problema que resuelve.** Los presets eran ventanas rodantes al milisegundo (`ahora − 28 días`) mientras que los rangos manuales estaban alineados a día completo. "Últimas 4 semanas" y un rango manual del mismo periodo podían diferir hasta en 24 horas por cada extremo sin ninguna explicación visible. Al alinear todo al día local, un preset y su equivalente manual devuelven las mismas cifras.
+
+**Coste.** Los presets pasan a incluir el día en curso completo, no las últimas N×24 horas exactas. Es lo que un usuario espera al leer "últimas 4 semanas", así que no se considera una pérdida.
+
+`parseRange` necesita por tanto recibir la zona horaria, además de los parámetros y el instante actual.
+
 ---
 
 ## 5. Modelo de datos
@@ -349,9 +374,16 @@ Módulos en `src/lib/stats/`, cada uno con un propósito y testeable de forma ai
 **Contrato común:**
 
 ```ts
-type StatsRange = { from: number; to: number; label: string }
+type StatsRange = {
+  fromDate: string;   // 'YYYY-MM-DD' en STATS_TZ, inclusiva
+  toDate: string;     // 'YYYY-MM-DD' en STATS_TZ, inclusiva
+  label: string;
+  preset: PresetId | "custom";
+}
 type Metric = "plays" | "ms"
 ```
+
+Las consultas filtran por `local_date BETWEEN :fromDate AND :toDate` (ver D9), nunca por `ts`. La única excepción son las consultas que necesitan el instante exacto y no un rango — la primera y la última vez que sonó algo — que sí leen `ts` directamente.
 
 Toda función de ranking acepta `metric`, por defecto `"plays"`. La UI muestra **siempre las dos cifras**: un artista de temas largos gana por tiempo y pierde por reproducciones, y presentar solo una induce a error.
 
