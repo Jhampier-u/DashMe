@@ -94,12 +94,17 @@ export const streams = sqliteTable(
     localDate: text("local_date").notNull(),
     /** 0-23 en STATS_TZ. */
     localHour: integer("local_hour").notNull(),
+    /** NULL en filas `live`. */
     reasonStart: text("reason_start"),
+    /** NULL en filas `live`. */
     reasonEnd: text("reason_end"),
-    shuffle: integer("shuffle"),
-    skipped: integer("skipped"),
+    /** NULL en filas `live`: recently-played no informa de esto. */
+    shuffle: integer("shuffle", { mode: "boolean" }),
+    /** NULL en filas `live`. Las estadísticas de skips solo usan `import`. */
+    skipped: integer("skipped", { mode: "boolean" }),
     platform: text("platform"),
-    /** 'live' | 'import'. */
+    /** 'live' | 'import'. Restringido por CHECK en el DDL: el borrado de D2
+     *  depende de que el valor sea exactamente 'live'. */
     source: text("source").notNull(),
     dedupKey: text("dedup_key").notNull().unique(),
   },

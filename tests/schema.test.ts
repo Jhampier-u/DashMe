@@ -55,4 +55,29 @@ describe("esquema", () => {
     insertar.run(1, "usuario", "token", Date.now());
     expect(() => insertar.run(2, "otro", "token", Date.now())).toThrow(/CHECK/);
   });
+
+  it("rechaza un valor de source fuera de 'live' e 'import'", () => {
+    const { sqlite } = createTestDb();
+    const insertar = sqlite.prepare(`
+      INSERT INTO streams
+        (ts, ms_played, track_name, artist_name, track_key, artist_key,
+         local_date, local_hour, source, dedup_key)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const fila = (source: string, dedup: string) => [
+      1_700_000_000_000, 210_000, "Alison", "Slowdive",
+      "slowdivealison", "slowdive", "2023-11-14", 15, source, dedup,
+    ];
+
+    // Los dos valores legítimos entran.
+    expect(() => insertar.run(...fila("live", "a"))).not.toThrow();
+    expect(() => insertar.run(...fila("import", "b"))).not.toThrow();
+
+    // El borrado de la regla "el dump manda" busca source = 'live' exacto.
+    // Una variante de mayúsculas o con espacios rompería la deduplicación en
+    // silencio, así que la base tiene que rechazarla.
+    expect(() => insertar.run(...fila("Live", "c"))).toThrow(/CHECK/);
+    expect(() => insertar.run(...fila("live ", "d"))).toThrow(/CHECK/);
+    expect(() => insertar.run(...fila("", "e"))).toThrow(/CHECK/);
+  });
 });

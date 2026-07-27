@@ -75,7 +75,7 @@ export const SCHEMA_SQL = `
       shuffle       INTEGER,
       skipped       INTEGER,
       platform      TEXT,
-      source        TEXT NOT NULL,
+      source        TEXT NOT NULL CHECK (source IN ('live', 'import')),
       dedup_key     TEXT NOT NULL UNIQUE
     );
     CREATE INDEX IF NOT EXISTS streams_ts_idx         ON streams(ts);
