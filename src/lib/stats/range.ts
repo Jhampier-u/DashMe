@@ -6,24 +6,36 @@
  * marzo y julio de 2019" no es un caso especial: es el caso general con otras
  * fechas.
  *
+ * Los límites son **fechas locales inclusivas** ('YYYY-MM-DD' en STATS_TZ), no
+ * marcas de tiempo epoch, y las consultas filtran por la columna `local_date`.
+ * Filtrar por `ts` en UTC desplazaba cada extremo cinco horas respecto al día
+ * local del usuario, y hacía que un preset y un rango manual equivalente
+ * devolvieran cifras distintas. Ver D9 en el documento de diseño.
+ *
  * Módulo puro: sin `server-only`, sin base de datos.
  */
+import { localParts } from "./local-time";
 
 export type PresetId = "4w" | "6m" | "year" | "all";
 
 export type StatsRange = {
-  from: number;
-  to: number;
+  /** 'YYYY-MM-DD' en STATS_TZ, inclusiva. */
+  fromDate: string;
+  /** 'YYYY-MM-DD' en STATS_TZ, inclusiva. */
+  toDate: string;
   label: string;
   preset: PresetId | "custom";
 };
 
 const DIA_MS = 24 * 60 * 60 * 1000;
 
+/** Cota inferior del preset histórico. Anterior a cualquier escucha posible. */
+const INICIO_DE_LOS_TIEMPOS = "1970-01-01";
+
 export const PRESETS: Record<PresetId, { label: string; days: number | null }> = {
-  "4w": { label: "Últimas 4 semanas", days: 28 },
-  "6m": { label: "Últimos 6 meses", days: 182 },
-  year: { label: "Último año", days: 365 },
+  "4w": { label: "Últimas 4 semanas", days: 27 },
+  "6m": { label: "Últimos 6 meses", days: 181 },
+  year: { label: "Último año", days: 364 },
   all: { label: "Histórico", days: null },
 };
 
@@ -35,24 +47,45 @@ export type RangeParams = {
   hasta?: string;
 };
 
-/** Convierte 'YYYY-MM-DD' a epoch ms UTC. Devuelve null si no es válida. */
-function parseDia(valor: string, finDelDia: boolean): number | null {
+/**
+ * Valida 'YYYY-MM-DD', incluyendo que la fecha exista en el calendario.
+ *
+ * La comprobación de ida y vuelta es imprescindible: `Date.UTC(2019, 1, 30)` no
+ * devuelve `NaN`, desborda silenciosamente al 2 de marzo. Sin ella, un rango
+ * mostraría una etiqueta que no corresponde con los datos consultados.
+ */
+function diaValido(valor: string): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor.trim());
   if (!m) return null;
 
   const [, y, mes, d] = m;
-  const ts = finDelDia
-    ? Date.UTC(Number(y), Number(mes) - 1, Number(d), 23, 59, 59, 999)
-    : Date.UTC(Number(y), Number(mes) - 1, Number(d), 0, 0, 0, 0);
+  const v = new Date(Date.UTC(Number(y), Number(mes) - 1, Number(d)));
 
-  return Number.isNaN(ts) ? null : ts;
+  if (
+    v.getUTCFullYear() !== Number(y) ||
+    v.getUTCMonth() !== Number(mes) - 1 ||
+    v.getUTCDate() !== Number(d)
+  ) {
+    return null;
+  }
+
+  return `${y}-${mes}-${d}`;
 }
 
-function desdePreset(preset: PresetId, ahora: number): StatsRange {
+function desdePreset(
+  preset: PresetId,
+  ahora: number,
+  timeZone: string,
+): StatsRange {
   const { label, days } = PRESETS[preset];
+  const toDate = localParts(ahora, timeZone).localDate;
+
   return {
-    from: days === null ? 0 : ahora - days * DIA_MS,
-    to: ahora,
+    fromDate:
+      days === null
+        ? INICIO_DE_LOS_TIEMPOS
+        : localParts(ahora - days * DIA_MS, timeZone).localDate,
+    toDate,
     label,
     preset,
   };
@@ -63,27 +96,37 @@ function desdePreset(preset: PresetId, ahora: number): StatsRange {
  * Cualquier entrada inválida cae al preset por defecto en vez de lanzar: estos
  * valores vienen de la URL y el usuario puede escribir cualquier cosa.
  */
-export function parseRange(params: RangeParams, ahora: number): StatsRange {
+export function parseRange(
+  params: RangeParams,
+  ahora: number,
+  timeZone: string,
+): StatsRange {
   if (params.desde && params.hasta) {
-    const a = parseDia(params.desde, false);
-    const b = parseDia(params.hasta, true);
+    const a = diaValido(params.desde);
+    const b = diaValido(params.hasta);
 
     if (a !== null && b !== null) {
-      const from = Math.min(a, b);
-      const to = Math.max(a, b);
+      const fromDate = a <= b ? a : b;
+      const toDate = a <= b ? b : a;
       return {
-        from,
-        to,
-        label: `${params.desde} → ${params.hasta}`,
+        fromDate,
+        toDate,
+        // La etiqueta refleja el rango ya normalizado, no la entrada cruda:
+        // mostrar lo que el usuario tecleó cuando difiere de lo consultado es
+        // precisamente el fallo que esta reescritura elimina.
+        label: `${fromDate} → ${toDate}`,
         preset: "custom",
       };
     }
   }
 
   const preset = params.preset;
-  if (preset && preset in PRESETS) {
-    return desdePreset(preset as PresetId, ahora);
+  // `hasOwnProperty` y no `in`: `in` recorre la cadena de prototipos, así que
+  // `?preset=constructor` pasaba el filtro y `PRESETS[preset]` resolvía a
+  // `Object`, produciendo un rango con `label: undefined`.
+  if (preset && Object.prototype.hasOwnProperty.call(PRESETS, preset)) {
+    return desdePreset(preset as PresetId, ahora, timeZone);
   }
 
-  return desdePreset(PRESET_POR_DEFECTO, ahora);
+  return desdePreset(PRESET_POR_DEFECTO, ahora, timeZone);
 }
