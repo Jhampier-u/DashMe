@@ -3721,6 +3721,132 @@ git commit -m "fix: no marcar hueco en la primera ejecución de captura"
 
 ---
 
+## Task 20: Cerrar los huecos del test de paridad
+
+Surge de la revisión de calidad de la Task 18, que demostró ejecutando código que el test promete más de lo que detecta.
+
+**Files:**
+- Modify: `tests/schema-parity.test.ts`
+
+- [ ] **Step 1: Tabla que existe solo en el DDL**
+
+El test descubre las tablas recorriendo `Object.values(schema)` — las definiciones de Drizzle — y solo compara las que encuentra ahí. Una tabla añadida al DDL sin su `sqliteTable()` correspondiente es **completamente invisible**: el revisor añadió una y el test siguió pasando sin señalar nada.
+
+Añade al `describe` existente:
+
+```ts
+  it("no hay tablas en el DDL que falten en Drizzle", () => {
+    const { sqlite } = createTestDb();
+
+    const enSqlite = (
+      sqlite
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' " +
+            "AND name NOT LIKE 'sqlite_%'",
+        )
+        .all() as { name: string }[]
+    ).map((f) => f.name);
+
+    const enDrizzle = new Set(tablas.map((t) => getTableConfig(t).name));
+
+    // La comparación por columnas solo recorre tablas que ya existen en
+    // Drizzle, así que una tabla creada únicamente en el DDL no la ve nadie.
+    const soloEnDdl = enSqlite.filter((n) => !enDrizzle.has(n));
+    expect(soloEnDdl).toEqual([]);
+  });
+```
+
+Para que `tablas` sea visible desde este test, súbelo del cuerpo del primer `it` al ámbito del `describe` si no lo está ya.
+
+- [ ] **Step 2: Pérdida de un UNIQUE**
+
+El test compara nombres de columna y nulabilidad, pero no restricciones de unicidad. El revisor simuló quitar el `UNIQUE` de `dedup_key` dejando el `.unique()` en Drizzle: el test no dijo nada, y una segunda inserción con clave duplicada pasó.
+
+Eso importa más que ningún otro tipo de divergencia aquí, porque **toda la idempotencia de la ingesta depende de esa restricción**. Sin ella, reimportar un archivo del dump duplica cada fila en silencio.
+
+```ts
+  it("las columnas únicas en Drizzle lo son también en el DDL", () => {
+    const { sqlite } = createTestDb();
+    const problemas: string[] = [];
+
+    for (const tabla of tablas) {
+      const config = getTableConfig(tabla);
+
+      const indices = sqlite
+        .prepare(`PRAGMA index_list(${config.name})`)
+        .all() as { name: string; unique: number }[];
+
+      // Columnas cubiertas por algún índice único de una sola columna.
+      const unicasEnSqlite = new Set<string>();
+      for (const idx of indices.filter((i) => i.unique === 1)) {
+        const cols = sqlite
+          .prepare(`PRAGMA index_info(${idx.name})`)
+          .all() as { name: string }[];
+        if (cols.length === 1) unicasEnSqlite.add(cols[0].name);
+      }
+
+      for (const col of config.columns) {
+        if (!col.isUnique) continue;
+        if (!unicasEnSqlite.has(col.name)) {
+          problemas.push(
+            `${config.name}.${col.name}: única en Drizzle pero sin UNIQUE en el DDL`,
+          );
+        }
+      }
+    }
+
+    expect(problemas).toEqual([]);
+  });
+```
+
+- [ ] **Step 3: Quitar el número mágico**
+
+`expect(tablas.length).toBeGreaterThanOrEqual(11)` deja de significar nada en cuanto se añada la tabla número doce, y nadie tendrá motivo para actualizarlo. Átalo al DDL:
+
+```ts
+  it("compara todas las tablas del esquema", () => {
+    const enDdl = (SCHEMA_SQL.match(/CREATE TABLE/g) ?? []).length;
+    expect(tablas.length).toBe(enDdl);
+  });
+```
+
+Necesitarás `import { SCHEMA_SQL } from "@/db/schema-sql";`.
+
+- [ ] **Step 4: Sustituir el try/catch por `isTable`**
+
+`getTableConfigSeguro` usa una excepción para discriminar tipos. `drizzle-orm` ya exporta un predicado real, y usarlo elimina el riesgo de que un error interno legítimo se trague y se interprete como "no es una tabla":
+
+```ts
+import { isTable } from "drizzle-orm";
+
+const tablas = Object.values(schema).filter(isTable) as Parameters<
+  typeof getTableConfig
+>[0][];
+```
+
+Borra `getTableConfigSeguro` por completo.
+
+- [ ] **Step 5: Demostrar que cada test nuevo detecta lo que promete**
+
+Para cada uno de los dos primeros, introduce la divergencia a mano, comprueba que el test falla señalándola, y deshaz el cambio:
+
+1. Añade una tabla al `SCHEMA_SQL` sin su definición Drizzle → debe fallar el test del Step 1 nombrándola.
+2. Quita `UNIQUE` de `dedup_key` en el DDL dejando `.unique()` en Drizzle → debe fallar el test del Step 2 nombrando `streams.dedup_key`.
+
+**Un test que no se ha visto fallar no es un test.** Reporta los dos mensajes de fallo.
+
+- [ ] **Step 6: Verificar y commitear**
+
+Run: `npx tsc --noEmit && npm run lint && npm test`
+Expected: sin errores, toda la suite en verde.
+
+```bash
+git add tests/schema-parity.test.ts
+git commit -m "test: detectar tablas solo en el DDL y pérdidas de UNIQUE"
+```
+
+---
+
 ## Verificación final
 
 - [ ] **Todos los tests pasan**
