@@ -4,6 +4,7 @@ import {
   dayKey,
   dayKeyFromISO,
   daysBetween,
+  formatDayLabel,
   isoFromDayKey,
   localDayRange,
   normalizeDayKey,
@@ -94,6 +95,17 @@ describe("weekdayOf", () => {
     expect(weekdayOf(dayKeyFromISO("2026-07-27")!)).toBe(1); // lunes
     expect(weekdayOf(dayKeyFromISO("2026-07-25")!)).toBe(6); // sábado
     expect(weekdayOf(dayKeyFromISO("2026-07-26")!)).toBe(0); // domingo
+  });
+});
+
+describe("formatDayLabel", () => {
+  it("no corre la fecha en husos negativos", () => {
+    // Con TZ=America/Lima, formatear sin timeZone daría "26 jul".
+    expect(formatDayLabel("2026-07-27")).toBe("27 jul");
+  });
+
+  it("formatea el primero de mes", () => {
+    expect(formatDayLabel("2026-01-01")).toBe("1 ene");
   });
 });
 
