@@ -2,7 +2,7 @@
 // devuelve números. Las consultas viven en lib/home.ts.
 
 import { addDays, isoFromDayKey } from "./day";
-import { isScheduledOn } from "./streak";
+import { isScheduledOn, sanitizeSchedule } from "./streak";
 
 /** Cuánto suma un día marcado en modo mínimo. */
 export const PARTIAL_WEIGHT = 0.5;
@@ -20,6 +20,37 @@ export type LogEntry = {
   partial: boolean;
   shielded: boolean;
 };
+
+export type HabitRow = {
+  id: string;
+  schedule: string;
+  /** Clave del día en que se creó el hábito. */
+  createdKey: Date;
+};
+
+/**
+ * Desde cuándo cuenta cada hábito: su creación o su registro más antiguo, lo
+ * que sea anterior. Rellenar días hacia atrás no debe dejarlos fuera del
+ * denominador.
+ */
+export function buildHabitSpecs(habits: HabitRow[], logs: LogEntry[]): HabitSpec[] {
+  const earliest = new Map<string, number>();
+  for (const entry of logs) {
+    const t = entry.day.getTime();
+    const previous = earliest.get(entry.habitId);
+    if (previous === undefined || t < previous) earliest.set(entry.habitId, t);
+  }
+
+  return habits.map((h) => {
+    const first = earliest.get(h.id);
+    const created = h.createdKey.getTime();
+    return {
+      id: h.id,
+      schedule: sanitizeSchedule(h.schedule),
+      since: new Date(first === undefined ? created : Math.min(created, first)),
+    };
+  });
+}
 
 export type DayCompliance = {
   date: string;

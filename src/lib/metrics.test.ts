@@ -3,6 +3,7 @@ import { dayKeyFromISO } from "./day";
 import {
   averageRate,
   bestWeekday,
+  buildHabitSpecs,
   complianceSeries,
   periodDelta,
   rollingMean,
@@ -180,6 +181,47 @@ describe("periodDelta", () => {
 
   it("devuelve null si el periodo actual no tiene datos", () => {
     expect(periodDelta([day("2026-07-01", null)], 2)).toBeNull();
+  });
+});
+
+describe("buildHabitSpecs", () => {
+  const created = key("2026-07-10");
+
+  it("sin registros, arranca en la fecha de creación", () => {
+    const specs = buildHabitSpecs([{ id: "a", schedule: "1111111", createdKey: created }], []);
+    expect(specs[0].since.getTime()).toBe(created.getTime());
+  });
+
+  it("con registros posteriores, sigue arrancando en la creación", () => {
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [{ habitId: "a", day: key("2026-07-15"), partial: false, shielded: false }],
+    );
+    expect(specs[0].since.getTime()).toBe(created.getTime());
+  });
+
+  it("con relleno hacia atrás, arranca en el registro más antiguo", () => {
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [
+        { habitId: "a", day: key("2026-07-15"), partial: false, shielded: false },
+        { habitId: "a", day: key("2026-07-02"), partial: false, shielded: false },
+      ],
+    );
+    expect(specs[0].since.getTime()).toBe(key("2026-07-02").getTime());
+  });
+
+  it("ignora los registros de otros hábitos", () => {
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [{ habitId: "b", day: key("2026-07-02"), partial: false, shielded: false }],
+    );
+    expect(specs[0].since.getTime()).toBe(created.getTime());
+  });
+
+  it("normaliza el calendario", () => {
+    const specs = buildHabitSpecs([{ id: "a", schedule: "", createdKey: created }], []);
+    expect(specs[0].schedule).toBe("1111111");
   });
 });
 

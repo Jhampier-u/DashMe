@@ -1,13 +1,13 @@
 import { prisma } from "./prisma";
 import { addDays, dayKey, normalizeDayKey } from "./day";
-import { isCriticalDay, isScheduledOn, sanitizeSchedule } from "./streak";
+import { isCriticalDay, isScheduledOn } from "./streak";
 import {
   bestWeekday,
+  buildHabitSpecs,
   complianceSeries,
   periodDelta,
   rollingMean,
   type DayCompliance,
-  type HabitSpec,
   type PeriodDelta,
   type WeekdayRate,
 } from "./metrics";
@@ -60,22 +60,10 @@ export async function getHomeMetrics(): Promise<HomeMetrics> {
 
   // Un hábito cuenta desde su creación o desde su registro más antiguo, lo que
   // sea anterior: rellenar hacia atrás no debe dejar días fuera del denominador.
-  const firstLog = new Map<string, number>();
-  for (const entry of entries) {
-    const previous = firstLog.get(entry.habitId);
-    const t = entry.day.getTime();
-    if (previous === undefined || t < previous) firstLog.set(entry.habitId, t);
-  }
-
-  const specs: HabitSpec[] = habits.map((h) => {
-    const created = dayKey(h.createdAt).getTime();
-    const earliest = firstLog.get(h.id);
-    return {
-      id: h.id,
-      schedule: sanitizeSchedule(h.schedule),
-      since: new Date(earliest === undefined ? created : Math.min(created, earliest)),
-    };
-  });
+  const specs = buildHabitSpecs(
+    habits.map((h) => ({ id: h.id, schedule: h.schedule, createdKey: dayKey(h.createdAt) })),
+    entries,
+  );
 
   const series = complianceSeries(specs, entries, from, today);
   const mean = rollingMean(series.map((d) => d.rate), MEAN_WINDOW);
