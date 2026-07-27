@@ -94,6 +94,6 @@ describe("seedStreams", () => {
       .prepare("SELECT artist_key, track_key FROM streams")
       .get() as { artist_key: string; track_key: string };
     expect(f.artist_key).toBe("beyonce");
-    expect(f.track_key).toBe("beyoncehalo");
+    expect(f.track_key).toBe("beyonce\u001Fhalo");
   });
 });
