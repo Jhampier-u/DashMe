@@ -2694,7 +2694,8 @@ describe("presets", () => {
   it("por defecto devuelve las últimas 4 semanas en días locales", () => {
     const r = parseRange({}, AHORA, TZ);
     expect(r.toDate).toBe("2026-07-27");
-    expect(r.fromDate).toBe("2026-06-29");
+    // 30 jun → 27 jul son 28 días contando ambos extremos.
+    expect(r.fromDate).toBe("2026-06-30");
     expect(r.preset).toBe("4w");
     expect(r.label).toBe(PRESETS["4w"].label);
   });
@@ -2702,8 +2703,32 @@ describe("presets", () => {
   it("resuelve el preset de 6 meses", () => {
     const r = parseRange({ preset: "6m" }, AHORA, TZ);
     expect(r.toDate).toBe("2026-07-27");
-    expect(r.fromDate).toBe("2026-01-26");
+    // 27 ene → 27 jul son 182 días contando ambos extremos.
+    expect(r.fromDate).toBe("2026-01-27");
     expect(r.preset).toBe("6m");
+  });
+
+  it("resuelve el preset de un año", () => {
+    const r = parseRange({ preset: "year" }, AHORA, TZ);
+    expect(r.toDate).toBe("2026-07-27");
+    // 28 jul 2025 → 27 jul 2026 son 365 días contando ambos extremos.
+    expect(r.fromDate).toBe("2025-07-28");
+    expect(r.preset).toBe("year");
+  });
+
+  it("cada preset cubre exactamente los días que promete su nombre", () => {
+    // Ancla la aritmética de extremos inclusivos: si alguien cambia `days`
+    // sin pensar, esto se rompe antes de que las cifras salgan mal en la UI.
+    const dias = (r: { fromDate: string; toDate: string }) =>
+      Math.round(
+        (Date.parse(`${r.toDate}T12:00:00Z`) -
+          Date.parse(`${r.fromDate}T12:00:00Z`)) /
+          86_400_000,
+      ) + 1;
+
+    expect(dias(parseRange({ preset: "4w" }, AHORA, TZ))).toBe(28);
+    expect(dias(parseRange({ preset: "6m" }, AHORA, TZ))).toBe(182);
+    expect(dias(parseRange({ preset: "year" }, AHORA, TZ))).toBe(365);
   });
 
   it("el preset histórico empieza en 1970", () => {
@@ -2952,7 +2977,7 @@ Nota sobre los días de cada preset: bajan de 28/182/365 a 27/181/364 porque aho
 - [ ] **Step 4: Ejecutar el test para verificar que pasa**
 
 Run: `npm test -- range`
-Expected: PASS, 16 tests.
+Expected: PASS, 19 tests.
 
 - [ ] **Step 5: Verificar tipos, lint y suite completa**
 
