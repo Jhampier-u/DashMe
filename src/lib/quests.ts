@@ -21,7 +21,7 @@ export type QuestDef = {
 export const QUEST_DEFS: Record<QuestKind, QuestDef> = {
   QUEST_3_HABITS: {
     kind: "QUEST_3_HABITS",
-    label: "Trío del día",
+    label: "Tres hábitos",
     description: "Completa 3 hábitos hoy",
     emoji: "🎯",
     target: 3,
@@ -29,7 +29,7 @@ export const QUEST_DEFS: Record<QuestKind, QuestDef> = {
   },
   QUEST_EARLY: {
     kind: "QUEST_EARLY",
-    label: "Madrugador",
+    label: "Antes de las 10",
     description: "Marca 1 hábito antes de las 10:00",
     emoji: "🌅",
     target: 1,
@@ -37,7 +37,7 @@ export const QUEST_DEFS: Record<QuestKind, QuestDef> = {
   },
   QUEST_TASK: {
     kind: "QUEST_TASK",
-    label: "Productividad",
+    label: "Dos tareas",
     description: "Completa 2 tareas",
     emoji: "📝",
     target: 2,
@@ -45,7 +45,7 @@ export const QUEST_DEFS: Record<QuestKind, QuestDef> = {
   },
   QUEST_TREE: {
     kind: "QUEST_TREE",
-    label: "Constructor",
+    label: "Una subtarea",
     description: "Completa 1 subtarea de proyecto",
     emoji: "🌳",
     target: 1,
@@ -53,8 +53,8 @@ export const QUEST_DEFS: Record<QuestKind, QuestDef> = {
   },
   QUEST_PERFECT: {
     kind: "QUEST_PERFECT",
-    label: "Día perfecto",
-    description: "Cumple TODOS tus hábitos hoy",
+    label: "Día completo",
+    description: "Cumple todos tus hábitos de hoy",
     emoji: "🏆",
     target: 1,
     xpReward: 100,
