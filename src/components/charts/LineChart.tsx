@@ -71,6 +71,14 @@ export function LineChart({
   // Índice activo ya acotado: evita la aserción no nula `hover!` más abajo.
   const activeIndex = hover === null ? null : Math.min(line.length - 1, Math.max(0, hover));
 
+  const tooltipLeft = activeIndex === null ? 0 : (x(activeIndex) / W) * 100;
+  const tooltipAnchor =
+    tooltipLeft < 15
+      ? "translateX(0)"
+      : tooltipLeft > 85
+        ? "translateX(-100%)"
+        : "translateX(-50%)";
+
   return (
     <div style={{ position: "relative" }}>
       <svg
@@ -157,9 +165,11 @@ export function LineChart({
             position: "absolute",
             // Misma escala X que la cruceta del SVG: si difiriera, la cruceta
             // y el tooltip señalarían días distintos al pasar el mouse.
-            left: `${(x(activeIndex) / W) * 100}%`,
+            left: `${tooltipLeft}%`,
             top: 0,
-            transform: "translateX(-50%)",
+            // Cerca de los bordes el tooltip se ancla por su lado en vez de
+            // centrarse, para no desbordar la tarjeta.
+            transform: tooltipAnchor,
             pointerEvents: "none",
             background: "var(--m-elevated)",
             border: "1px solid var(--m-line)",
