@@ -43,6 +43,9 @@ next-env.d.ts
 /src/generated/prisma
 .env
 
+# Claude Code (ajustes locales de cada máquina)
+.claude/settings.local.json
+
 # SQLite (datos personales — no compartir)
 *.db
 *.db-journal

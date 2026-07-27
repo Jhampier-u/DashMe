@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { MonthCalendar } from "./MonthCalendar";
+import { fetchHabitStats } from "@/app/actions";
+import { on } from "@/lib/events";
 import type { HabitDetailStats } from "@/lib/stats";
 
 type Props = {
@@ -9,29 +11,34 @@ type Props = {
   habitName: string;
 };
 
-async function fetchStats(id: string) {
-  const res = await fetch(`/api/habit-stats?id=${id}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return (await res.json()) as HabitDetailStats;
-}
-
 export function HabitDetail({ habitId, habitName }: Props) {
   const [stats, setStats] = useState<HabitDetailStats | null>(null);
+  // Marcar días desde el calendario cambia racha, mejor racha y % de 30 días,
+  // así que las estadísticas se recargan con cada cambio de XP.
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => on("untap:xp", () => setVersion((v) => v + 1)), []);
 
   useEffect(() => {
-    fetchStats(habitId).then(setStats);
-  }, [habitId]);
+    let alive = true;
+    fetchHabitStats(habitId).then((s) => {
+      if (alive) setStats(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [habitId, version]);
 
   return (
     <div className="mt-3 flex flex-col gap-3">
       {stats ? (
-        <div className="grid grid-cols-4 gap-2">
-          <Stat label="HOY" value={stats.currentStreak} suffix="d racha" />
-          <Stat label="MEJOR" value={stats.bestStreak} suffix="d racha" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Stat label="RACHA" value={stats.currentStreak} suffix="días" />
+          <Stat label="MEJOR" value={stats.bestStreak} suffix="días" />
           <Stat
             label="30D"
             value={`${Math.round(stats.completionRate30 * 100)}%`}
-            suffix="cumplido"
+            suffix={`${stats.doneIn30}/${stats.scheduledIn30} que tocaban`}
           />
           <Stat label="TOTAL" value={stats.totalDone} suffix="veces" />
         </div>

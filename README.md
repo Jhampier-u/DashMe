@@ -167,35 +167,52 @@ untap/
 │   │   ├── garden/page.tsx    # /garden
 │   │   ├── tasks/page.tsx     # /tasks
 │   │   ├── projects/          # /projects + /projects/[id]
-│   │   ├── actions.ts         # Server Actions (mutaciones Prisma)
-│   │   ├── api/               # Endpoints JSON (habit-month, habit-stats)
+│   │   ├── actions.ts         # Server Actions (mutaciones + lecturas)
 │   │   ├── layout.tsx         # Layout raíz con NavBar
+│   │   ├── error.tsx          # Boundary de errores
+│   │   ├── not-found.tsx      # 404
 │   │   └── globals.css        # Tokens de diseño pixel art
 │   ├── components/            # Componentes pixel art reutilizables
 │   │   ├── NavBar.tsx
 │   │   ├── PlayerStatus.tsx
 │   │   ├── HabitToggle.tsx
-│   │   ├── HabitGarden.tsx
 │   │   ├── GardenScene.tsx
+│   │   ├── MonthCalendar.tsx
 │   │   ├── DailyQuestsPanel.tsx
 │   │   ├── AchievementToast.tsx
+│   │   ├── PixelConfirm.tsx   # Diálogo de confirmación propio
 │   │   ├── SoundEffects.tsx / SoundToggle.tsx
 │   │   └── ...
 │   └── lib/                   # Lógica de dominio
 │       ├── prisma.ts          # Cliente Prisma singleton
-│       ├── habits.ts          # Queries + cálculo de rachas
+│       ├── day.ts             # Claves de día locales  (+ tests)
+│       ├── streak.ts          # Rachas y calendarios    (+ tests)
+│       ├── habits.ts          # Queries de hábitos y jugador
 │       ├── level.ts           # Curva de XP y constantes
 │       ├── garden.ts          # Especies de plantas + etapas
-│       ├── quests.ts          # Generación de misiones diarias
-│       ├── stats.ts           # Estadísticas globales + heatmap
+│       ├── quests.ts          # Misiones diarias (progreso recalculado)
+│       ├── stats.ts           # Estadísticas + heatmap
+│       ├── events.ts          # Bus de eventos del cliente
 │       ├── tasks.ts           # Queries de tareas
 │       ├── projects.ts        # Queries de proyectos + árbol
 │       └── sound.ts           # Sintetizador WebAudio
 ├── Tareas.txt                 # Backlog de features
+├── vitest.config.mts
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
+## 🕐 Cómo se define "un día"
+
+Un día es tu **fecha de calendario local**, y se guarda como medianoche UTC de
+esa fecha (una *day key*). El día cambia a tu medianoche, no a la de Greenwich.
+
+> ⚠️ Si vienes de una versión anterior a este cambio, los registros que hiciste
+> **entre tu medianoche y la de UTC** (p. ej. después de las 19:00 en UTC-5) se
+> guardaron con la fecha del día siguiente. Esos registros antiguos se seguirán
+> viendo un día corridos; los nuevos ya son correctos. Se puede corregir a mano
+> desde el calendario de cada hábito.
 
 ---
 
@@ -256,6 +273,11 @@ npm rebuild better-sqlite3
 ### Sonidos no se oyen
 Activa el botón 🔊 en la NavBar (arriba a la derecha). Por defecto arranca muteado.
 
+### Una página se queda en "Cargando…" para siempre
+No añadas archivos `loading.tsx`. Con Next 16.2.4 + Turbopack y páginas
+`force-dynamic`, el fallback de Suspense nunca se sustituye por el contenido y
+la página queda colgada. Está pendiente de revisar en versiones futuras.
+
 ---
 
 ## ⌨️ Comandos cheatsheet
@@ -266,6 +288,9 @@ Activa el botón 🔊 en la NavBar (arriba a la derecha). Por defecto arranca mu
 | `npm run build` | Build de producción |
 | `npm run start` | Servir build de producción |
 | `npm run lint` | Lint con ESLint |
+| `npm run typecheck` | TypeScript sin emitir |
+| `npm test` | Tests de la lógica de días y rachas |
+| `npm run test:watch` | Tests en modo watch |
 | `npx prisma studio` | GUI web para inspeccionar/editar la DB |
 | `npx prisma migrate dev` | Aplicar migraciones pendientes |
 | `npx prisma migrate dev --name nombre` | Crear nueva migración tras cambios al schema |

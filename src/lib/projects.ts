@@ -2,6 +2,12 @@ import { prisma } from "./prisma";
 
 export type ProjectItemStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
+export const PROJECT_ITEM_STATUSES: ProjectItemStatus[] = [
+  "TODO",
+  "IN_PROGRESS",
+  "DONE",
+];
+
 export type ProjectItemNode = {
   id: string;
   projectId: string;

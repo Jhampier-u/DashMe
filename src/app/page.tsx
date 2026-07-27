@@ -109,6 +109,7 @@ export default async function Home() {
                     id={h.id}
                     name={h.name}
                     icon={h.icon}
+                    color={h.color}
                     streak={h.streak}
                     doneToday={h.doneToday}
                     partialToday={h.partialToday}

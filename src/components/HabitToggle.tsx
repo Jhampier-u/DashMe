@@ -1,20 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import {
-  toggleToday,
-  deleteHabit,
-  setHabitAnchor,
-  type ToggleResult,
-} from "@/app/actions";
+import { toggleToday, deleteHabit, setHabitAnchor } from "@/app/actions";
+import { emitToggleResult } from "@/lib/events";
 import { HabitDetail } from "./HabitDetail";
+import { useConfirm } from "./PixelConfirm";
 import { useSparkleBurst, SparkleLayer } from "./Sparkle";
 import { plantEmoji, type PlantSpecies } from "@/lib/garden";
+import { DEFAULT_SCHEDULE } from "@/lib/streak";
 
 type Props = {
   id: string;
   name: string;
   icon: string;
+  color: string;
   streak: number;
   doneToday: boolean;
   partialToday: boolean;
@@ -29,11 +28,16 @@ type Props = {
 };
 
 const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"];
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-function bg(doneToday: boolean, partial: boolean, scheduledToday: boolean) {
+function accentVar(color: string) {
+  return `var(--color-${color || "mint"})`;
+}
+
+function bg(doneToday: boolean, partial: boolean, scheduledToday: boolean, color: string) {
   if (!scheduledToday) return "var(--color-bg-deep)";
   if (doneToday && partial) return "var(--color-peach)";
-  if (doneToday) return "var(--color-mint)";
+  if (doneToday) return accentVar(color);
   return "var(--color-surface)";
 }
 
@@ -42,48 +46,18 @@ function ink(doneToday: boolean, scheduledToday: boolean) {
   return doneToday ? "var(--color-bg-deep)" : "var(--color-ink)";
 }
 
-function dispatchResult(result: ToggleResult) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("untap:xp", { detail: result }));
-  if (result.shieldUsed) {
-    window.dispatchEvent(new CustomEvent("untap:shield"));
-  }
-  if (result.anchorTriggered) {
-    window.dispatchEvent(new CustomEvent("untap:anchor"));
-  }
-  if (result.leveledUp) {
-    window.dispatchEvent(
-      new CustomEvent("untap:levelup", { detail: { newLevel: result.newLevel } }),
-    );
-  }
-  if (result.milestone) {
-    window.dispatchEvent(
-      new CustomEvent("untap:milestone", {
-        detail: {
-          habit: result.milestone.habitName,
-          days: result.milestone.days,
-          bonus: result.milestone.bonus,
-        },
-      }),
-    );
-  }
-  for (const q of result.questsCompleted) {
-    window.dispatchEvent(new CustomEvent("untap:questComplete", { detail: q }));
-  }
-}
-
 export function HabitToggle(p: Props) {
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const sparkle = useSparkleBurst("spark");
   const drops = useSparkleBurst("drop");
+  const { confirm, dialog } = useConfirm();
 
   function handleToggle(partial: boolean) {
-    if (!p.scheduledToday) return;
+    if (!p.scheduledToday || pending) return;
     const willComplete = !p.doneToday;
     startTransition(async () => {
-      const result = await toggleToday(p.id, partial);
-      dispatchResult(result);
+      emitToggleResult(await toggleToday(p.id, partial));
     });
     if (willComplete) {
       sparkle.burst();
@@ -91,8 +65,12 @@ export function HabitToggle(p: Props) {
     }
   }
 
-  function handleDelete() {
-    if (!confirm(`¿Borrar "${p.name}"?`)) return;
+  async function handleDelete() {
+    const ok = await confirm({
+      title: "Borrar hábito",
+      message: `Se borrará "${p.name}" y todo su historial. Esto no se puede deshacer.`,
+    });
+    if (!ok) return;
     const fd = new FormData();
     fd.set("id", p.id);
     startTransition(() => deleteHabit(fd));
@@ -103,15 +81,16 @@ export function HabitToggle(p: Props) {
   }
 
   const plant = plantEmoji(p.plantSpecies, p.streak, p.doneToday, p.hasEverBeenDone);
-  const sched = (p.schedule ?? "1111111").padEnd(7, "0");
+  const sched = (p.schedule || DEFAULT_SCHEDULE).padEnd(7, "0");
 
   return (
     <li
       className="flex flex-col p-3 pixel-edge-tight relative"
       style={{
-        background: bg(p.doneToday, p.partialToday, p.scheduledToday),
+        background: bg(p.doneToday, p.partialToday, p.scheduledToday, p.color),
         color: ink(p.doneToday, p.scheduledToday),
         opacity: pending ? 0.6 : !p.scheduledToday ? 0.55 : 1,
+        borderLeft: `4px solid ${accentVar(p.color)}`,
         boxShadow: p.criticalToday
           ? "0 0 0 3px var(--color-pink), 0 0 12px rgba(240, 168, 196, 0.5)"
           : p.isAnchor && !p.doneToday
@@ -141,13 +120,10 @@ export function HabitToggle(p: Props) {
           aria-label={p.doneToday ? `Desmarcar ${p.name}` : `Marcar ${p.name} como hecho`}
         >
           <span className="relative text-2xl">
-            {icon(p.icon)}
+            {p.icon}
             <SparkleLayer particles={sparkle.particles} />
           </span>
-          <span
-            className="relative text-3xl untap-bobble"
-            title={`${plant} planta`}
-          >
+          <span className="relative text-3xl untap-bobble" aria-hidden>
             {plant}
             <SparkleLayer particles={drops.particles} />
           </span>
@@ -199,6 +175,7 @@ export function HabitToggle(p: Props) {
             boxShadow: "0 0 0 3px var(--color-border)",
           }}
           title={p.isAnchor ? "Quitar ancla" : "Designar como hábito ancla"}
+          aria-pressed={p.isAnchor}
         >
           👑
         </button>
@@ -213,6 +190,7 @@ export function HabitToggle(p: Props) {
             boxShadow: "0 0 0 3px var(--color-border)",
           }}
           aria-label={open ? "Ocultar detalles" : "Ver detalles"}
+          aria-expanded={open}
         >
           {open ? "▲" : "▼"}
         </button>
@@ -237,7 +215,7 @@ export function HabitToggle(p: Props) {
           className="text-sm mt-2 italic flex items-start gap-2"
           style={{ color: p.doneToday ? "var(--color-bg-deep)" : "var(--color-ink-soft)" }}
         >
-          <span>💭</span>
+          <span aria-hidden>💭</span>
           <span>{p.intention}</span>
         </div>
       ) : null}
@@ -251,14 +229,12 @@ export function HabitToggle(p: Props) {
         </div>
       ) : null}
 
-      {/* schedule indicator — only if non-daily */}
-      {sched !== "1111111" ? (
+      {sched !== DEFAULT_SCHEDULE ? (
         <div className="flex items-center gap-1 mt-2">
           <span className="font-display text-[0.5rem] tracking-wider text-[var(--color-ink-dim)] mr-1">
             DÍAS
           </span>
-          {/* render Mon..Sun order for legibility */}
-          {[1, 2, 3, 4, 5, 6, 0].map((wd) => {
+          {WEEKDAY_ORDER.map((wd) => {
             const on = sched[wd] === "1";
             return (
               <span
@@ -278,10 +254,7 @@ export function HabitToggle(p: Props) {
       ) : null}
 
       {open ? <HabitDetail habitId={p.id} habitName={p.name} /> : null}
+      {dialog}
     </li>
   );
-}
-
-function icon(s: string) {
-  return s;
 }

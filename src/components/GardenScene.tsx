@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 import type { HabitWithStatus } from "@/lib/habits";
+import { useLocalHour } from "@/lib/useLocalHour";
 import { plantEmoji, stageFor, stageLabel } from "@/lib/garden";
-import { toggleToday, type ToggleResult } from "@/app/actions";
+import { toggleToday } from "@/app/actions";
+import { emitToggleResult } from "@/lib/events";
 import { useSparkleBurst, SparkleLayer } from "./Sparkle";
 
 type Props = { habits: HabitWithStatus[] };
@@ -35,6 +37,14 @@ const SKY_GRADIENTS: Record<SkyPhase, string> = {
     "linear-gradient(180deg, #0f0d1f 0%, #1d1b2e 35%, #2a1f4a 60%, #2d3a18 65%, #1a2510 100%)",
 };
 
+// El amanecer y el atardecer también cuentan como "oscuros" para las estrellas,
+// así que el icono no puede deducirse de isDark — antes el 🌅 nunca salía.
+function skyIcon(phase: SkyPhase): string {
+  if (phase === "dawn" || phase === "dusk") return "🌅";
+  if (phase === "night") return "🌙";
+  return "☀️";
+}
+
 const SKY_LABEL: Record<SkyPhase, string> = {
   dawn: "AMANECER",
   morning: "MAÑANA",
@@ -52,41 +62,9 @@ function seedRand(seed: number) {
   };
 }
 
-function dispatchResult(result: ToggleResult) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("untap:xp", { detail: result }));
-  if (result.shieldUsed) window.dispatchEvent(new CustomEvent("untap:shield"));
-  if (result.anchorTriggered) window.dispatchEvent(new CustomEvent("untap:anchor"));
-  if (result.leveledUp) {
-    window.dispatchEvent(
-      new CustomEvent("untap:levelup", { detail: { newLevel: result.newLevel } }),
-    );
-  }
-  if (result.milestone) {
-    window.dispatchEvent(
-      new CustomEvent("untap:milestone", {
-        detail: {
-          habit: result.milestone.habitName,
-          days: result.milestone.days,
-          bonus: result.milestone.bonus,
-        },
-      }),
-    );
-  }
-  for (const q of result.questsCompleted) {
-    window.dispatchEvent(new CustomEvent("untap:questComplete", { detail: q }));
-  }
-}
-
 export function GardenScene({ habits }: Props) {
-  const [phase, setPhase] = useState<SkyPhase>("night");
-
-  useEffect(() => {
-    const update = () => setPhase(phaseFor(new Date().getHours()));
-    update();
-    const id = window.setInterval(update, 60_000);
-    return () => window.clearInterval(id);
-  }, []);
+  const hour = useLocalHour();
+  const phase: SkyPhase = hour === null ? "night" : phaseFor(hour);
 
   const isDark = phase === "night" || phase === "dusk" || phase === "dawn";
 
@@ -157,7 +135,7 @@ export function GardenScene({ habits }: Props) {
                 : "drop-shadow(0 0 8px rgba(245, 200, 158, 0.5))",
         }}
       >
-        {isDark ? "🌙" : phase === "dawn" || phase === "dusk" ? "🌅" : "☀️"}
+        {skyIcon(phase)}
       </span>
 
       {/* Stars (only at night/dawn/dusk) */}
@@ -362,8 +340,7 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
     drops.burst();
     sparkle.burst();
     startTransition(async () => {
-      const result = await toggleToday(habit.id, false);
-      dispatchResult(result);
+      emitToggleResult(await toggleToday(habit.id, false));
     });
   }
 

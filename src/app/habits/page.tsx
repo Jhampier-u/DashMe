@@ -105,6 +105,7 @@ export default async function HabitsPage() {
                   id={h.id}
                   name={h.name}
                   icon={h.icon}
+                  color={h.color}
                   streak={h.streak}
                   doneToday={h.doneToday}
                   partialToday={h.partialToday}

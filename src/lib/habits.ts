@@ -6,37 +6,23 @@ import {
   type LevelInfo,
 } from "./level";
 import type { PlantSpecies } from "./garden";
+import {
+  addDays,
+  dayKey,
+  isoFromDayKey,
+  MS_PER_DAY,
+  normalizeDayKey,
+} from "./day";
+import {
+  computeStreak,
+  DEFAULT_SCHEDULE,
+  isCriticalDay,
+  isScheduledOn,
+  sanitizeSchedule,
+} from "./streak";
 
-export function startOfDayUTC(d: Date = new Date()): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
-
-// Schedule helpers: schedule is a 7-char string of "1"/"0", indexed by getUTCDay() (0=Sun..6=Sat).
-export const DEFAULT_SCHEDULE = "1111111";
-
-export function isScheduledOn(schedule: string, date: Date): boolean {
-  const sched = (schedule ?? DEFAULT_SCHEDULE).padEnd(7, "0").slice(0, 7);
-  const idx = date.getUTCDay();
-  return sched[idx] === "1";
-}
-
-export function isScheduledDaily(schedule: string): boolean {
-  return (schedule ?? DEFAULT_SCHEDULE) === DEFAULT_SCHEDULE;
-}
-
-// Find the most recent scheduled day strictly before "from" (inclusive of cap days back).
-function previousScheduledDay(
-  schedule: string,
-  from: Date,
-  maxBackDays = 14,
-): Date | null {
-  for (let i = 1; i <= maxBackDays; i++) {
-    const d = new Date(from);
-    d.setUTCDate(d.getUTCDate() - i);
-    if (isScheduledOn(schedule, d)) return d;
-  }
-  return null;
-}
+/** Ventana máxima que se lee de historial para calcular rachas. */
+const STREAK_LOOKBACK_DAYS = 400;
 
 export type HabitWithStatus = {
   id: string;
@@ -58,60 +44,33 @@ export type HabitWithStatus = {
 };
 
 export async function getHabitsWithTodayStatus(): Promise<HabitWithStatus[]> {
-  const today = startOfDayUTC();
+  const today = dayKey();
+  const cutoff = addDays(today, -STREAK_LOOKBACK_DAYS);
+
   const habits = await prisma.habit.findMany({
     orderBy: [{ isAnchor: "desc" }, { createdAt: "asc" }],
     include: {
-      logs: { orderBy: { date: "desc" }, take: 120 },
+      logs: {
+        where: { date: { gte: cutoff } },
+        orderBy: { date: "desc" },
+      },
       _count: { select: { logs: true } },
     },
   });
 
   return habits.map((h) => {
-    const schedule = h.schedule ?? DEFAULT_SCHEDULE;
-    const dates = new Set(h.logs.map((l) => startOfDayUTC(l.date).getTime()));
-    const todayLog = h.logs.find(
-      (l) => startOfDayUTC(l.date).getTime() === today.getTime(),
+    const schedule = sanitizeSchedule(h.schedule);
+    const doneKeys = new Set(
+      h.logs.map((l) => normalizeDayKey(l.date).getTime()),
     );
-    const doneToday = !!todayLog;
-    const partialToday = !!todayLog?.partial;
-    const scheduledToday = isScheduledOn(schedule, today);
-
-    // streak: walk back through SCHEDULED days only, counting "done"
-    let streak = 0;
-    {
-      const cursor = new Date(today);
-      if (!doneToday || !scheduledToday) {
-        // start from yesterday's most recent scheduled day
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
-      }
-      for (let i = 0; i < 365; i++) {
-        if (cursor.getTime() < 0) break;
-        if (isScheduledOn(schedule, cursor)) {
-          if (dates.has(cursor.getTime())) {
-            streak += 1;
-          } else {
-            break;
-          }
-        }
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
-      }
-    }
-
-    // critical today: scheduled today, not done today, AND previous scheduled day was missed
-    let criticalToday = false;
-    if (scheduledToday && !doneToday) {
-      const prev = previousScheduledDay(schedule, today, 14);
-      if (prev && !dates.has(prev.getTime()) && h._count.logs > 0) {
-        criticalToday = true;
-      }
-    }
+    const todayLog = h.logs.find(
+      (l) => normalizeDayKey(l.date).getTime() === today.getTime(),
+    );
+    const hasEverBeenDone = h._count.logs > 0;
 
     const last30: boolean[] = [];
     for (let i = 0; i < 30; i++) {
-      const d = new Date(today);
-      d.setUTCDate(d.getUTCDate() - i);
-      last30.push(dates.has(d.getTime()));
+      last30.push(doneKeys.has(addDays(today, -i).getTime()));
     }
 
     return {
@@ -124,17 +83,25 @@ export async function getHabitsWithTodayStatus(): Promise<HabitWithStatus[]> {
       isAnchor: !!h.isAnchor,
       schedule,
       intention: h.intention,
-      doneToday,
-      partialToday,
-      scheduledToday,
-      criticalToday,
-      streak,
-      hasEverBeenDone: h._count.logs > 0,
+      doneToday: !!todayLog,
+      partialToday: !!todayLog?.partial,
+      scheduledToday: isScheduledOn(schedule, today),
+      criticalToday: isCriticalDay(schedule, doneKeys, today, hasEverBeenDone),
+      streak: computeStreak(schedule, doneKeys, today),
+      hasEverBeenDone,
       last30,
     };
   });
 }
 
+/**
+ * Devuelve el jugador, regenerando escudos si toca.
+ *
+ * El bug anterior: `shieldsUpdated` solo se tocaba al regenerar, así que
+ * estando al máximo el reloj quedaba congelado en el pasado y el primer
+ * escudo gastado se recuperaba al instante. Ahora el reloj también avanza
+ * mientras estás lleno, y al regenerar se conserva el resto del periodo.
+ */
 export async function getOrCreatePlayer() {
   const player = await prisma.player.upsert({
     where: { id: "default" },
@@ -143,25 +110,36 @@ export async function getOrCreatePlayer() {
   });
 
   const now = new Date();
-  const elapsedDays =
-    (now.getTime() - player.shieldsUpdated.getTime()) / (24 * 60 * 60 * 1000);
-  const earned = Math.floor(elapsedDays / SHIELD_REGEN_DAYS);
-  if (earned > 0 && player.shields < MAX_SHIELDS) {
-    const newShields = Math.min(MAX_SHIELDS, player.shields + earned);
+  const regenMs = SHIELD_REGEN_DAYS * MS_PER_DAY;
+  const elapsed = now.getTime() - player.shieldsUpdated.getTime();
+  const earned = Math.floor(elapsed / regenMs);
+  if (earned <= 0) return player;
+
+  if (player.shields >= MAX_SHIELDS) {
+    // Lleno: no hay nada que ganar, pero el contador arranca de nuevo.
     return prisma.player.update({
       where: { id: "default" },
-      data: { shields: newShields, shieldsUpdated: now },
+      data: { shieldsUpdated: now },
     });
   }
-  return player;
+
+  const newShields = Math.min(MAX_SHIELDS, player.shields + earned);
+  const shieldsUpdated =
+    newShields >= MAX_SHIELDS
+      ? now
+      : new Date(player.shieldsUpdated.getTime() + earned * regenMs);
+
+  return prisma.player.update({
+    where: { id: "default" },
+    data: { shields: newShields, shieldsUpdated },
+  });
 }
 
 export async function getPlayerLevelInfo(): Promise<
   LevelInfo & { shields: number }
 > {
   const player = await getOrCreatePlayer();
-  const info = getLevelInfo(player.xp);
-  return { ...info, shields: player.shields };
+  return { ...getLevelInfo(player.xp), shields: player.shields };
 }
 
 export type MonthDay = {
@@ -174,63 +152,75 @@ export type MonthDay = {
   done: boolean;
   partial: boolean;
   shielded: boolean;
+  editable: boolean;
 };
+
+/** Cuántos días atrás se puede rellenar el calendario. */
+export const BACKFILL_MAX_DAYS = 60;
 
 export async function getHabitMonth(
   habitId: string,
   year: number,
   monthIndex: number,
 ): Promise<MonthDay[]> {
+  if (!Number.isInteger(year) || year < 2000 || year > 2999) return [];
+  if (!Number.isInteger(monthIndex) || monthIndex < 0 || monthIndex > 11) {
+    return [];
+  }
+
   const habit = await prisma.habit.findUnique({
     where: { id: habitId },
     include: { logs: true },
   });
   if (!habit) return [];
 
-  const schedule = habit.schedule ?? DEFAULT_SCHEDULE;
+  const schedule = sanitizeSchedule(habit.schedule);
   const logByDate = new Map<number, { partial: boolean; shielded: boolean }>();
   for (const l of habit.logs) {
-    logByDate.set(startOfDayUTC(l.date).getTime(), {
+    logByDate.set(normalizeDayKey(l.date).getTime(), {
       partial: !!l.partial,
       shielded: !!l.shielded,
     });
   }
-  const today = startOfDayUTC();
+
+  const today = dayKey();
+  const oldestEditable = addDays(today, -BACKFILL_MAX_DAYS);
+
+  function makeDay(d: Date, inMonth: boolean): MonthDay {
+    const t = d.getTime();
+    const meta = logByDate.get(t);
+    const isFuture = t > today.getTime();
+    const scheduled = isScheduledOn(schedule, d);
+    return {
+      date: isoFromDayKey(d),
+      day: d.getUTCDate(),
+      isToday: t === today.getTime(),
+      isFuture,
+      inMonth,
+      scheduled,
+      done: !!meta,
+      partial: meta?.partial ?? false,
+      shielded: meta?.shielded ?? false,
+      editable: !isFuture && scheduled && t >= oldestEditable.getTime(),
+    };
+  }
 
   const first = new Date(Date.UTC(year, monthIndex, 1));
   const startWeekday = first.getUTCDay();
   const lastOfMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
 
   const out: MonthDay[] = [];
-  function makeDay(d: Date, inMonth: boolean): MonthDay {
-    const t = d.getTime();
-    const meta = logByDate.get(t);
-    return {
-      date: d.toISOString().slice(0, 10),
-      day: d.getUTCDate(),
-      isToday: t === today.getTime(),
-      isFuture: t > today.getTime(),
-      inMonth,
-      scheduled: isScheduledOn(schedule, d),
-      done: !!meta,
-      partial: meta?.partial ?? false,
-      shielded: meta?.shielded ?? false,
-    };
-  }
-
-  for (let i = startWeekday - 1; i >= 0; i--) {
-    const d = new Date(first);
-    d.setUTCDate(first.getUTCDate() - (i + 1));
-    out.push(makeDay(d, false));
+  for (let i = startWeekday; i > 0; i--) {
+    out.push(makeDay(addDays(first, -i), false));
   }
   for (let day = 1; day <= lastOfMonth; day++) {
-    const d = new Date(Date.UTC(year, monthIndex, day));
-    out.push(makeDay(d, true));
+    out.push(makeDay(new Date(Date.UTC(year, monthIndex, day)), true));
   }
   while (out.length % 7 !== 0) {
-    const last = new Date(out[out.length - 1].date + "T00:00:00Z");
-    last.setUTCDate(last.getUTCDate() + 1);
-    out.push(makeDay(last, false));
+    const last = out[out.length - 1];
+    out.push(makeDay(addDays(new Date(last.date + "T00:00:00Z"), 1), false));
   }
   return out;
 }
+
+export { DEFAULT_SCHEDULE, isScheduledOn, sanitizeSchedule };

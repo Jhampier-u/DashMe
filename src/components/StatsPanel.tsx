@@ -13,15 +13,12 @@ function colorForCount(count: number, max: number) {
   return "var(--color-sky)";
 }
 
-export function StatsPanel({ stats }: Props) {
-  const max = stats.heatmap.reduce((m, d) => Math.max(m, d.count), 0);
+const WEEKDAY_INITIALS = ["D", "L", "M", "M", "J", "V", "S"];
 
-  // 12 columns of 7 rows (week-by-week, oldest left). Layout: each column is a week.
-  // We have 84 days; arrange as columns of 7.
-  const weeks: typeof stats.heatmap[] = [];
-  for (let i = 0; i < 12; i++) {
-    weeks.push(stats.heatmap.slice(i * 7, i * 7 + 7));
-  }
+export function StatsPanel({ stats }: Props) {
+  const max = stats.weeks
+    .flat()
+    .reduce((m, d) => Math.max(m, d.count), 0);
 
   return (
     <PixelWindow title="Tu progreso · 12 semanas">
@@ -31,17 +28,36 @@ export function StatsPanel({ stats }: Props) {
         <Mini label="TOTAL" value={stats.totalCompletions} />
       </div>
 
-      <div className="flex gap-1 justify-center mb-2">
-        {weeks.map((week, wi) => (
+      {/* Cada columna es una semana real y cada fila un día de la semana. */}
+      <div className="flex gap-1 justify-center mb-2 overflow-x-auto">
+        <div className="flex flex-col gap-1 mr-1">
+          {WEEKDAY_INITIALS.map((d, i) => (
+            <div
+              key={i}
+              className="w-3 h-3 font-display text-[0.4rem] leading-3 text-[var(--color-ink-dim)] text-center"
+            >
+              {i % 2 === 1 ? d : ""}
+            </div>
+          ))}
+        </div>
+        {stats.weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-1">
             {week.map((day) => (
               <div
                 key={day.date}
-                title={`${day.date} · ${day.count} hábito${day.count === 1 ? "" : "s"}`}
+                title={
+                  day.isFuture
+                    ? day.date
+                    : `${day.date} · ${day.count} hábito${day.count === 1 ? "" : "s"}`
+                }
                 className="w-3 h-3"
                 style={{
-                  background: colorForCount(day.count, max),
-                  boxShadow: "0 0 0 1px var(--color-border)",
+                  background: day.isFuture
+                    ? "transparent"
+                    : colorForCount(day.count, max),
+                  boxShadow: day.isFuture
+                    ? "0 0 0 1px var(--color-surface)"
+                    : "0 0 0 1px var(--color-border)",
                 }}
               />
             ))}

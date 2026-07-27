@@ -135,14 +135,6 @@ export function playAnchor() {
   ]);
 }
 
-export function playCritical() {
-  // descending ominous tone for critical day alert
-  playSequence([
-    { freq: 440, duration: 0.18, type: "sawtooth", gain: 0.06 },
-    { freq: 330, duration: 0.22, type: "sawtooth", gain: 0.06, delay: 0.14 },
-  ]);
-}
-
 export function playMilestone() {
   // streak milestone — bigger fanfare
   playSequence([

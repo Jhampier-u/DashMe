@@ -33,9 +33,13 @@ model HabitLog {
   date      DateTime
   partial   Boolean  @default(false)
   shielded  Boolean  @default(false)
+  // XP concedido al crear este registro (base + ancla + hito). Al borrarlo se
+  // devuelve exactamente esto, así marcar/desmarcar siempre suma cero.
+  xpAwarded Int      @default(0)
   createdAt DateTime @default(now())
 
   @@unique([habitId, date])
+  @@index([date])
 }
 
 model Player {

@@ -4,6 +4,8 @@
 
 export const XP_PER_HABIT = 25;
 export const XP_PER_TASK = 15;
+/** Extra por cumplir el hábito ancla (solo en su versión completa). */
+export const ANCHOR_BONUS = 10;
 
 export const MAX_SHIELDS = 2;
 export const SHIELD_REGEN_DAYS = 15;

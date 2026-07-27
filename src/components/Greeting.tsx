@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLocalHour } from "@/lib/useLocalHour";
+
+const NEUTRAL = { text: "Hola, aventurero", emoji: "👋" };
 
 function pickGreeting(hour: number) {
   if (hour < 6) return { text: "¿No duermes, aventurero?", emoji: "🌙" };
@@ -10,10 +12,9 @@ function pickGreeting(hour: number) {
 }
 
 export function Greeting() {
-  const [g, setG] = useState({ text: "Hola, aventurero", emoji: "👋" });
-  useEffect(() => {
-    setG(pickGreeting(new Date().getHours()));
-  }, []);
+  const hour = useLocalHour();
+  const g = hour === null ? NEUTRAL : pickGreeting(hour);
+
   return (
     <div className="text-center">
       <div className="text-3xl mb-2 untap-bobble inline-block">{g.emoji}</div>

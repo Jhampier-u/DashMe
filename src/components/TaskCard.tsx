@@ -3,6 +3,8 @@
 import { useTransition } from "react";
 import type { TaskRow, TaskStatus } from "@/lib/tasks";
 import { updateTaskStatus, deleteTask } from "@/app/actions";
+import { emitStatusChange } from "@/lib/events";
+import { useConfirm } from "./PixelConfirm";
 
 type Props = { task: TaskRow };
 
@@ -19,24 +21,21 @@ const PREV: Record<TaskStatus, TaskStatus | null> = {
 
 export function TaskCard({ task }: Props) {
   const [pending, startTransition] = useTransition();
+  const { confirm, dialog } = useConfirm();
 
   function move(target: TaskStatus | null) {
     if (!target) return;
     startTransition(async () => {
-      const result = await updateTaskStatus(task.id, target);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("untap:xp", { detail: result }));
-        if (result.leveledUp) {
-          window.dispatchEvent(
-            new CustomEvent("untap:levelup", { detail: { newLevel: result.newLevel } }),
-          );
-        }
-      }
+      emitStatusChange(await updateTaskStatus(task.id, target));
     });
   }
 
-  function remove() {
-    if (!confirm(`¿Borrar "${task.title}"?`)) return;
+  async function remove() {
+    const ok = await confirm({
+      title: "Borrar tarea",
+      message: `Se borrará "${task.title}".`,
+    });
+    if (!ok) return;
     const fd = new FormData();
     fd.set("id", task.id);
     startTransition(() => deleteTask(fd));
@@ -101,6 +100,7 @@ export function TaskCard({ task }: Props) {
           ✕
         </button>
       </div>
+      {dialog}
     </div>
   );
 }

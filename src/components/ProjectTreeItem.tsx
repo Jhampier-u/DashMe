@@ -8,6 +8,8 @@ import {
   deleteProjectItem,
   renameProjectItem,
 } from "@/app/actions";
+import { emitStatusChange } from "@/lib/events";
+import { useConfirm } from "./PixelConfirm";
 
 const STATUS_CYCLE: Record<ProjectItemStatus, ProjectItemStatus> = {
   TODO: "IN_PROGRESS",
@@ -32,21 +34,6 @@ type Props = {
   depth: number;
 };
 
-function dispatchXp(result: {
-  xp: number;
-  newLevel: number;
-  progress: number;
-  leveledUp: boolean;
-}) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("untap:xp", { detail: result }));
-  if (result.leveledUp) {
-    window.dispatchEvent(
-      new CustomEvent("untap:levelup", { detail: { newLevel: result.newLevel } }),
-    );
-  }
-}
-
 export function ProjectTreeItem({ node, depth }: Props) {
   const [open, setOpen] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -54,19 +41,33 @@ export function ProjectTreeItem({ node, depth }: Props) {
   const [draftTitle, setDraftTitle] = useState(node.title);
   const [newChildTitle, setNewChildTitle] = useState("");
   const [pending, startTransition] = useTransition();
+  const { confirm, dialog } = useConfirm();
 
   const hasChildren = node.children.length > 0;
+
+  // Si el título cambia en el servidor (renombrado, deshacer…) el borrador
+  // local tiene que seguirlo mientras no estemos editando.
+  const [lastTitle, setLastTitle] = useState(node.title);
+  if (lastTitle !== node.title) {
+    setLastTitle(node.title);
+    if (!editing) setDraftTitle(node.title);
+  }
 
   function cycleStatus() {
     const next = STATUS_CYCLE[node.status];
     startTransition(async () => {
-      const result = await updateProjectItemStatus(node.id, next);
-      dispatchXp(result);
+      emitStatusChange(await updateProjectItemStatus(node.id, next));
     });
   }
 
-  function remove() {
-    if (!confirm(`¿Borrar "${node.title}" y sus subtareas?`)) return;
+  async function remove() {
+    const ok = await confirm({
+      title: "Borrar subtarea",
+      message: hasChildren
+        ? `Se borrará "${node.title}" y todas sus subtareas.`
+        : `Se borrará "${node.title}".`,
+    });
+    if (!ok) return;
     startTransition(() => deleteProjectItem(node.id));
   }
 
@@ -270,6 +271,7 @@ export function ProjectTreeItem({ node, depth }: Props) {
           ) : null}
         </div>
       ) : null}
+      {dialog}
     </div>
   );
 }

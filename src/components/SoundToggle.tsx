@@ -1,28 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { isMuted, setMuted, playClick } from "@/lib/sound";
+import { on } from "@/lib/events";
+
+// El ajuste vive en localStorage (sistema externo), así que se lee con
+// useSyncExternalStore: sin efecto de arranque y sin parpadeo del icono.
+const subscribe = (onChange: () => void) => on("untap:muteChange", onChange);
+const mutedOnServer = () => true;
 
 export function SoundToggle() {
-  const [muted, setMutedState] = useState(true);
-
-  useEffect(() => {
-    setMutedState(isMuted());
-    function onChange(e: Event) {
-      setMutedState((e as CustomEvent<{ muted: boolean }>).detail.muted);
-    }
-    window.addEventListener("untap:muteChange", onChange);
-    return () => window.removeEventListener("untap:muteChange", onChange);
-  }, []);
+  const muted = useSyncExternalStore(subscribe, isMuted, mutedOnServer);
 
   function toggle() {
     const next = !muted;
     setMuted(next);
-    setMutedState(next);
-    if (!next) {
-      // play feedback when unmuting
-      window.setTimeout(() => playClick(), 30);
-    }
+    // Feedback al desmutear: el gesto del click también desbloquea el audio.
+    if (!next) window.setTimeout(() => playClick(), 30);
   }
 
   return (
@@ -37,6 +31,7 @@ export function SoundToggle() {
       }}
       title={muted ? "Activar sonidos 8-bit" : "Silenciar"}
       aria-label={muted ? "Activar sonidos" : "Silenciar sonidos"}
+      aria-pressed={!muted}
     >
       <span className="text-base">{muted ? "🔇" : "🔊"}</span>
     </button>

@@ -24,7 +24,7 @@ Scope actual (Pack A — Hábitos más inteligentes):
 [x] Implementation intentions ("Cuando X entonces hábito")
 
 🌱 3. Mundo vivo
-[ ] Day/night cycle real (fondo cambia con tu hora local)
+[x] Day/night cycle real (fondo cambia con tu hora local)
 [ ] Estaciones del año (florece en mayo, nieva en diciembre)
 [x] Jardín que crece (cada hábito = una planta que crece con la racha)
 [ ] Casa del aventurero (habitación pixel decorable con XP)
@@ -75,5 +75,12 @@ Scope actual (Pack A — Hábitos más inteligentes):
 
 Pendiente del fase 4 (deploy):
 [ ] Migrar SQLite → Postgres (Neon)
-[ ] Proteger con contraseña
+[ ] Proteger con contraseña  ← BLOQUEANTE: hoy las Server Actions son públicas
 [ ] Deploy a Vercel
+
+
+🔧 Deuda técnica conocida
+[ ] loading.tsx cuelga la página con Next 16.2.4 + force-dynamic (ver README)
+[ ] Sin tests de componentes ni e2e (solo lógica pura de días/rachas)
+[ ] Emojis como sprites: dependen de la fuente del sistema, no son pixel art real
+[ ] Los eventos del cliente (untap:*) no sobreviven a varias pestañas abiertas

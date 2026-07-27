@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useTransition } from "react";
 import type { MonthDay } from "@/lib/habits";
-import { toggleHabitOnDay } from "@/app/actions";
+import { fetchHabitMonth, toggleHabitOnDay } from "@/app/actions";
+import { emitToggleResult } from "@/lib/events";
 
 type Props = {
   habitId: string;
@@ -16,34 +17,32 @@ const MONTHS_ES = [
 
 const WEEKDAYS_ES = ["D", "L", "M", "M", "J", "V", "S"];
 
-async function fetchMonth(habitId: string, year: number, month: number) {
-  const res = await fetch(
-    `/api/habit-month?id=${habitId}&y=${year}&m=${month}`,
-    { cache: "no-store" },
-  );
-  if (!res.ok) return [];
-  return (await res.json()) as MonthDay[];
-}
-
 export function MonthCalendar({ habitId, habitName }: Props) {
-  const today = new Date();
-  const [year, setYear] = useState(today.getUTCFullYear());
-  const [month, setMonth] = useState(today.getUTCMonth());
-  const [days, setDays] = useState<MonthDay[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Mes actual según el calendario LOCAL del usuario.
+  const [now] = useState(() => new Date());
+  const [year, setYear] = useState(() => now.getFullYear());
+  const [month, setMonth] = useState(() => now.getMonth());
+  // El mes cargado viaja junto a sus datos, así que "cargando" es un valor
+  // derivado y no hace falta un setState de arranque en el efecto.
+  const [loaded, setLoaded] = useState<{ key: string; days: MonthDay[] } | null>(
+    null,
+  );
+  const [reloadToken, setReloadToken] = useState(0);
   const [pending, startTransition] = useTransition();
 
-  async function reload(y: number, m: number) {
-    setLoading(true);
-    const result = await fetchMonth(habitId, y, m);
-    setDays(result);
-    setLoading(false);
-  }
+  const monthKey = `${year}-${month}`;
+  const loading = loaded?.key !== monthKey;
+  const days = loaded?.key === monthKey ? loaded.days : [];
 
   useEffect(() => {
-    reload(year, month);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [habitId, year, month]);
+    let alive = true;
+    fetchHabitMonth(habitId, year, month).then((result) => {
+      if (alive) setLoaded({ key: `${year}-${month}`, days: result });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [habitId, year, month, reloadToken]);
 
   function shift(delta: number) {
     let m = month + delta;
@@ -55,24 +54,38 @@ export function MonthCalendar({ habitId, habitName }: Props) {
   }
 
   function toggle(d: MonthDay) {
-    if (d.isFuture) return;
-    // optimistic
-    setDays((prev) =>
-      prev.map((x) => (x.date === d.date ? { ...x, done: !x.done } : x)),
+    if (!d.editable || pending) return;
+    // Optimista: se corrige al recargar si el servidor dice otra cosa.
+    setLoaded((prev) =>
+      prev === null
+        ? prev
+        : {
+            ...prev,
+            days: prev.days.map((x) =>
+              x.date === d.date ? { ...x, done: !x.done } : x,
+            ),
+          },
     );
     startTransition(async () => {
-      const result = await toggleHabitOnDay(habitId, d.date);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("untap:xp", { detail: result }));
-        if (result.leveledUp) {
-          window.dispatchEvent(
-            new CustomEvent("untap:levelup", { detail: { newLevel: result.newLevel } }),
-          );
-        }
-      }
-      // refresh from server in case of race
-      reload(year, month);
+      emitToggleResult(await toggleHabitOnDay(habitId, d.date));
+      setReloadToken((t) => t + 1);
     });
+  }
+
+  function cellStyle(d: MonthDay) {
+    if (d.shielded) return { bg: "var(--color-sky)", ink: "var(--color-bg-deep)" };
+    if (d.partial) return { bg: "var(--color-peach)", ink: "var(--color-bg-deep)" };
+    if (d.done) return { bg: "var(--color-mint)", ink: "var(--color-bg-deep)" };
+    if (!d.scheduled) return { bg: "var(--color-bg)", ink: "var(--color-ink-dim)" };
+    return { bg: "var(--color-surface)", ink: "var(--color-ink-soft)" };
+  }
+
+  function cellTitle(d: MonthDay) {
+    if (d.shielded) return `${d.date} · cubierto por un escudo`;
+    if (d.isFuture) return `${d.date} · aún no llega`;
+    if (!d.scheduled) return `${d.date} · no toca`;
+    if (!d.editable) return `${d.date} · fuera del rango editable`;
+    return `${d.date} · ${d.done ? "cumplido" : "pendiente"}`;
   }
 
   return (
@@ -87,6 +100,7 @@ export function MonthCalendar({ habitId, habitName }: Props) {
             color: "var(--color-ink)",
             boxShadow: "0 0 0 2px var(--color-border)",
           }}
+          aria-label="Mes anterior"
         >
           ◄
         </button>
@@ -102,6 +116,7 @@ export function MonthCalendar({ habitId, habitName }: Props) {
             color: "var(--color-ink)",
             boxShadow: "0 0 0 2px var(--color-border)",
           }}
+          aria-label="Mes siguiente"
         >
           ►
         </button>
@@ -128,19 +143,14 @@ export function MonthCalendar({ habitId, habitName }: Props) {
               />
             ))
           : days.map((d) => {
-              const bg = d.done
-                ? "var(--color-mint)"
-                : d.inMonth
-                  ? "var(--color-surface)"
-                  : "var(--color-bg)";
-              const ink = d.done ? "var(--color-bg-deep)" : "var(--color-ink-soft)";
+              const { bg, ink } = cellStyle(d);
               return (
                 <button
                   key={d.date}
                   type="button"
                   onClick={() => toggle(d)}
-                  disabled={d.isFuture || pending}
-                  title={d.date + (d.isFuture ? " (futuro)" : "")}
+                  disabled={!d.editable || pending}
+                  title={cellTitle(d)}
                   className="aspect-square flex items-center justify-center text-sm pixel-button"
                   style={{
                     background: bg,
@@ -150,16 +160,19 @@ export function MonthCalendar({ habitId, habitName }: Props) {
                       ? "inset 0 0 0 2px var(--color-peach)"
                       : "0 0 0 1px var(--color-border)",
                   }}
-                  aria-label={`${habitName} en ${d.date}`}
+                  aria-label={`${habitName} · ${cellTitle(d)}`}
                 >
-                  {d.day}
+                  {d.shielded ? "🛡" : d.day}
                 </button>
               );
             })}
       </div>
 
-      <div className="text-[0.6rem] font-display tracking-wider text-[var(--color-ink-dim)] text-center mt-3">
-        CLICK PARA MARCAR · HASTA 60 DÍAS ATRÁS
+      <div className="text-[0.6rem] font-display tracking-wider text-[var(--color-ink-dim)] text-center mt-3 leading-relaxed">
+        SOLO DÍAS QUE TOCAN · HASTA 60 DÍAS ATRÁS
+        <br />
+        <span className="text-[var(--color-sky)]">🛡 ESCUDO</span> ·{" "}
+        <span className="text-[var(--color-peach)]">◐ MÍNIMO</span>
       </div>
     </div>
   );

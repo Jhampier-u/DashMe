@@ -10,6 +10,14 @@ const ICON_CHOICES = [
   "🎮", "🌱", "🎵", "💪", "🍎", "✍️",
 ];
 
+const COLOR_CHOICES = [
+  { key: "mint", label: "Menta" },
+  { key: "peach", label: "Melocotón" },
+  { key: "pink", label: "Rosa" },
+  { key: "lavender", label: "Lavanda" },
+  { key: "sky", label: "Cielo" },
+] as const;
+
 // Index matches JS Date.getDay() / getUTCDay(): 0=Sunday..6=Saturday
 const WEEKDAYS = [
   { idx: 1, label: "L" },
@@ -31,6 +39,7 @@ export function NewHabitForm() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("⭐");
+  const [color, setColor] = useState<string>("mint");
   const [plantSpecies, setPlantSpecies] = useState<PlantSpecies>("flower");
   const [minimalGoal, setMinimalGoal] = useState("");
   const [intention, setIntention] = useState("");
@@ -56,6 +65,7 @@ export function NewHabitForm() {
     const fd = new FormData();
     fd.set("name", name);
     fd.set("icon", icon);
+    fd.set("color", color);
     fd.set("plantSpecies", plantSpecies);
     fd.set("minimalGoal", minimalGoal);
     fd.set("intention", intention);
@@ -65,6 +75,7 @@ export function NewHabitForm() {
       await createHabit(fd);
       setName("");
       setIcon("⭐");
+      setColor("mint");
       setPlantSpecies("flower");
       setMinimalGoal("");
       setIntention("");
@@ -118,6 +129,30 @@ export function NewHabitForm() {
           >
             {emoji}
           </button>
+        ))}
+      </div>
+
+      <label className="font-display text-[0.6rem] tracking-wider text-[var(--color-ink-soft)] mt-2">
+        Color
+      </label>
+      <div className="flex gap-2">
+        {COLOR_CHOICES.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => setColor(c.key)}
+            className="pixel-button flex-1 h-9"
+            style={{
+              background: `var(--color-${c.key})`,
+              boxShadow:
+                color === c.key
+                  ? "0 0 0 3px var(--color-ink)"
+                  : "0 0 0 3px var(--color-border)",
+            }}
+            title={c.label}
+            aria-label={c.label}
+            aria-pressed={color === c.key}
+          />
         ))}
       </div>
 
@@ -179,7 +214,10 @@ export function NewHabitForm() {
       </p>
 
       <label className="font-display text-[0.6rem] tracking-wider text-[var(--color-ink-soft)] mt-2">
-        Intención (opcional) <span className="text-[var(--color-ink-dim)]">— "Cuando X entonces Y"</span>
+        Intención (opcional){" "}
+        <span className="text-[var(--color-ink-dim)]">
+          — «Cuando X entonces Y»
+        </span>
       </label>
       <input
         className="pixel-input"
@@ -190,7 +228,8 @@ export function NewHabitForm() {
       />
 
       <label className="font-display text-[0.6rem] tracking-wider text-[var(--color-ink-soft)] mt-2">
-        Modo mínimo (opcional) <span className="text-[var(--color-ink-dim)]">— versión "modo flojo"</span>
+        Modo mínimo (opcional){" "}
+        <span className="text-[var(--color-ink-dim)]">— versión «modo flojo»</span>
       </label>
       <input
         className="pixel-input"

@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // better-sqlite3 es un módulo nativo: nunca debe entrar en el bundle del
+  // servidor, hay que cargarlo con require en tiempo de ejecución.
+  serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
 };
 
 export default nextConfig;

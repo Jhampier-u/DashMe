@@ -2,18 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { MAX_SHIELDS, type LevelInfo } from "@/lib/level";
+import { on } from "@/lib/events";
 
 type Props = {
   initial: LevelInfo & { shields: number };
   completedToday: number;
   totalHabits: number;
-};
-
-type XpDetail = {
-  xp: number;
-  newLevel: number;
-  progress: number;
-  shields?: number;
 };
 
 function avatarFor(percent: number) {
@@ -31,27 +25,36 @@ function moodTextFor(percent: number, total: number) {
   return "Buen comienzo, no pares";
 }
 
+type Snapshot = LevelInfo & { shields: number };
+
 export function PlayerStatus({ initial, completedToday, totalHabits }: Props) {
-  const [info, setInfo] = useState<LevelInfo & { shields: number }>(initial);
+  // `live` es lo que llega por evento entre renders del servidor; en cuanto el
+  // servidor manda datos nuevos (otro objeto), vuelven a mandar ellos.
+  const [live, setLive] = useState<Snapshot | null>(null);
+  const [lastFromServer, setLastFromServer] = useState(initial);
   const [pulse, setPulse] = useState(false);
 
-  useEffect(() => setInfo(initial), [initial]);
+  if (lastFromServer !== initial) {
+    setLastFromServer(initial);
+    setLive(null);
+  }
+
+  const info = live ?? initial;
 
   useEffect(() => {
-    function handler(e: Event) {
-      const d = (e as CustomEvent<XpDetail>).detail;
-      setInfo((prev) => ({
-        ...prev,
-        xp: d.xp,
-        level: d.newLevel,
-        progress: d.progress,
-        shields: d.shields ?? prev.shields,
-      }));
+    // El snapshot del servidor llega completo, así que la barra, el nivel y el
+    // "X / Y para Nv. N" se actualizan juntos y no quedan desfasados.
+    let timer = 0;
+    const off = on("untap:xp", ({ player }) => {
+      setLive(player);
       setPulse(true);
-      window.setTimeout(() => setPulse(false), 400);
-    }
-    window.addEventListener("untap:xp", handler);
-    return () => window.removeEventListener("untap:xp", handler);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setPulse(false), 400);
+    });
+    return () => {
+      off();
+      window.clearTimeout(timer);
+    };
   }, []);
 
   const percent = totalHabits === 0 ? 0 : completedToday / totalHabits;

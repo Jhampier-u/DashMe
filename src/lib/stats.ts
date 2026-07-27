@@ -1,12 +1,38 @@
 import { prisma } from "./prisma";
-import { startOfDayUTC } from "./habits";
+import {
+  addDays,
+  dayKey,
+  daysBetween,
+  isoFromDayKey,
+  normalizeDayKey,
+} from "./day";
+import {
+  computeBestStreak,
+  computeStreak,
+  countScheduledDays,
+  isScheduledOn,
+  sanitizeSchedule,
+} from "./streak";
 
 export type HabitDetailStats = {
   totalDone: number;
-  completionRate30: number; // 0..1 over last 30 days
+  /** 0..1 sobre los días que TOCABAN en los últimos 30 (desde su creación). */
+  completionRate30: number;
+  doneIn30: number;
+  scheduledIn30: number;
   bestStreak: number;
   currentStreak: number;
   daysSinceCreated: number;
+};
+
+const EMPTY_HABIT_STATS: HabitDetailStats = {
+  totalDone: 0,
+  completionRate30: 0,
+  doneIn30: 0,
+  scheduledIn30: 0,
+  bestStreak: 0,
+  currentStreak: 0,
+  daysSinceCreated: 0,
 };
 
 export async function getHabitStats(habitId: string): Promise<HabitDetailStats> {
@@ -14,80 +40,58 @@ export async function getHabitStats(habitId: string): Promise<HabitDetailStats> 
     where: { id: habitId },
     include: { logs: { orderBy: { date: "asc" } } },
   });
-  if (!habit) {
-    return {
-      totalDone: 0,
-      completionRate30: 0,
-      bestStreak: 0,
-      currentStreak: 0,
-      daysSinceCreated: 0,
-    };
-  }
+  if (!habit) return EMPTY_HABIT_STATS;
 
-  const today = startOfDayUTC();
-  const dates = new Set(
-    habit.logs.map((l) => startOfDayUTC(l.date).getTime()),
+  const today = dayKey();
+  const schedule = sanitizeSchedule(habit.schedule);
+  const doneKeys = new Set(habit.logs.map((l) => normalizeDayKey(l.date).getTime()));
+  const createdKey = dayKey(habit.createdAt);
+  const firstKey = habit.logs.length
+    ? normalizeDayKey(habit.logs[0].date)
+    : createdKey;
+  // El historial empieza en lo más antiguo que conocemos: la creación o el
+  // primer registro (que puede ser anterior si se rellenó hacia atrás).
+  const historyStart = new Date(
+    Math.min(firstKey.getTime(), createdKey.getTime()),
   );
-  const totalDone = habit.logs.length;
 
-  // last 30 days
-  let last30Done = 0;
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(today);
-    d.setUTCDate(d.getUTCDate() - i);
-    if (dates.has(d.getTime())) last30Done += 1;
-  }
-
-  // best streak (scan ascending)
-  const sortedDates = [...dates].sort((a, b) => a - b);
-  let bestStreak = 0;
-  let runningStreak = 0;
-  let prev: number | null = null;
-  for (const t of sortedDates) {
-    if (prev === null) {
-      runningStreak = 1;
-    } else {
-      const diff = (t - prev) / (24 * 60 * 60 * 1000);
-      runningStreak = diff === 1 ? runningStreak + 1 : 1;
+  // Ventana de 30 días que nunca empieza antes de que el hábito existiera:
+  // un hábito creado ayer no debería mostrar un 3% de cumplimiento.
+  const windowStart = new Date(
+    Math.max(addDays(today, -29).getTime(), historyStart.getTime()),
+  );
+  const scheduledIn30 = countScheduledDays(schedule, windowStart, today);
+  let doneIn30 = 0;
+  for (let cursor = windowStart; cursor <= today; cursor = addDays(cursor, 1)) {
+    if (isScheduledOn(schedule, cursor) && doneKeys.has(cursor.getTime())) {
+      doneIn30 += 1;
     }
-    if (runningStreak > bestStreak) bestStreak = runningStreak;
-    prev = t;
   }
-
-  // current streak (scan back from today)
-  let currentStreak = 0;
-  const cursor = new Date(today);
-  if (!dates.has(cursor.getTime())) {
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-  }
-  while (dates.has(cursor.getTime())) {
-    currentStreak += 1;
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-  }
-
-  const daysSinceCreated = Math.max(
-    1,
-    Math.ceil(
-      (today.getTime() - startOfDayUTC(habit.createdAt).getTime()) /
-        (24 * 60 * 60 * 1000),
-    ) + 1,
-  );
 
   return {
-    totalDone,
-    completionRate30: last30Done / 30,
-    bestStreak,
-    currentStreak,
-    daysSinceCreated,
+    totalDone: habit.logs.length,
+    completionRate30: scheduledIn30 === 0 ? 0 : doneIn30 / scheduledIn30,
+    doneIn30,
+    scheduledIn30,
+    bestStreak: computeBestStreak(schedule, doneKeys, historyStart, today),
+    currentStreak: computeStreak(schedule, doneKeys, today),
+    daysSinceCreated: Math.max(1, daysBetween(today, createdKey) + 1),
   };
 }
+
+export type HeatCell = {
+  date: string;
+  count: number;
+  isFuture: boolean;
+};
 
 export type GlobalStats = {
   totalCompletions: number;
   todayCompletions: number;
   weekCompletions: number;
   bestWeekday: { weekday: number; count: number } | null;
-  heatmap: { date: string; count: number }[]; // last 84 days (12 weeks), oldest first
+  /** 12 columnas (semanas) × 7 filas (Dom..Sáb), la última incluye hoy. */
+  weeks: HeatCell[][];
 };
 
 const WEEKDAY_NAMES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -96,41 +100,49 @@ export function weekdayName(idx: number) {
   return WEEKDAY_NAMES[idx] ?? "?";
 }
 
+export const HEATMAP_WEEKS = 12;
+
 export async function getGlobalStats(): Promise<GlobalStats> {
-  const today = startOfDayUTC();
-  const cutoff = new Date(today);
-  cutoff.setUTCDate(cutoff.getUTCDate() - 83);
+  const today = dayKey();
+  // El mapa arranca en el domingo de hace 11 semanas, para que cada columna
+  // sea una semana real y cada fila un día de la semana.
+  const firstSunday = addDays(
+    today,
+    -today.getUTCDay() - (HEATMAP_WEEKS - 1) * 7,
+  );
 
   const logs = await prisma.habitLog.findMany({
-    where: { date: { gte: cutoff } },
+    where: { date: { gte: firstSunday } },
     select: { date: true },
   });
 
   const byDay = new Map<number, number>();
   const byWeekday = new Map<number, number>();
   for (const l of logs) {
-    const dayMs = startOfDayUTC(l.date).getTime();
-    byDay.set(dayMs, (byDay.get(dayMs) ?? 0) + 1);
-    const wd = new Date(l.date).getUTCDay();
+    const key = normalizeDayKey(l.date);
+    const t = key.getTime();
+    byDay.set(t, (byDay.get(t) ?? 0) + 1);
+    const wd = key.getUTCDay();
     byWeekday.set(wd, (byWeekday.get(wd) ?? 0) + 1);
   }
 
-  const heatmap: { date: string; count: number }[] = [];
-  for (let i = 83; i >= 0; i--) {
-    const d = new Date(today);
-    d.setUTCDate(d.getUTCDate() - i);
-    heatmap.push({
-      date: d.toISOString().slice(0, 10),
-      count: byDay.get(d.getTime()) ?? 0,
-    });
+  const weeks: HeatCell[][] = [];
+  for (let w = 0; w < HEATMAP_WEEKS; w++) {
+    const week: HeatCell[] = [];
+    for (let d = 0; d < 7; d++) {
+      const key = addDays(firstSunday, w * 7 + d);
+      week.push({
+        date: isoFromDayKey(key),
+        count: byDay.get(key.getTime()) ?? 0,
+        isFuture: key.getTime() > today.getTime(),
+      });
+    }
+    weeks.push(week);
   }
 
-  // current week (last 7 days incl today)
   let weekCompletions = 0;
   for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setUTCDate(d.getUTCDate() - i);
-    weekCompletions += byDay.get(d.getTime()) ?? 0;
+    weekCompletions += byDay.get(addDays(today, -i).getTime()) ?? 0;
   }
 
   let bestWeekday: GlobalStats["bestWeekday"] = null;
@@ -138,7 +150,6 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     if (!bestWeekday || c > bestWeekday.count) bestWeekday = { weekday: wd, count: c };
   }
 
-  // total all-time (one extra query)
   const totalCompletions = await prisma.habitLog.count();
 
   return {
@@ -146,6 +157,6 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     todayCompletions: byDay.get(today.getTime()) ?? 0,
     weekCompletions,
     bestWeekday,
-    heatmap,
+    weeks,
   };
 }

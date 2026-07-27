@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { on } from "@/lib/events";
 
 type Toast =
   | { kind: "levelup"; key: number; level: number }
@@ -9,70 +10,71 @@ type Toast =
   | { kind: "quest"; key: number; label: string; xp: number; emoji: string }
   | { kind: "anchor"; key: number };
 
+// Omit sobre una unión hay que distribuirlo a mano, si no colapsa a las
+// propiedades comunes y no deja construir ninguna variante.
+type NewToast = Toast extends infer T
+  ? T extends Toast
+    ? Omit<T, "key">
+    : never
+  : never;
+
 let nextKey = 0;
+
+// La animación y el tiempo en pantalla deben coincidir: antes el pop-in duraba
+// 2200ms sin `forwards`, así que el toast se desvanecía y volvía a aparecer
+// durante los 1300ms que le quedaban de vida.
+const SHORT_MS = 2200;
+const LONG_MS = 3500;
 
 export function AchievementToast() {
   const [queue, setQueue] = useState<Toast[]>([]);
 
   useEffect(() => {
-    function onLevel(e: Event) {
-      const d = (e as CustomEvent<{ newLevel: number }>).detail;
-      setQueue((q) => [...q, { kind: "levelup", key: ++nextKey, level: d.newLevel }]);
-    }
-    function onMilestone(e: Event) {
-      const d = (e as CustomEvent<{ habit: string; days: number; bonus: number }>).detail;
-      setQueue((q) => [
-        ...q,
-        { kind: "milestone", key: ++nextKey, habit: d.habit, days: d.days, bonus: d.bonus },
-      ]);
-    }
-    function onShield() {
-      setQueue((q) => [...q, { kind: "shield", key: ++nextKey }]);
-    }
-    function onQuest(e: Event) {
-      const d = (e as CustomEvent<{ label: string; xp: number; emoji: string }>).detail;
-      setQueue((q) => [
-        ...q,
-        { kind: "quest", key: ++nextKey, label: d.label, xp: d.xp, emoji: d.emoji },
-      ]);
-    }
-    function onAnchor() {
-      setQueue((q) => [...q, { kind: "anchor", key: ++nextKey }]);
-    }
-    window.addEventListener("untap:levelup", onLevel);
-    window.addEventListener("untap:milestone", onMilestone);
-    window.addEventListener("untap:shield", onShield);
-    window.addEventListener("untap:questComplete", onQuest);
-    window.addEventListener("untap:anchor", onAnchor);
-    return () => {
-      window.removeEventListener("untap:levelup", onLevel);
-      window.removeEventListener("untap:milestone", onMilestone);
-      window.removeEventListener("untap:shield", onShield);
-      window.removeEventListener("untap:questComplete", onQuest);
-      window.removeEventListener("untap:anchor", onAnchor);
-    };
+    const push = (t: NewToast) =>
+      setQueue((q) => [...q, { ...t, key: ++nextKey } as Toast]);
+
+    const offs = [
+      on("untap:levelup", (d) => push({ kind: "levelup", level: d.level })),
+      on("untap:milestone", (d) =>
+        push({ kind: "milestone", habit: d.habit, days: d.days, bonus: d.bonus }),
+      ),
+      on("untap:shield", () => push({ kind: "shield" })),
+      on("untap:anchor", () => push({ kind: "anchor" })),
+      on("untap:quest", (d) =>
+        push({ kind: "quest", label: d.label, xp: d.xp, emoji: d.emoji }),
+      ),
+    ];
+    return () => offs.forEach((off) => off());
   }, []);
 
+  const top = queue[0];
+  const duration =
+    top?.kind === "shield" || top?.kind === "anchor" ? SHORT_MS : LONG_MS;
+
   useEffect(() => {
-    if (queue.length === 0) return;
-    const k = queue[0].kind;
-    const duration = k === "shield" || k === "anchor" ? 2200 : 3500;
+    if (!top) return;
     const t = window.setTimeout(() => setQueue((q) => q.slice(1)), duration);
     return () => window.clearTimeout(t);
-  }, [queue]);
+    // Solo el toast visible marca el reloj: si llegan más mientras tanto,
+    // esperan su turno sin reiniciar el temporizador del actual.
+  }, [top, duration]);
 
-  const top = queue[0];
   if (!top) return null;
 
   return (
     <div
-      key={top.key}
       className="fixed inset-0 pointer-events-none flex items-center justify-center z-50"
       aria-live="polite"
     >
       <div
-        className="pixel-window animate-untap-popin"
-        style={{ minWidth: "20rem", textAlign: "center", background: "var(--color-bg)" }}
+        key={top.key}
+        className="pixel-window untap-popin"
+        style={{
+          minWidth: "20rem",
+          textAlign: "center",
+          background: "var(--color-bg)",
+          animationDuration: `${duration}ms`,
+        }}
       >
         {top.kind === "levelup" ? (
           <>
@@ -112,7 +114,7 @@ export function AchievementToast() {
             </div>
             <div className="text-6xl mb-2">👑</div>
             <div className="text-lg text-[var(--color-ink)]">
-              +10 XP bonus · tu pilar del día
+              Bonus extra · tu pilar del día
             </div>
           </>
         ) : (
@@ -128,16 +130,6 @@ export function AchievementToast() {
           </>
         )}
       </div>
-      <style>{`
-        @keyframes untap-popin {
-          0% { transform: scale(0.6); opacity: 0; }
-          15% { transform: scale(1.08); opacity: 1; }
-          30% { transform: scale(1); }
-          85% { transform: scale(1); opacity: 1; }
-          100% { transform: scale(0.95); opacity: 0; }
-        }
-        .animate-untap-popin { animation: untap-popin 2200ms steps(20, jump-end); }
-      `}</style>
     </div>
   );
 }

@@ -1,151 +1,340 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { startOfDayUTC, getOrCreatePlayer, isScheduledOn } from "@/lib/habits";
 import {
+  BACKFILL_MAX_DAYS,
+  getOrCreatePlayer,
+  getHabitMonth,
+} from "@/lib/habits";
+import {
+  addDays,
+  dayKey,
+  dayKeyFromISO,
+  daysBetween,
+  normalizeDayKey,
+} from "@/lib/day";
+import {
+  computeStreak,
+  isScheduledOn,
+  previousScheduledDay,
+  sanitizeSchedule,
+} from "@/lib/streak";
+import {
+  ANCHOR_BONUS,
+  MAX_SHIELDS,
   XP_PER_HABIT,
   XP_PER_TASK,
-  levelFromXp,
   getLevelInfo,
+  levelFromXp,
   milestoneFor,
+  type LevelInfo,
 } from "@/lib/level";
-import type { TaskStatus } from "@/lib/tasks";
-import type { ProjectItemStatus } from "@/lib/projects";
-import type { PlantSpecies } from "@/lib/garden";
-import { QUEST_DEFS, type QuestKind } from "@/lib/quests";
+import { TASK_STATUSES, type TaskStatus } from "@/lib/tasks";
+import { PROJECT_ITEM_STATUSES, type ProjectItemStatus } from "@/lib/projects";
+import { PLANT_SPECIES, type PlantSpecies } from "@/lib/garden";
+import { syncDailyQuests, type QuestCompletion } from "@/lib/quests";
+import { getHabitStats } from "@/lib/stats";
 
-// ---------- HELPERS ----------
+// ---------- LÍMITES / VALIDACIÓN ----------
 
-async function applyXpDelta(delta: number) {
-  const player = await getOrCreatePlayer();
-  const oldLevel = levelFromXp(player.xp);
-  const newXp = Math.max(0, player.xp + delta);
+const LIMITS = {
+  habitName: 60,
+  habitIcon: 8,
+  minimalGoal: 80,
+  intention: 140,
+  taskTitle: 120,
+  taskDescription: 500,
+  projectName: 60,
+  projectDescription: 300,
+  itemTitle: 200,
+} as const;
+
+const HABIT_COLORS = ["mint", "peach", "pink", "lavender", "sky"] as const;
+const PROJECT_ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
+const PROJECT_COLORS = ["lavender", "mint", "peach", "sky", "pink"];
+
+const SPECIES_KEYS = PLANT_SPECIES.map((s) => s.key);
+
+/** Recorta y normaliza texto de formulario. Devuelve null si queda vacío. */
+function text(value: FormDataEntryValue | null, max: number): string | null {
+  const t = String(value ?? "").trim().slice(0, max);
+  return t.length ? t : null;
+}
+
+function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return allowed.includes(value as T) ? (value as T) : fallback;
+}
+
+// ---------- JUGADOR / XP ----------
+
+export type PlayerSnapshot = LevelInfo & { shields: number };
+
+/**
+ * Aplica un delta de XP de forma atómica (`increment`), sin leer-modificar-
+ * escribir: dos clicks simultáneos ya no se pisan.
+ */
+async function grantXp(delta: number): Promise<{
+  oldLevel: number;
+  player: PlayerSnapshot;
+}> {
+  const current = await getOrCreatePlayer();
+  if (delta === 0) {
+    return {
+      oldLevel: levelFromXp(current.xp),
+      player: { ...getLevelInfo(current.xp), shields: current.shields },
+    };
+  }
+
   const updated = await prisma.player.update({
     where: { id: "default" },
-    data: { xp: newXp },
+    data: { xp: { increment: delta } },
   });
-  const info = getLevelInfo(updated.xp);
-  return { oldLevel, info, shields: updated.shields };
-}
 
-type QuestComplete = { kind: QuestKind; label: string; xp: number; emoji: string };
-
-async function bumpQuestProgress(
-  kinds: QuestKind[],
-): Promise<{ totalReward: number; completed: QuestComplete[] }> {
-  const today = startOfDayUTC();
-  let totalReward = 0;
-  const completed: QuestComplete[] = [];
-  for (const kind of kinds) {
-    const q = await prisma.dailyQuest.findUnique({
-      where: { date_kind: { date: today, kind } },
-    });
-    if (!q || q.completed) continue;
-    const newProgress = q.progress + 1;
-    const isDone = newProgress >= q.target;
-    await prisma.dailyQuest.update({
-      where: { id: q.id },
-      data: {
-        progress: newProgress,
-        completed: isDone,
-        completedAt: isDone ? new Date() : null,
-      },
-    });
-    if (isDone) {
-      totalReward += q.xpReward;
-      const def = QUEST_DEFS[kind];
-      completed.push({
-        kind,
-        label: def.label,
-        xp: q.xpReward,
-        emoji: def.emoji,
-      });
-    }
+  let xp = updated.xp;
+  if (xp < 0) {
+    xp = 0;
+    await prisma.player.update({ where: { id: "default" }, data: { xp: 0 } });
   }
-  return { totalReward, completed };
+
+  return {
+    oldLevel: levelFromXp(Math.max(0, updated.xp - delta)),
+    player: { ...getLevelInfo(xp), shields: updated.shields },
+  };
 }
 
-async function decrementQuestProgress(kinds: QuestKind[]) {
-  const today = startOfDayUTC();
-  for (const kind of kinds) {
-    await prisma.dailyQuest.updateMany({
-      where: { date: today, kind, completed: false, progress: { gt: 0 } },
-      data: { progress: { decrement: 1 } },
-    });
-  }
+async function playerSnapshot(): Promise<PlayerSnapshot> {
+  const player = await getOrCreatePlayer();
+  return { ...getLevelInfo(player.xp), shields: player.shields };
 }
 
+// ---------- ESCUDOS ----------
+
+async function refundShield() {
+  await prisma.player.updateMany({
+    where: { id: "default", shields: { lt: MAX_SHIELDS } },
+    data: { shields: { increment: 1 } },
+  });
+}
+
+/**
+ * Rellena con un escudo el hueco del día programado anterior.
+ *
+ * Ahora respeta el calendario del hábito: si tu hábito es L-M-V y ayer era
+ * martes, el hueco a cubrir es el lunes, no "ayer".
+ */
 async function trySpendShield(
-  habitId: string,
+  habit: { id: string; schedule: string | null },
   today: Date,
 ): Promise<boolean> {
-  const yesterday = new Date(today);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const dayBefore = new Date(today);
-  dayBefore.setUTCDate(dayBefore.getUTCDate() - 2);
+  const schedule = sanitizeSchedule(habit.schedule);
+  const gap = previousScheduledDay(schedule, today, 14);
+  if (!gap) return false;
+  const before = previousScheduledDay(schedule, gap, 14);
+  if (!before) return false;
 
-  const [yLog, dbLog] = await Promise.all([
+  const [gapLog, beforeLog] = await Promise.all([
     prisma.habitLog.findUnique({
-      where: { habitId_date: { habitId, date: yesterday } },
+      where: { habitId_date: { habitId: habit.id, date: gap } },
     }),
     prisma.habitLog.findUnique({
-      where: { habitId_date: { habitId, date: dayBefore } },
+      where: { habitId_date: { habitId: habit.id, date: before } },
     }),
   ]);
-  if (yLog) return false;
-  if (!dbLog) return false;
+  if (gapLog) return false; // no hay hueco
+  if (!beforeLog) return false; // no había racha que salvar
 
-  const player = await getOrCreatePlayer();
-  if (player.shields <= 0) return false;
+  // Guardia atómica: nunca gasta un escudo que no existe.
+  const { count } = await prisma.player.updateMany({
+    where: { id: "default", shields: { gt: 0 } },
+    data: { shields: { decrement: 1 } },
+  });
+  if (count !== 1) return false;
 
-  await prisma.player.update({
-    where: { id: "default" },
-    data: { shields: player.shields - 1 },
-  });
-  await prisma.habitLog.create({
-    data: { habitId, date: yesterday, shielded: true },
-  });
-  return true;
+  try {
+    await prisma.habitLog.create({
+      data: { habitId: habit.id, date: gap, shielded: true, xpAwarded: 0 },
+    });
+    return true;
+  } catch {
+    await refundShield();
+    return false;
+  }
 }
 
-async function isPerfectDayAfter(today: Date): Promise<boolean> {
-  const habits = await prisma.habit.findMany({
-    select: { id: true, schedule: true },
+// ---------- HÁBITOS ----------
+
+export type ToggleResult = {
+  ok: boolean;
+  reason: "ok" | "not-found" | "not-scheduled" | "out-of-range";
+  done: boolean;
+  partial: boolean;
+  xpDelta: number;
+  leveledUp: boolean;
+  player: PlayerSnapshot;
+  shieldUsed: boolean;
+  anchorTriggered: boolean;
+  milestone: { habitName: string; days: number; bonus: number } | null;
+  questsCompleted: QuestCompletion[];
+};
+
+async function emptyToggle(
+  reason: ToggleResult["reason"],
+): Promise<ToggleResult> {
+  return {
+    ok: false,
+    reason,
+    done: false,
+    partial: false,
+    xpDelta: 0,
+    leveledUp: false,
+    player: await playerSnapshot(),
+    shieldUsed: false,
+    anchorTriggered: false,
+    milestone: null,
+    questsCompleted: [],
+  };
+}
+
+/**
+ * Marca o desmarca un hábito en un día concreto.
+ *
+ * Toda la contabilidad de XP pasa por aquí y queda grabada en
+ * `HabitLog.xpAwarded`, así que desmarcar devuelve exactamente lo que se
+ * concedió — incluidos el bonus de ancla y el de hito. Antes desmarcar
+ * devolvía solo la base, y marcar/desmarcar en bucle era XP gratis.
+ */
+async function toggleHabitDay(
+  habitId: string,
+  key: Date,
+  partial: boolean,
+): Promise<ToggleResult> {
+  const habit = await prisma.habit.findUnique({ where: { id: habitId } });
+  if (!habit) return emptyToggle("not-found");
+
+  const today = dayKey();
+  if (key.getTime() > today.getTime()) return emptyToggle("out-of-range");
+  if (daysBetween(today, key) > BACKFILL_MAX_DAYS) {
+    return emptyToggle("out-of-range");
+  }
+
+  const schedule = sanitizeSchedule(habit.schedule);
+  if (!isScheduledOn(schedule, key)) return emptyToggle("not-scheduled");
+
+  const isToday = key.getTime() === today.getTime();
+  const existing = await prisma.habitLog.findUnique({
+    where: { habitId_date: { habitId, date: key } },
   });
-  const scheduledToday = habits.filter((h) =>
-    isScheduledOn(h.schedule ?? "1111111", today),
-  );
-  if (scheduledToday.length === 0) return false;
+
+  let logXpDelta = 0;
+  let done = false;
+  let nowPartial = false;
+  let shieldUsed = false;
+  let anchorTriggered = false;
+  let milestone: ToggleResult["milestone"] = null;
+
+  if (existing) {
+    await prisma.habitLog.delete({ where: { id: existing.id } });
+    logXpDelta = -existing.xpAwarded;
+    // Si borras un día cubierto por un escudo, se te devuelve.
+    if (existing.shielded) await refundShield();
+  } else {
+    const base = partial ? Math.floor(XP_PER_HABIT / 2) : XP_PER_HABIT;
+    anchorTriggered = habit.isAnchor && !partial;
+    let awarded = base + (anchorTriggered ? ANCHOR_BONUS : 0);
+
+    const created = await prisma.habitLog.create({
+      data: { habitId, date: key, partial, xpAwarded: awarded },
+    });
+    done = true;
+    nowPartial = partial;
+
+    // Hito: se calcula sobre la racha real (respetando el calendario) y su
+    // bonus queda grabado en el propio registro para poder devolverlo.
+    const streak = await currentStreakOf(habitId, schedule, today);
+    const m = milestoneFor(streak);
+    if (m) {
+      awarded += m.bonus;
+      await prisma.habitLog.update({
+        where: { id: created.id },
+        data: { xpAwarded: awarded },
+      });
+      milestone = { habitName: habit.name, days: m.days, bonus: m.bonus };
+    }
+    logXpDelta = awarded;
+
+    if (isToday && !partial) {
+      shieldUsed = await trySpendShield({ id: habitId, schedule }, today);
+    }
+  }
+
+  const quests = await syncDailyQuests();
+  const { oldLevel, player } = await grantXp(logXpDelta + quests.xpDelta);
+  refresh();
+
+  return {
+    ok: true,
+    reason: "ok",
+    done,
+    partial: nowPartial,
+    xpDelta: logXpDelta + quests.xpDelta,
+    leveledUp: player.level > oldLevel,
+    player,
+    shieldUsed,
+    anchorTriggered,
+    milestone,
+    questsCompleted: quests.completed,
+  };
+}
+
+async function currentStreakOf(
+  habitId: string,
+  schedule: string,
+  today: Date,
+): Promise<number> {
   const logs = await prisma.habitLog.findMany({
-    where: {
-      date: today,
-      habitId: { in: scheduledToday.map((h) => h.id) },
-    },
-    select: { habitId: true },
+    where: { habitId, date: { gte: addDays(today, -400) } },
+    select: { date: true },
   });
-  return logs.length === scheduledToday.length;
+  const keys = new Set(logs.map((l) => normalizeDayKey(l.date).getTime()));
+  return computeStreak(schedule, keys, today);
 }
 
-// ---------- HABITS ----------
+export async function toggleToday(
+  habitId: string,
+  partial = false,
+): Promise<ToggleResult> {
+  if (!habitId) return emptyToggle("not-found");
+  return toggleHabitDay(habitId, dayKey(), partial);
+}
 
-function sanitizeSchedule(s: string): string {
-  const cleaned = (s ?? "").replace(/[^01]/g, "").padEnd(7, "0").slice(0, 7);
-  if (cleaned === "0000000") return "1111111";
-  return cleaned;
+export async function toggleHabitOnDay(
+  habitId: string,
+  isoDate: string,
+): Promise<ToggleResult> {
+  if (!habitId) return emptyToggle("not-found");
+  const key = dayKeyFromISO(isoDate);
+  if (!key) return emptyToggle("out-of-range");
+  return toggleHabitDay(habitId, key, false);
 }
 
 export async function createHabit(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const icon = String(formData.get("icon") ?? "⭐").trim() || "⭐";
-  const color = String(formData.get("color") ?? "mint");
-  const plantSpecies = (String(formData.get("plantSpecies") ?? "flower")) as PlantSpecies;
-  const minimalGoal = String(formData.get("minimalGoal") ?? "").trim() || null;
-  const schedule = sanitizeSchedule(String(formData.get("schedule") ?? "1111111"));
-  const intention = String(formData.get("intention") ?? "").trim() || null;
-  const isAnchor = formData.get("isAnchor") === "on" || formData.get("isAnchor") === "true";
-
+  const name = text(formData.get("name"), LIMITS.habitName);
   if (!name) return;
+
+  const icon = text(formData.get("icon"), LIMITS.habitIcon) ?? "⭐";
+  const color = oneOf(formData.get("color"), HABIT_COLORS, "mint");
+  const plantSpecies = oneOf<PlantSpecies>(
+    formData.get("plantSpecies"),
+    SPECIES_KEYS,
+    "flower",
+  );
+  const minimalGoal = text(formData.get("minimalGoal"), LIMITS.minimalGoal);
+  const intention = text(formData.get("intention"), LIMITS.intention);
+  const schedule = sanitizeSchedule(String(formData.get("schedule") ?? ""));
+  const isAnchor =
+    formData.get("isAnchor") === "on" || formData.get("isAnchor") === "true";
+
   if (isAnchor) {
     await prisma.habit.updateMany({
       where: { isAnchor: true },
@@ -153,12 +342,13 @@ export async function createHabit(formData: FormData) {
     });
   }
   await prisma.habit.create({
-    data: {
-      name, icon, color, plantSpecies, minimalGoal,
-      schedule, intention, isAnchor,
-    },
+    data: { name, icon, color, plantSpecies, minimalGoal, schedule, intention, isAnchor },
   });
-  revalidatePath("/", "layout");
+
+  // Un hábito nuevo puede deshacer el "día perfecto" que ya estaba pagado.
+  const quests = await syncDailyQuests();
+  await grantXp(quests.xpDelta);
+  refresh();
 }
 
 export async function setHabitAnchor(habitId: string, makeAnchor: boolean) {
@@ -173,7 +363,7 @@ export async function setHabitAnchor(habitId: string, makeAnchor: boolean) {
     where: { id: habitId },
     data: { isAnchor: makeAnchor },
   });
-  revalidatePath("/", "layout");
+  refresh();
 }
 
 export async function updateHabitSchedule(habitId: string, schedule: string) {
@@ -182,207 +372,69 @@ export async function updateHabitSchedule(habitId: string, schedule: string) {
     where: { id: habitId },
     data: { schedule: sanitizeSchedule(schedule) },
   });
-  revalidatePath("/", "layout");
+  const quests = await syncDailyQuests();
+  await grantXp(quests.xpDelta);
+  refresh();
 }
 
 export async function updateHabitIntention(habitId: string, intention: string) {
   if (!habitId) return;
-  const t = intention.trim();
   await prisma.habit.update({
     where: { id: habitId },
-    data: { intention: t.length ? t : null },
+    data: { intention: intention.trim().slice(0, LIMITS.intention) || null },
   });
-  revalidatePath("/", "layout");
+  refresh();
 }
 
 export async function deleteHabit(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await prisma.habit.delete({ where: { id } });
-  revalidatePath("/", "layout");
+  await prisma.habit.delete({ where: { id } }).catch(() => null);
+  const quests = await syncDailyQuests();
+  await grantXp(quests.xpDelta);
+  refresh();
 }
 
-export type ToggleResult = {
-  doneToday: boolean;
-  partial: boolean;
+// Lecturas que antes eran endpoints GET públicos en /api. Como Server
+// Functions viajan por el mismo canal que el resto y no añaden superficie.
+export async function fetchHabitMonth(
+  habitId: string,
+  year: number,
+  monthIndex: number,
+) {
+  if (!habitId) return [];
+  return getHabitMonth(habitId, year, monthIndex);
+}
+
+export async function fetchHabitStats(habitId: string) {
+  if (!habitId) return null;
+  return getHabitStats(habitId);
+}
+
+// ---------- TAREAS ----------
+
+export type StatusChangeResult = {
+  becameDone: boolean;
   xpDelta: number;
   leveledUp: boolean;
-  newLevel: number;
-  xp: number;
-  progress: number;
-  shields: number;
-  shieldUsed: boolean;
-  anchorTriggered: boolean;
-  milestone: { habitName: string; days: number; bonus: number } | null;
-  questsCompleted: QuestComplete[];
+  player: PlayerSnapshot;
+  questsCompleted: QuestCompletion[];
 };
 
-const EMPTY_TOGGLE: ToggleResult = {
-  doneToday: false,
-  partial: false,
-  xpDelta: 0,
-  leveledUp: false,
-  newLevel: 1,
-  xp: 0,
-  progress: 0,
-  shields: 0,
-  shieldUsed: false,
-  anchorTriggered: false,
-  milestone: null,
-  questsCompleted: [],
-};
-
-export async function toggleToday(
-  habitId: string,
-  partial = false,
-): Promise<ToggleResult> {
-  if (!habitId) return EMPTY_TOGGLE;
-  const habit = await prisma.habit.findUnique({ where: { id: habitId } });
-  if (!habit) return EMPTY_TOGGLE;
-
-  const today = startOfDayUTC();
-
-  // refuse if not scheduled today
-  if (!isScheduledOn(habit.schedule ?? "1111111", today)) {
-    return EMPTY_TOGGLE;
-  }
-
-  const existing = await prisma.habitLog.findUnique({
-    where: { habitId_date: { habitId, date: today } },
-  });
-
-  let xpDelta = 0;
-  let nowDone = false;
-  let nowPartial = false;
-  let milestone: ToggleResult["milestone"] = null;
-  let shieldUsed = false;
-  let anchorTriggered = false;
-  let questsCompleted: QuestComplete[] = [];
-
-  if (existing) {
-    // un-toggle
-    await prisma.habitLog.delete({ where: { id: existing.id } });
-    xpDelta = -(existing.partial ? Math.floor(XP_PER_HABIT / 2) : XP_PER_HABIT);
-    // decrement quest progress (best-effort)
-    const kinds: QuestKind[] = ["QUEST_3_HABITS"];
-    if (new Date().getHours() < 10) kinds.push("QUEST_EARLY");
-    await decrementQuestProgress(kinds);
-  } else {
-    // create log
-    await prisma.habitLog.create({
-      data: { habitId, date: today, partial },
-    });
-    xpDelta = partial ? Math.floor(XP_PER_HABIT / 2) : XP_PER_HABIT;
-    if (habit.isAnchor && !partial) {
-      xpDelta += 10; // anchor bonus
-      anchorTriggered = true;
-    }
-    nowDone = true;
-    nowPartial = partial;
-
-    // shield gap-fill (only if becoming fully done, not partial — partials don't deserve shielding)
-    if (!partial) {
-      shieldUsed = await trySpendShield(habitId, today);
-    }
-
-    // milestone — recompute streak after marking
-    const fresh = await prisma.habit.findUnique({
-      where: { id: habitId },
-      include: { logs: { orderBy: { date: "desc" } } },
-    });
-    if (fresh) {
-      const dates = new Set(
-        fresh.logs.map((l) => startOfDayUTC(l.date).getTime()),
-      );
-      let streak = 0;
-      const cursor = new Date(today);
-      while (dates.has(cursor.getTime())) {
-        streak += 1;
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
-      }
-      const m = milestoneFor(streak);
-      if (m) {
-        xpDelta += m.bonus;
-        milestone = { habitName: habit.name, days: m.days, bonus: m.bonus };
-      }
-    }
-
-    // bump quests
-    const bumpKinds: QuestKind[] = ["QUEST_3_HABITS"];
-    if (new Date().getHours() < 10) bumpKinds.push("QUEST_EARLY");
-    if (await isPerfectDayAfter(today)) bumpKinds.push("QUEST_PERFECT");
-    const bumped = await bumpQuestProgress(bumpKinds);
-    xpDelta += bumped.totalReward;
-    questsCompleted = bumped.completed;
-  }
-
-  const { oldLevel, info, shields } = await applyXpDelta(xpDelta);
-  revalidatePath("/", "layout");
-
+async function emptyStatusChange(): Promise<StatusChangeResult> {
   return {
-    doneToday: nowDone,
-    partial: nowPartial,
-    xpDelta,
-    leveledUp: info.level > oldLevel,
-    newLevel: info.level,
-    xp: info.xp,
-    progress: info.progress,
-    shields,
-    shieldUsed,
-    anchorTriggered,
-    milestone,
-    questsCompleted,
+    becameDone: false,
+    xpDelta: 0,
+    leveledUp: false,
+    player: await playerSnapshot(),
+    questsCompleted: [],
   };
 }
-
-export async function toggleHabitOnDay(
-  habitId: string,
-  isoDate: string,
-): Promise<ToggleResult> {
-  if (!habitId || !isoDate) return EMPTY_TOGGLE;
-
-  const target = startOfDayUTC(new Date(isoDate + "T00:00:00Z"));
-  const today = startOfDayUTC();
-  if (target.getTime() > today.getTime()) return EMPTY_TOGGLE;
-  const diffDays = (today.getTime() - target.getTime()) / (24 * 60 * 60 * 1000);
-  if (diffDays > 60) return EMPTY_TOGGLE;
-
-  const existing = await prisma.habitLog.findUnique({
-    where: { habitId_date: { habitId, date: target } },
-  });
-
-  let xpDelta = 0;
-  let nowDone = false;
-  if (existing) {
-    await prisma.habitLog.delete({ where: { id: existing.id } });
-    xpDelta = -XP_PER_HABIT;
-  } else {
-    await prisma.habitLog.create({ data: { habitId, date: target } });
-    xpDelta = XP_PER_HABIT;
-    nowDone = true;
-  }
-
-  const { oldLevel, info, shields } = await applyXpDelta(xpDelta);
-  revalidatePath("/", "layout");
-
-  return {
-    ...EMPTY_TOGGLE,
-    doneToday: nowDone,
-    xpDelta,
-    leveledUp: info.level > oldLevel,
-    newLevel: info.level,
-    xp: info.xp,
-    progress: info.progress,
-    shields,
-  };
-}
-
-// ---------- TASKS ----------
 
 export async function createTask(formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim() || null;
+  const title = text(formData.get("title"), LIMITS.taskTitle);
   if (!title) return;
+  const description = text(formData.get("description"), LIMITS.taskDescription);
   const last = await prisma.task.findFirst({
     where: { status: "TODO" },
     orderBy: { order: "desc" },
@@ -390,38 +442,21 @@ export async function createTask(formData: FormData) {
   await prisma.task.create({
     data: { title, description, status: "TODO", order: (last?.order ?? 0) + 1 },
   });
-  revalidatePath("/", "layout");
+  refresh();
 }
-
-export type TaskUpdateResult = {
-  becameDone: boolean;
-  xpDelta: number;
-  leveledUp: boolean;
-  newLevel: number;
-  xp: number;
-  progress: number;
-  questsCompleted: QuestComplete[];
-};
 
 export async function updateTaskStatus(
   taskId: string,
   newStatus: TaskStatus,
-): Promise<TaskUpdateResult> {
-  const empty: TaskUpdateResult = {
-    becameDone: false,
-    xpDelta: 0,
-    leveledUp: false,
-    newLevel: 1,
-    xp: 0,
-    progress: 0,
-    questsCompleted: [],
-  };
+): Promise<StatusChangeResult> {
+  if (!taskId || !TASK_STATUSES.includes(newStatus)) {
+    return emptyStatusChange();
+  }
   const task = await prisma.task.findUnique({ where: { id: taskId } });
-  if (!task) return empty;
+  if (!task) return emptyStatusChange();
 
   const wasDone = task.status === "DONE";
   const willBeDone = newStatus === "DONE";
-
   let xpDelta = 0;
   if (!wasDone && willBeDone) xpDelta = XP_PER_TASK;
   if (wasDone && !willBeDone) xpDelta = -XP_PER_TASK;
@@ -431,65 +466,51 @@ export async function updateTaskStatus(
     data: { status: newStatus, completedAt: willBeDone ? new Date() : null },
   });
 
-  let questsCompleted: QuestComplete[] = [];
-  if (!wasDone && willBeDone) {
-    const bumped = await bumpQuestProgress(["QUEST_TASK"]);
-    xpDelta += bumped.totalReward;
-    questsCompleted = bumped.completed;
-  } else if (wasDone && !willBeDone) {
-    await decrementQuestProgress(["QUEST_TASK"]);
-  }
-
-  const { oldLevel, info } = await applyXpDelta(xpDelta);
-  revalidatePath("/", "layout");
+  const quests = await syncDailyQuests();
+  const { oldLevel, player } = await grantXp(xpDelta + quests.xpDelta);
+  refresh();
 
   return {
     becameDone: !wasDone && willBeDone,
-    xpDelta,
-    leveledUp: info.level > oldLevel,
-    newLevel: info.level,
-    xp: info.xp,
-    progress: info.progress,
-    questsCompleted,
+    xpDelta: xpDelta + quests.xpDelta,
+    leveledUp: player.level > oldLevel,
+    player,
+    questsCompleted: quests.completed,
   };
 }
 
 export async function deleteTask(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await prisma.task.delete({ where: { id } });
-  revalidatePath("/", "layout");
+  await prisma.task.delete({ where: { id } }).catch(() => null);
+  const quests = await syncDailyQuests();
+  await grantXp(quests.xpDelta);
+  refresh();
 }
 
-// ---------- PROJECTS ----------
-
-const PROJECT_ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
-const PROJECT_COLORS = ["lavender", "mint", "peach", "sky", "pink"];
+// ---------- PROYECTOS ----------
 
 export async function createProject(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim() || null;
-  const icon = String(formData.get("icon") ?? "📁");
-  const color = String(formData.get("color") ?? "lavender");
+  const name = text(formData.get("name"), LIMITS.projectName);
   if (!name) return;
   await prisma.project.create({
     data: {
       name,
-      description,
-      icon: PROJECT_ICONS.includes(icon) ? icon : "📁",
-      color: PROJECT_COLORS.includes(color) ? color : "lavender",
+      description: text(formData.get("description"), LIMITS.projectDescription),
+      icon: oneOf(formData.get("icon"), PROJECT_ICONS, "📁"),
+      color: oneOf(formData.get("color"), PROJECT_COLORS, "lavender"),
     },
   });
-  revalidatePath("/projects");
-  revalidatePath("/", "layout");
+  refresh();
 }
 
 export async function deleteProject(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await prisma.project.delete({ where: { id } });
-  revalidatePath("/projects");
-  revalidatePath("/", "layout");
+  await prisma.project.delete({ where: { id } }).catch(() => null);
+  const quests = await syncDailyQuests();
+  await grantXp(quests.xpDelta);
+  refresh();
 }
 
 export async function createProjectItem(
@@ -497,7 +518,7 @@ export async function createProjectItem(
   parentId: string | null,
   title: string,
 ) {
-  const t = title.trim();
+  const t = title.trim().slice(0, LIMITS.itemTitle);
   if (!projectId || !t) return;
   const last = await prisma.projectItem.findFirst({
     where: { projectId, parentId },
@@ -512,39 +533,21 @@ export async function createProjectItem(
       status: "TODO",
     },
   });
-  revalidatePath(`/projects/${projectId}`);
-  revalidatePath("/", "layout");
+  refresh();
 }
-
-export type ItemStatusResult = {
-  becameDone: boolean;
-  xpDelta: number;
-  leveledUp: boolean;
-  newLevel: number;
-  xp: number;
-  progress: number;
-  questsCompleted: QuestComplete[];
-};
 
 export async function updateProjectItemStatus(
   itemId: string,
   newStatus: ProjectItemStatus,
-): Promise<ItemStatusResult> {
-  const empty: ItemStatusResult = {
-    becameDone: false,
-    xpDelta: 0,
-    leveledUp: false,
-    newLevel: 1,
-    xp: 0,
-    progress: 0,
-    questsCompleted: [],
-  };
+): Promise<StatusChangeResult> {
+  if (!itemId || !PROJECT_ITEM_STATUSES.includes(newStatus)) {
+    return emptyStatusChange();
+  }
   const item = await prisma.projectItem.findUnique({ where: { id: itemId } });
-  if (!item) return empty;
+  if (!item) return emptyStatusChange();
 
   const wasDone = item.status === "DONE";
   const willBeDone = newStatus === "DONE";
-
   let xpDelta = 0;
   if (!wasDone && willBeDone) xpDelta = XP_PER_TASK;
   if (wasDone && !willBeDone) xpDelta = -XP_PER_TASK;
@@ -554,45 +557,33 @@ export async function updateProjectItemStatus(
     data: { status: newStatus, completedAt: willBeDone ? new Date() : null },
   });
 
-  let questsCompleted: QuestComplete[] = [];
-  if (!wasDone && willBeDone) {
-    const bumped = await bumpQuestProgress(["QUEST_TREE"]);
-    xpDelta += bumped.totalReward;
-    questsCompleted = bumped.completed;
-  } else if (wasDone && !willBeDone) {
-    await decrementQuestProgress(["QUEST_TREE"]);
-  }
-
-  const { oldLevel, info } = await applyXpDelta(xpDelta);
-  revalidatePath(`/projects/${item.projectId}`);
-  revalidatePath("/", "layout");
+  const quests = await syncDailyQuests();
+  const { oldLevel, player } = await grantXp(xpDelta + quests.xpDelta);
+  refresh();
 
   return {
     becameDone: !wasDone && willBeDone,
-    xpDelta,
-    leveledUp: info.level > oldLevel,
-    newLevel: info.level,
-    xp: info.xp,
-    progress: info.progress,
-    questsCompleted,
+    xpDelta: xpDelta + quests.xpDelta,
+    leveledUp: player.level > oldLevel,
+    player,
+    questsCompleted: quests.completed,
   };
 }
 
 export async function deleteProjectItem(itemId: string) {
   if (!itemId) return;
-  const item = await prisma.projectItem.findUnique({ where: { id: itemId } });
-  if (!item) return;
-  await prisma.projectItem.delete({ where: { id: itemId } });
-  revalidatePath(`/projects/${item.projectId}`);
-  revalidatePath("/", "layout");
+  await prisma.projectItem.delete({ where: { id: itemId } }).catch(() => null);
+  const quests = await syncDailyQuests();
+  await grantXp(quests.xpDelta);
+  refresh();
 }
 
 export async function renameProjectItem(itemId: string, newTitle: string) {
-  const t = newTitle.trim();
+  const t = newTitle.trim().slice(0, LIMITS.itemTitle);
   if (!itemId || !t) return;
-  const item = await prisma.projectItem.update({
+  await prisma.projectItem.update({
     where: { id: itemId },
     data: { title: t },
   });
-  revalidatePath(`/projects/${item.projectId}`);
+  refresh();
 }

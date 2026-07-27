@@ -12,8 +12,9 @@
   --color-border-soft: #6e6592;
 
   --color-ink: #f0e6d2;
-  --color-ink-soft: #b8a8c8;
-  --color-ink-dim: #8a7da0;
+  --color-ink-soft: #c4b6d4;
+  /* Subido desde #8a7da0 (~4.0:1): el texto pixel es pequeño y no llegaba a AA. */
+  --color-ink-dim: #a396b8;
 
   --color-mint: #a8d8b8;
   --color-mint-dark: #6fa888;
@@ -170,6 +171,41 @@ img {
 }
 .untap-pulse {
   animation: untap-pulse 1400ms steps(8, jump-end) infinite;
+}
+
+/* Toast de logro: la animación cubre toda la vida del toast (duración
+   inyectada desde el componente) y se queda en el último frame. */
+@keyframes untap-popin {
+  0% { transform: scale(0.6); opacity: 0; }
+  6% { transform: scale(1.08); opacity: 1; }
+  12% { transform: scale(1); }
+  88% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+.untap-popin {
+  animation-name: untap-popin;
+  animation-timing-function: steps(24, jump-end);
+  animation-fill-mode: forwards;
+}
+
+/* Respeta a quien pide menos movimiento: nada de bucles infinitos. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .untap-bobble,
+  .untap-pulse {
+    animation: none !important;
+  }
+  .untap-popin {
+    animation: none !important;
+    opacity: 1;
+  }
 }
 
 /* Theme accent stripe */
