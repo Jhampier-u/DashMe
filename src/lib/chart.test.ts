@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { areaPath, linePath, scaleLinear, segments } from "./chart";
+import { areaPath, invertLinear, linePath, scaleLinear, segments } from "./chart";
 
 describe("scaleLinear", () => {
   it("mapea el dominio al rango", () => {
@@ -18,6 +18,18 @@ describe("scaleLinear", () => {
   it("no divide por cero con dominio degenerado", () => {
     const s = scaleLinear([5, 5], [0, 100]);
     expect(s(5)).toBe(0);
+  });
+});
+
+describe("invertLinear", () => {
+  it("deshace scaleLinear", () => {
+    const s = scaleLinear([0, 27], [32, 546]);
+    const inv = invertLinear([0, 27], [32, 546]);
+    for (const i of [0, 7, 13, 27]) expect(inv(s(i))).toBeCloseTo(i, 6);
+  });
+
+  it("no divide por cero con rango degenerado", () => {
+    expect(invertLinear([0, 10], [5, 5])(5)).toBe(0);
   });
 });
 

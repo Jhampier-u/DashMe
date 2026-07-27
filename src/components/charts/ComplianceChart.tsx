@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { areaPath, linePath, scaleLinear, segments, type Point } from "@/lib/chart";
+import { areaPath, invertLinear, linePath, scaleLinear, segments, type Point } from "@/lib/chart";
 import { formatDayLabel } from "@/lib/day";
 
 export type ChartPoint = {
@@ -23,7 +23,10 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
   if (points.length === 0) return null;
 
-  const x = scaleLinear([0, Math.max(1, points.length - 1)], [PAD.left, W - PAD.right]);
+  const xDomain: [number, number] = [0, Math.max(1, points.length - 1)];
+  const xRange: [number, number] = [PAD.left, W - PAD.right];
+  const x = scaleLinear(xDomain, xRange);
+  const xInverse = invertLinear(xDomain, xRange);
   const y = scaleLinear([0, 1], [H - PAD.bottom, PAD.top]);
 
   const meanSegments = segments(points.map((p) => p.mean)).map((seg) =>
@@ -33,7 +36,12 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
   function onMove(e: React.MouseEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect();
     const ratio = (e.clientX - box.left) / box.width;
-    const index = Math.round(ratio * (points.length - 1));
+    // El ratio es una fracción del SVG completo (viewBox 0..W); hay que
+    // pasarlo primero a coordenada del viewBox y luego invertir la misma
+    // escala X que usa el trazado, porque el dominio no arranca en el borde
+    // (PAD.left) ni termina en él (W - PAD.right).
+    const viewBoxX = ratio * W;
+    const index = Math.round(xInverse(viewBoxX));
     setHover(Math.min(points.length - 1, Math.max(0, index)));
   }
 
@@ -133,7 +141,9 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
         <div
           style={{
             position: "absolute",
-            left: `${(activeIndex / Math.max(1, points.length - 1)) * 100}%`,
+            // Misma escala X que la cruceta del SVG: si difiriera, la cruceta
+            // y el tooltip señalarían días distintos al pasar el mouse.
+            left: `${(x(activeIndex) / W) * 100}%`,
             top: 0,
             transform: "translateX(-50%)",
             pointerEvents: "none",

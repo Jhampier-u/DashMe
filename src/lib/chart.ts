@@ -14,6 +14,18 @@ export function scaleLinear(
   return (value) => r0 + ((value - d0) / span) * (r1 - r0);
 }
 
+/** Inverso de `scaleLinear`: del rango al dominio. */
+export function invertLinear(
+  domain: [number, number],
+  range: [number, number],
+): (value: number) => number {
+  const [d0, d1] = domain;
+  const [r0, r1] = range;
+  const span = r1 - r0;
+  if (span === 0) return () => d0;
+  return (value) => d0 + ((value - r0) / span) * (d1 - d0);
+}
+
 function round(n: number): number {
   return Math.round(n * 100) / 100;
 }
