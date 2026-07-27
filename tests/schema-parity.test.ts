@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/sqlite-core";
+import { isTable } from "drizzle-orm";
 import * as schema from "@/db/schema";
+import { SCHEMA_SQL } from "@/db/schema-sql";
 import { createTestDb } from "./helpers/test-db";
 
 type ColumnaSqlite = {
@@ -9,6 +11,10 @@ type ColumnaSqlite = {
   pk: number;
 };
 
+const tablas = Object.values(schema).filter(isTable) as Parameters<
+  typeof getTableConfig
+>[0][];
+
 /**
  * El esquema está descrito dos veces: como DDL en `schema-sql.ts` (lo que
  * ejecuta SQLite) y como definiciones de Drizzle en `schema.ts` (lo que ve
@@ -16,12 +22,62 @@ type ColumnaSqlite = {
  * lado compila, pasa los demás tests y falla al insertar.
  */
 describe("paridad entre el DDL y las definiciones de Drizzle", () => {
-  const tablas = Object.values(schema).filter(
-    (v) => typeof v === "object" && v !== null && getTableConfigSeguro(v) !== null,
-  ) as Parameters<typeof getTableConfig>[0][];
+  it("compara todas las tablas del esquema", () => {
+    const enDdl = (SCHEMA_SQL.match(/CREATE TABLE/g) ?? []).length;
+    expect(tablas.length).toBe(enDdl);
+  });
 
-  it("encuentra tablas que comparar", () => {
-    expect(tablas.length).toBeGreaterThanOrEqual(11);
+  it("no hay tablas en el DDL que falten en Drizzle", () => {
+    const { sqlite } = createTestDb();
+
+    const enSqlite = (
+      sqlite
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' " +
+            "AND name NOT LIKE 'sqlite_%'",
+        )
+        .all() as { name: string }[]
+    ).map((f) => f.name);
+
+    const enDrizzle = new Set(tablas.map((t) => getTableConfig(t).name));
+
+    // La comparación por columnas solo recorre tablas que ya existen en
+    // Drizzle, así que una tabla creada únicamente en el DDL no la ve nadie.
+    const soloEnDdl = enSqlite.filter((n) => !enDrizzle.has(n));
+    expect(soloEnDdl).toEqual([]);
+  });
+
+  it("las columnas únicas en Drizzle lo son también en el DDL", () => {
+    const { sqlite } = createTestDb();
+    const problemas: string[] = [];
+
+    for (const tabla of tablas) {
+      const config = getTableConfig(tabla);
+
+      const indices = sqlite
+        .prepare(`PRAGMA index_list(${config.name})`)
+        .all() as { name: string; unique: number }[];
+
+      // Columnas cubiertas por algún índice único de una sola columna.
+      const unicasEnSqlite = new Set<string>();
+      for (const idx of indices.filter((i) => i.unique === 1)) {
+        const cols = sqlite
+          .prepare(`PRAGMA index_info(${idx.name})`)
+          .all() as { name: string }[];
+        if (cols.length === 1) unicasEnSqlite.add(cols[0].name);
+      }
+
+      for (const col of config.columns) {
+        if (!col.isUnique) continue;
+        if (!unicasEnSqlite.has(col.name)) {
+          problemas.push(
+            `${config.name}.${col.name}: única en Drizzle pero sin UNIQUE en el DDL`,
+          );
+        }
+      }
+    }
+
+    expect(problemas).toEqual([]);
   });
 
   it("cada tabla de Drizzle tiene las mismas columnas que el DDL", () => {
@@ -74,12 +130,3 @@ describe("paridad entre el DDL y las definiciones de Drizzle", () => {
     expect(problemas).toEqual([]);
   });
 });
-
-/** `getTableConfig` lanza si el valor no es una tabla; esto lo convierte en null. */
-function getTableConfigSeguro(v: unknown) {
-  try {
-    return getTableConfig(v as Parameters<typeof getTableConfig>[0]);
-  } catch {
-    return null;
-  }
-}
