@@ -137,27 +137,48 @@ export function averageRate(days: DayCompliance[]): number | null {
 
 export type PeriodDelta = {
   current: number;
+  /** Días con algo programado dentro del periodo actual. */
+  currentDays: number;
   previous: number | null;
+  /** Días con algo programado dentro del periodo anterior. */
+  previousDays: number;
   /** Diferencia en puntos porcentuales, redondeada. */
   deltaPoints: number | null;
 };
+
+function countMeasured(days: DayCompliance[]): number {
+  return days.filter((d) => d.rate !== null).length;
+}
 
 /**
  * Compara los últimos `periodDays` días con los `periodDays` anteriores.
  * Se usan 28 días (cuatro semanas exactas) para que ambos periodos tengan la
  * misma composición de días de la semana.
+ *
+ * El periodo anterior solo se compara si tiene al menos la mitad de días
+ * medidos que el actual: si no, el promedio saldría de un puñado de días y la
+ * comparación afirmaría más de lo que sabe.
  */
 export function periodDelta(
   days: DayCompliance[],
   periodDays: number,
 ): PeriodDelta | null {
-  const current = averageRate(days.slice(-periodDays));
+  const currentSlice = days.slice(-periodDays);
+  const current = averageRate(currentSlice);
   if (current === null) return null;
 
-  const previous = averageRate(days.slice(-periodDays * 2, -periodDays));
+  const currentDays = countMeasured(currentSlice);
+  const previousSlice = days.slice(-periodDays * 2, -periodDays);
+  const previousDays = countMeasured(previousSlice);
+
+  const comparable = previousDays >= Math.max(1, Math.ceil(currentDays / 2));
+  const previous = comparable ? averageRate(previousSlice) : null;
+
   return {
     current,
+    currentDays,
     previous,
+    previousDays,
     deltaPoints:
       previous === null ? null : Math.round((current - previous) * 100),
   };

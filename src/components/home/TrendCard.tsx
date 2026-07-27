@@ -22,7 +22,9 @@ export function TrendCard({ points, delta }: Props) {
   const [range, setRange] = useState<(typeof RANGES)[number]>(RANGES[0]);
   const visible = points.slice(-range.days);
 
-  const up = (delta?.deltaPoints ?? 0) >= 0;
+  const deltaPoints = delta?.deltaPoints ?? null;
+  const changed = deltaPoints !== null && deltaPoints !== 0;
+  const up = changed && deltaPoints > 0;
 
   return (
     <div className="m-card">
@@ -46,17 +48,17 @@ export function TrendCard({ points, delta }: Props) {
                     style={{
                       fontSize: 12.5,
                       fontWeight: 550,
-                      color: up ? "var(--m-good)" : "var(--m-crit)",
+                      color: changed ? (up ? "var(--m-good)" : "var(--m-crit)") : "var(--m-ink-2)",
                     }}
                   >
-                    {up ? "▲" : "▼"} {Math.abs(delta.deltaPoints)} pts
+                    {changed ? `${up ? "▲" : "▼"} ${Math.abs(delta.deltaPoints)} pts` : "sin cambio"}
                   </span>
                 )}
               </div>
               <div style={{ fontSize: 11.5, color: "var(--m-ink-3)", marginTop: 5 }}>
                 {delta.previous === null
-                  ? "sin periodo anterior con el que comparar"
-                  : `frente a ${Math.round(delta.previous * 100)}% en los 28 días anteriores`}
+                  ? "sin periodo anterior suficiente para comparar"
+                  : `frente a ${Math.round(delta.previous * 100)}% del periodo anterior · ${delta.previousDays} días medidos`}
               </div>
             </>
           )}

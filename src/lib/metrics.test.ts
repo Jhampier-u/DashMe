@@ -165,7 +165,9 @@ describe("periodDelta", () => {
     ];
     expect(periodDelta(days, 2)).toEqual({
       current: 0.8,
+      currentDays: 2,
       previous: 0.5,
+      previousDays: 2,
       deltaPoints: 30,
     });
   });
@@ -174,13 +176,41 @@ describe("periodDelta", () => {
     const days = [day("2026-07-01", 0.6), day("2026-07-02", 0.6)];
     expect(periodDelta(days, 2)).toEqual({
       current: 0.6,
+      currentDays: 2,
       previous: null,
+      previousDays: 0,
       deltaPoints: null,
     });
   });
 
   it("devuelve null si el periodo actual no tiene datos", () => {
     expect(periodDelta([day("2026-07-01", null)], 2)).toBeNull();
+  });
+
+  it("no compara si el periodo anterior apenas tiene días medidos", () => {
+    // 28 días actuales completos y solo 2 medidos en los 28 anteriores:
+    // la forma real de un usuario que empezó hace un mes.
+    const previo = Array.from({ length: 28 }, (_, i) =>
+      day(`p${i}`, i >= 26 ? 0.5 : null),
+    );
+    const actual = Array.from({ length: 28 }, (_, i) => day(`a${i}`, 0.8));
+    const result = periodDelta([...previo, ...actual], 28)!;
+    expect(result.current).toBeCloseTo(0.8, 6);
+    expect(result.currentDays).toBe(28);
+    expect(result.previousDays).toBe(2);
+    expect(result.previous).toBeNull();
+    expect(result.deltaPoints).toBeNull();
+  });
+
+  it("compara cuando el periodo anterior tiene datos suficientes", () => {
+    const previo = Array.from({ length: 28 }, (_, i) =>
+      day(`p${i}`, i >= 14 ? 0.5 : null),
+    );
+    const actual = Array.from({ length: 28 }, (_, i) => day(`a${i}`, 0.8));
+    const result = periodDelta([...previo, ...actual], 28)!;
+    expect(result.previous).toBeCloseTo(0.5, 6);
+    expect(result.previousDays).toBe(14);
+    expect(result.deltaPoints).toBe(30);
   });
 });
 
