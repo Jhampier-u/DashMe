@@ -68,65 +68,57 @@ export function AchievementToast() {
     >
       <div
         key={top.key}
-        className="pixel-window untap-popin"
+        className="untap-popin"
         style={{
-          minWidth: "20rem",
+          minWidth: "17rem",
+          maxWidth: "22rem",
           textAlign: "center",
-          background: "var(--color-bg)",
+          background: "var(--m-surface)",
+          border: "1px solid var(--m-line)",
+          borderRadius: 14,
+          padding: "26px 24px",
+          boxShadow: "0 22px 60px rgba(0, 0, 0, 0.55)",
           animationDuration: `${duration}ms`,
         }}
       >
         {top.kind === "levelup" ? (
           <>
-            <div className="font-display text-[0.7rem] tracking-widest text-[var(--color-peach)] mb-3">
-              ¡SUBISTE DE NIVEL!
+            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
+              Has subido de nivel
             </div>
-            <div className="text-6xl mb-2">🎉</div>
-            <div className="font-display text-2xl text-[var(--color-mint)]">
-              Nv. {top.level}
+            <div className="m-num" style={{ fontSize: 46, fontWeight: 650, letterSpacing: "-0.03em", lineHeight: 1 }}>
+              {top.level}
             </div>
           </>
         ) : top.kind === "milestone" ? (
           <>
-            <div className="font-display text-[0.7rem] tracking-widest text-[var(--color-peach)] mb-3">
-              ¡RACHA DE {top.days} DÍAS!
+            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
+              Racha de {top.days} días
             </div>
-            <div className="text-6xl mb-2">🔥</div>
-            <div className="font-display text-base text-[var(--color-mint)] mb-2">
-              {top.habit}
-            </div>
-            <div className="text-lg text-[var(--color-ink)]">+{top.bonus} XP bonus</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{top.habit}</div>
+            <div style={{ fontSize: 13.5, color: "var(--m-good)" }}>+{top.bonus} XP</div>
           </>
         ) : top.kind === "shield" ? (
           <>
-            <div className="font-display text-[0.7rem] tracking-widest text-[var(--color-sky)] mb-3">
-              ESCUDO USADO
+            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
+              Escudo usado
             </div>
-            <div className="text-6xl mb-2">🛡️</div>
-            <div className="text-lg text-[var(--color-ink)]">
-              Tu racha está a salvo
-            </div>
+            <div style={{ fontSize: 15, color: "var(--m-ink)" }}>Tu racha sigue viva</div>
           </>
         ) : top.kind === "anchor" ? (
           <>
-            <div className="font-display text-[0.7rem] tracking-widest text-[var(--color-peach)] mb-3">
-              ¡HÁBITO ANCLA COMPLETO!
+            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
+              Hábito ancla
             </div>
-            <div className="text-6xl mb-2">👑</div>
-            <div className="text-lg text-[var(--color-ink)]">
-              Bonus extra · tu pilar del día
-            </div>
+            <div style={{ fontSize: 15, color: "var(--m-ink)" }}>Cumplido · bonus extra</div>
           </>
         ) : (
           <>
-            <div className="font-display text-[0.7rem] tracking-widest text-[var(--color-peach)] mb-3">
-              ¡MISIÓN COMPLETA!
+            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
+              Objetivo cumplido
             </div>
-            <div className="text-6xl mb-2">{top.emoji}</div>
-            <div className="font-display text-base text-[var(--color-mint)] mb-2">
-              {top.label}
-            </div>
-            <div className="text-lg text-[var(--color-ink)]">+{top.xp} XP</div>
+            <div style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{top.label}</div>
+            <div style={{ fontSize: 13.5, color: "var(--m-good)" }}>+{top.xp} XP</div>
           </>
         )}
       </div>
