@@ -56,4 +56,83 @@ export const SCHEMA_SQL = `
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS streams (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts            INTEGER NOT NULL,
+      ms_played     INTEGER NOT NULL,
+      track_uri     TEXT,
+      track_name    TEXT NOT NULL,
+      artist_name   TEXT NOT NULL,
+      album_name    TEXT,
+      track_key     TEXT NOT NULL,
+      artist_key    TEXT NOT NULL,
+      album_key     TEXT,
+      local_date    TEXT NOT NULL,
+      local_hour    INTEGER NOT NULL,
+      reason_start  TEXT,
+      reason_end    TEXT,
+      shuffle       INTEGER,
+      skipped       INTEGER,
+      platform      TEXT,
+      source        TEXT NOT NULL,
+      dedup_key     TEXT NOT NULL UNIQUE
+    );
+    CREATE INDEX IF NOT EXISTS streams_ts_idx         ON streams(ts);
+    CREATE INDEX IF NOT EXISTS streams_artist_idx     ON streams(artist_key, ts);
+    CREATE INDEX IF NOT EXISTS streams_track_idx      ON streams(track_key, ts);
+    CREATE INDEX IF NOT EXISTS streams_album_idx      ON streams(album_key, ts);
+    CREATE INDEX IF NOT EXISTS streams_local_date_idx ON streams(local_date);
+    CREATE INDEX IF NOT EXISTS streams_local_hour_idx ON streams(local_hour);
+    CREATE INDEX IF NOT EXISTS streams_source_ts_idx  ON streams(source, ts);
+
+    CREATE TABLE IF NOT EXISTS spotify_credentials (
+      id               INTEGER PRIMARY KEY CHECK (id = 1),
+      spotify_user_id  TEXT NOT NULL,
+      refresh_token    TEXT NOT NULL,
+      access_token     TEXT,
+      expires_at       INTEGER,
+      updated_at       INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS capture_state (
+      id                INTEGER PRIMARY KEY CHECK (id = 1),
+      last_played_at    INTEGER,
+      last_run_at       INTEGER,
+      last_run_status   TEXT,
+      last_run_inserted INTEGER,
+      last_error        TEXT,
+      gap_suspected_at  INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS import_batches (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename      TEXT NOT NULL,
+      file_hash     TEXT,
+      format        TEXT,
+      rows_read     INTEGER,
+      rows_inserted INTEGER,
+      rows_skipped  INTEGER,
+      rows_invalid  INTEGER,
+      range_start   INTEGER,
+      range_end     INTEGER,
+      imported_at   INTEGER NOT NULL,
+      status        TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS artist_resolution (
+      artist_key        TEXT PRIMARY KEY,
+      spotify_artist_id TEXT,
+      image_url         TEXT,
+      resolved_at       INTEGER,
+      attempts          INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS top_snapshots (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      taken_at     INTEGER NOT NULL,
+      time_range   TEXT NOT NULL,
+      entity       TEXT NOT NULL,
+      payload_json TEXT NOT NULL
+    );
   `;
