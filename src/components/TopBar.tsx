@@ -7,7 +7,7 @@ export default function TopBar({
   active,
 }: {
   me: SpotifyUser;
-  active?: "index" | "library" | "tags" | "smart" | "stats";
+  active?: "index" | "library" | "tags" | "smart" | "stats" | "ajustes";
 }) {
   return (
     <header className="px-8 py-5 flex items-center justify-between hairline-b sticky top-0 bg-ink/85 backdrop-blur-md z-50">
@@ -34,6 +34,9 @@ export default function TopBar({
           </NavLink>
           <NavLink href="/stats" active={active === "stats"}>
             Stats
+          </NavLink>
+          <NavLink href="/ajustes" active={active === "ajustes"}>
+            Ajustes
           </NavLink>
         </nav>
       </div>
