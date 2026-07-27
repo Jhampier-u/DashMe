@@ -108,6 +108,68 @@ Si quieres compartir tags y smart playlists entre máquinas, exporta/importa el 
 
 ---
 
+## Captura de escuchas
+
+La API de Spotify no guarda tu historial: solo devuelve las **últimas 50
+reproducciones**. Para no perder nada hay que consultarla periódicamente.
+
+### Variables necesarias
+
+```
+CRON_SECRET=...            # protege /api/cron/capture
+STATS_TZ=America/Guayaquil # zona IANA para las estadísticas por hora y día
+```
+
+`STATS_TZ` es obligatoria y no tiene valor por defecto: una zona equivocada
+produce histogramas desplazados que parecen correctos. El valor debe ser una
+zona horaria **IANA** válida (p. ej. `America/Guayaquil`, `Europe/Madrid`,
+`America/Lima`) — no un offset ni una abreviatura.
+
+El **Redirect URI** del dashboard de Spotify debe ser exactamente
+`http://127.0.0.1:3000/api/auth/callback/spotify` — nunca `localhost`, que
+Spotify rechaza en apps nuevas. La app lo envía explícito porque Auth.js en
+este fork de Next no consigue derivar el origen de la petición por sí solo.
+
+### En local (Windows)
+
+Con la app corriendo, crea la tarea programada (PowerShell como administrador):
+
+```powershell
+schtasks /Create /TN "Voidtify captura" /SC MINUTE /MO 20 /TR "curl.exe -s -X POST -H \"x-cron-secret: EL_SECRETO\" http://127.0.0.1:3000/api/cron/capture" /F
+```
+
+### En un VPS
+
+```bash
+*/20 * * * * curl -sX POST -H "x-cron-secret: EL_SECRETO" http://127.0.0.1:3000/api/cron/capture
+```
+
+Misma ruta y mismo código en ambos entornos.
+
+### Estado
+
+`/ajustes` muestra la última ejecución, cuántas escuchas van capturadas y el
+último error. Avisa si la captura lleva más de dos horas sin correr o si
+detecta un posible hueco.
+
+### Por qué cada 20 minutos
+
+La ventana de la API son 50 pistas, unas 2,5–3 h de escucha continua. Veinte
+minutos deja margen de sobra incluso si el equipo estuvo suspendido, y son solo
+~72 llamadas al día.
+
+### `src/auth.ts` no recarga en caliente
+
+Ese módulo se evalúa una sola vez al arrancar el proceso. Cambios en él —incluido
+cualquier `process.env` leído a nivel de módulo, como el origen público usado
+para construir el redirect URI— no se aplican con Fast Refresh: hace falta
+parar `npm run dev` por completo y volver a arrancarlo. Esto costó tiempo de
+depuración real dos veces durante el desarrollo de la captura. Si tocas
+`auth.ts` y el comportamiento no cambia, reinicia el servidor entero antes de
+sospechar de otra cosa.
+
+---
+
 ## Limitaciones conocidas
 
 ### Spotify Web API (cambios feb 2026)
