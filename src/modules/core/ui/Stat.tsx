@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Card } from "./Card";
 
 /**
@@ -15,19 +15,36 @@ type StatProps = {
   size?: StatSize;
 };
 
+/**
+ * La etiqueta en Quicksand, el número en VT323: es el reparto de fuentes del
+ * sistema aplicado al caso más pequeño que existe. VT323 es estrecha, así que
+ * 26px de VT323 ocupan lo que 21 de una sans — el número gana presencia sin
+ * ganar sitio.
+ */
+const ETIQUETA: CSSProperties = {
+  fontFamily: "var(--font-cuerpo)",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: "0.09em",
+  textTransform: "uppercase",
+  color: "var(--color-tinta)",
+};
+
 export function Stat({ label, value, meta, size = "md" }: StatProps) {
   const md = size === "md";
 
   const body = (
     <>
-      <div className="m-label">{label}</div>
+      <div style={ETIQUETA}>{label}</div>
       <div
-        className="m-num"
         style={{
-          fontSize: md ? 21 : 17,
-          fontWeight: 600,
+          // 26 y 20: los dos por encima del mínimo de 16px de VT323.
+          fontFamily: "var(--font-vt)",
+          fontSize: md ? 26 : 20,
+          lineHeight: 1,
+          fontVariantNumeric: "tabular-nums",
+          color: "var(--color-tinta)",
           marginTop: md ? 6 : 4,
-          letterSpacing: md ? "-0.02em" : undefined,
         }}
       >
         {value}
@@ -35,9 +52,12 @@ export function Stat({ label, value, meta, size = "md" }: StatProps) {
       {meta === undefined ? null : (
         <div
           style={{
+            // Tinta plena, no tinta-2: a 11px, 4,00:1 no llega a AA. Lo que
+            // separa el apunte del número es el tamaño y el grosor, no el tono.
+            fontFamily: "var(--font-cuerpo)",
             fontSize: md ? 11.5 : 11,
-            color: md ? "var(--m-ink-2)" : "var(--m-ink-3)",
-            marginTop: md ? 3 : 2,
+            color: "var(--color-tinta)",
+            marginTop: md ? 4 : 2,
           }}
         >
           {meta}

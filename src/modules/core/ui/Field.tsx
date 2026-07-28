@@ -1,16 +1,30 @@
-import { useId, type CSSProperties } from "react";
+import { useId } from "react";
 
-const CONTROL: CSSProperties = {
-  width: "100%",
-  background: "var(--m-page)",
-  border: "1px solid var(--m-line)",
-  borderRadius: 8,
-  padding: "9px 11px",
-  fontFamily: "inherit",
-  fontSize: 13.5,
-  color: "var(--m-ink)",
-  outline: "none",
-};
+/*
+  El control va en clases y no en un objeto de estilo, al revés que el resto del
+  archivo antes de repintarlo. El motivo es el foco: `:focus` no se puede
+  expresar en línea, y un anillo de foco que se ve es un requisito, no un
+  adorno. Con todo en utilidades no hay estilo en línea al que ganarle.
+
+  Fondo en paper-2 y no en paper: hundir levemente el campo respecto a la
+  tarjeta que lo contiene es lo que lo hace leerse como algo donde se escribe.
+  Tinta encima, 9,09:1.
+*/
+const CONTROL =
+  "w-full bg-paper-2 text-tinta font-cuerpo text-[13.5px] " +
+  "border-3 border-line rounded-control px-2.5 py-2 " +
+  // El marcador de posición es el único sitio donde entra tinta-2 (4,00:1) por
+  // debajo de texto grande, y es defendible: nunca lleva información, siempre
+  // hay una etiqueta visible al lado y desaparece al escribir.
+  "placeholder:text-tinta-2 " +
+  "outline-none focus:outline-3 focus:outline-offset-2 focus:outline-line";
+
+/**
+ * La etiqueta va en Quicksand, que es la fuente de lo que hay que leer, y en
+ * tinta plena: a 12px, tinta-2 se queda en 4,00:1 y eso solo vale para texto
+ * grande. La jerarquía con el valor la da el tamaño, no el color.
+ */
+const ETIQUETA = "block text-xs font-semibold text-tinta font-cuerpo mb-1.5";
 
 type BaseProps = {
   label: string;
@@ -33,10 +47,7 @@ export function Field({
   const id = useId();
   return (
     <div>
-      <label
-        htmlFor={id}
-        style={{ display: "block", fontSize: 12, color: "var(--m-ink-2)", marginBottom: 6 }}
-      >
+      <label htmlFor={id} className={ETIQUETA}>
         {label}
       </label>
       <input
@@ -46,7 +57,7 @@ export function Field({
         placeholder={placeholder}
         maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
-        style={CONTROL}
+        className={CONTROL}
       />
     </div>
   );
@@ -64,10 +75,7 @@ export function TextArea({
   const id = useId();
   return (
     <div>
-      <label
-        htmlFor={id}
-        style={{ display: "block", fontSize: 12, color: "var(--m-ink-2)", marginBottom: 6 }}
-      >
+      <label htmlFor={id} className={ETIQUETA}>
         {label}
       </label>
       <textarea
@@ -77,7 +85,7 @@ export function TextArea({
         placeholder={placeholder}
         maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
-        style={{ ...CONTROL, resize: "vertical" }}
+        className={`${CONTROL} resize-y`}
       />
     </div>
   );
