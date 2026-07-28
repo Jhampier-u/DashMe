@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import type { HabitWithStatus } from "@/lib/habits";
 import { useLocalHour } from "@/lib/useLocalHour";
-import { plantEmoji, stageFor, stageLabel } from "@/lib/garden";
+import { isPlantWilted, plantEmoji, plantStateLabel, stageFor } from "@/lib/garden";
 import { habitColorVar, resolveHabitColor } from "@/lib/color";
 import { formatDays } from "@/lib/day";
 import { toggleToday } from "@/app/actions";
@@ -246,7 +246,16 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
     habit.hasEverBeenDone,
   );
   const stage = stageFor(habit.streak);
-  const isWilted = !habit.doneToday && habit.streak === 0 && habit.hasEverBeenDone;
+  const isWilted = isPlantWilted(
+    habit.streak,
+    habit.doneToday,
+    habit.hasEverBeenDone,
+  );
+  const estado = plantStateLabel(
+    habit.streak,
+    habit.doneToday,
+    habit.hasEverBeenDone,
+  );
   const thirsty = !habit.doneToday && !isWilted && habit.scheduledToday;
   const offDay = !habit.scheduledToday;
   const accent = habitColorVar(resolveHabitColor(habit.color));
@@ -271,7 +280,7 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
       type="button"
       onClick={handleWater}
       disabled={pending || habit.doneToday || offDay}
-      title={`${habit.name} · ${stageLabel(stage)} · racha de ${formatDays(habit.streak)} · ${situacion}`}
+      title={`${habit.name} · ${estado} · racha de ${formatDays(habit.streak)} · ${situacion}`}
       style={{
         position: "relative",
         display: "flex",
@@ -376,7 +385,7 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
           {habit.name}
         </div>
         <div className="m-num" style={{ fontSize: 10.5, color: "var(--m-ink-2)" }}>
-          {habit.streak} d · {stageLabel(stage)}
+          {habit.streak} d · {estado}
         </div>
       </div>
     </button>

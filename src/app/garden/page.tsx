@@ -5,7 +5,7 @@ import { buttonStyle } from "@/components/ui/Button";
 import { Stat, StatGrid } from "@/components/ui/Stat";
 import { GardenScene } from "@/components/GardenScene";
 import { getHabitsWithTodayStatus } from "@/lib/habits";
-import { stageFor } from "@/lib/garden";
+import { isPlantWilted, stageFor } from "@/lib/garden";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +24,8 @@ export default async function GardenPage() {
   const wateredToday = habits.filter((h) => h.doneToday).length;
   const mature = habits.filter((h) => stageFor(h.streak) >= 3).length;
   const blooming = habits.filter((h) => stageFor(h.streak) >= 4).length;
-  const wilted = habits.filter(
-    (h) => !h.doneToday && h.streak === 0 && h.hasEverBeenDone,
+  const wilted = habits.filter((h) =>
+    isPlantWilted(h.streak, h.doneToday, h.hasEverBeenDone),
   ).length;
 
   return (
