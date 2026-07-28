@@ -54,7 +54,7 @@ export default async function FichaAlbum({
       <TopBar me={me} active="portada" />
 
       <section className="px-8 py-5 hairline-b flex items-center justify-between gap-4 flex-wrap">
-        <RangePicker range={range} />
+        <RangePicker range={range} base={`/escucha/album/${key}`} />
         <Link href="/" className="label-mono text-mute hover:text-acid transition-colors">
           ← Portada
         </Link>

@@ -89,7 +89,7 @@ export default async function Historial({
       <TopBar me={me} active="historial" />
 
       <section className="px-8 py-5 hairline-b">
-        <RangePicker range={range} />
+        <RangePicker range={range} base="/historial" />
       </section>
 
       <section className="px-8 py-8 hairline-b flex items-end justify-between gap-6 flex-wrap">
