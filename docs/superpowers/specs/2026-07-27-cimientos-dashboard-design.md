@@ -50,9 +50,19 @@ Todo lo siguiente se comprobó contra el disco, no se asumió:
   0 registros en `HabitLog`, `Player` con `xp: 0`, 0 tareas, 0 proyectos, 3 misiones
   diarias autogeneradas. Los 110 KB del archivo son esquema y las 9 migraciones de
   Prisma. **No hay datos irremplazables.**
-- **Voidtify no tiene datos en esta máquina.** Sin `node_modules`, sin `.env.local`,
-  sin `data/ledger.db`. Su propio `.gitignore` declara la base como
-  *"user-specific cache, regenerated per machine"*.
+- **El clon de Voidtify dentro de este directorio no tiene datos** — sin
+  `node_modules`, sin `.env.local`, sin `data/ledger.db`. Es un duplicado exacto del
+  remoto (mismo commit `6aba138`, árbol limpio).
+- **Pero la instalación real de Voidtify vive fuera, en `C:\Voidtify`.** Mismo
+  repositorio y mismo commit, instalada y en uso, con `data/ledger.db` de **158 MB**
+  más 9 MB de WAL y una carpeta `import/`. Ahí están la biblioteca, el historial de
+  escucha, los tags y las smart playlists. Pese a que el `.gitignore` de Voidtify
+  describe esa base como *"user-specific cache, regenerated per machine"*,
+  regenerarla significa reescanear la cuenta entera de Spotify contra el rate limit,
+  y los tags y smart playlists creados a mano **no se regeneran en absoluto**.
+  **El sub-proyecto 2 debe migrar ese archivo, no reconstruirlo.** Para Cimientos no
+  cambia nada: Voidtify solo aterriza en `legacy/` desde GitHub y `C:\Voidtify` no se
+  toca.
 
 ## 3. Decisiones tomadas
 
