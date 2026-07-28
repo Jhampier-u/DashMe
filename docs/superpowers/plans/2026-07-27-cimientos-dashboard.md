@@ -222,11 +222,14 @@ Si alguno falla con `Working tree has modifications`, commitea o descarta lo pen
 ```bash
 cd "/c/PROYECTO JUAMPI"
 git log --oneline | wc -l
-git log --oneline --all | grep -c "."
-git log --oneline -- legacy/portafolio | tail -3
+# El commit de merge del subtree: su SEGUNDO padre es la historia original.
+MERGE=$(git log --oneline --grep="Add 'legacy/portafolio/'" --format=%H)
+git log --oneline "$MERGE^2" | tail -3
 ```
 
-Esperado: bastante más de 4 commits en total, y en el último comando deben aparecer los commits originales del Portafolio (`first commit`, `Arrelo`, `mk`). Si `git log -- legacy/portafolio` solo muestra un commit, el subtree se hizo con `--squash` por error: deshaz con `git reset --hard` al commit anterior y repite sin esa bandera.
+Esperado: bastante más de 4 commits en total, y en el segundo comando los commits originales del Portafolio (`first commit`, `Arrelo`, `mk`).
+
+**No uses `git log -- legacy/portafolio`.** La simplificación de historia de git se detiene en el commit de merge, porque los commits originales tocaban `index.html` y no `legacy/portafolio/index.html`. Da un solo commit aunque la historia esté entera, y parece un `--squash` que no ocurrió. Comprueba siempre por el segundo padre, o por SHA: `git log -1 9a9fe62` debe resolver.
 
 - [ ] **Paso 3: Confirmar que no quedaron `.git` anidados**
 
@@ -2045,10 +2048,10 @@ npm run lint
 npx tsc --noEmit
 npm run test
 npm run build
-git log --oneline -- legacy/portafolio | tail -3
+for sha in 9a9fe62 70f434b b2465fe 6aba138 518aef2; do git log -1 --format="%h %s" $sha; done
 ```
 
-Esperado: los cuatro comandos en verde y el `git log` mostrando los commits originales del Portafolio (`first commit`, `Arrelo`, `mk`).
+Esperado: los cuatro comandos en verde y los cinco SHA originales resolviendo a su mensaje de commit.
 
 Si `npm run build` falla por `better-sqlite3`, revisa que `serverExternalPackages` esté en `next.config.ts`.
 
@@ -2066,7 +2069,7 @@ git log --oneline | head -20
 
 Repasa los ocho del spec, cada uno con su comprobación:
 
-- [ ] 1. `git log --oneline -- legacy/portafolio` muestra la historia original de los cuatro repos
+- [ ] 1. Los SHA originales de los cuatro repos resuelven (`git log -1 9a9fe62` y compañía)
 - [ ] 2. `npm run build` pasa
 - [ ] 3. `npm run test` pasa — los 7 archivos migrados intactos más los 7 nuevos
 - [ ] 4. `npm run lint` y `npx tsc --noEmit` limpios
@@ -2078,8 +2081,9 @@ Repasa los ocho del spec, cada uno con su comprobación:
 Verifica el 8 explícitamente:
 
 ```bash
-git log --oneline -- legacy/voidtify | head -3
 find legacy/voidtify -newer package.json -type f -not -path "*/node_modules/*" | head
 ```
 
-El segundo comando no debe devolver nada: si algún archivo de Voidtify se modificó durante este trabajo, se salió del alcance.
+No debe devolver nada: si algún archivo de Voidtify se modificó durante este trabajo, se salió del alcance.
+
+**Y no toques `C:\Voidtify`**, que es la instalación real y tiene 158 MB de datos que el sub-proyecto 2 debe migrar. Está fuera de este repo y fuera de este alcance.
