@@ -1,4 +1,4 @@
-// Iconos de trazo propios. Sin librería: son cinco figuras de una línea cada
+// Iconos de trazo propios. Sin librería: son seis figuras de una línea cada
 // una y una dependencia menos que mantener.
 
 import type { SVGProps } from "react";
@@ -55,6 +55,16 @@ export function IconProjects({ className }: IconProps) {
   return (
     <svg {...SHARED} className={className}>
       <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    </svg>
+  );
+}
+
+export function IconMusic({ className }: IconProps) {
+  return (
+    <svg {...SHARED} className={className}>
+      <path d="M9 18V5l12-2v13" />
+      <path d="M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      <path d="M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
     </svg>
   );
 }

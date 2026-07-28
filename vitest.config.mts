@@ -11,10 +11,15 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // Voidtify importa `server-only` en módulos que sus tests ejercitan.
+      "server-only": fileURLToPath(
+        new URL("./tests/stubs/server-only.ts", import.meta.url),
+      ),
     },
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    // Los de habitos están junto al código; los de música, en tests/.
+    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
   },
 });
