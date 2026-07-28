@@ -1,4 +1,10 @@
-import { prisma } from "./prisma";
+import { and, asc, count, desc, eq, gte, inArray } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import {
+  habits as habitsTable,
+  habitLogs,
+  player as playerTable,
+} from "@/modules/habitos/schema";
 import {
   getLevelInfo,
   MAX_SHIELDS,
@@ -52,30 +58,62 @@ export type HabitWithStatus = {
   last30: boolean[];
 };
 
-export async function getHabitsWithTodayStatus(): Promise<HabitWithStatus[]> {
+export async function getHabitsWithTodayStatus(
+  db: Db,
+): Promise<HabitWithStatus[]> {
   const today = dayKey();
   const cutoff = addDays(today, -STREAK_LOOKBACK_DAYS);
 
-  const habits = await prisma.habit.findMany({
-    orderBy: [{ isAnchor: "desc" }, { createdAt: "asc" }],
-    include: {
-      logs: {
-        where: { date: { gte: cutoff } },
-        orderBy: { date: "desc" },
-      },
-      _count: { select: { logs: true } },
-    },
-  });
+  const habits = await db
+    .select()
+    .from(habitsTable)
+    .orderBy(desc(habitsTable.isAnchor), asc(habitsTable.createdAt));
+
+  const ids = habits.map((h) => h.id);
+
+  // Sin hábitos no hay nada que consultar, y un inArray con lista vacía genera
+  // SQL inválido en SQLite.
+  const logs = ids.length
+    ? await db
+        .select()
+        .from(habitLogs)
+        .where(
+          and(inArray(habitLogs.habitId, ids), gte(habitLogs.date, cutoff)),
+        )
+        .orderBy(desc(habitLogs.date))
+    : [];
+
+  // Conteo total SIN filtro de fecha: es el equivalente al _count de Prisma.
+  // Calcularlo sobre `logs`, que viene recortado a la ventana de rachas, haría
+  // que un hábito cumplido hace más de STREAK_LOOKBACK_DAYS figurase como nunca
+  // cumplido. No da error: simplemente miente, y el jardín lo pinta de semilla.
+  const totales = ids.length
+    ? await db
+        .select({ habitId: habitLogs.habitId, n: count() })
+        .from(habitLogs)
+        .where(inArray(habitLogs.habitId, ids))
+        .groupBy(habitLogs.habitId)
+    : [];
+
+  const logsPorHabito = new Map<string, typeof logs>();
+  for (const l of logs) {
+    const lista = logsPorHabito.get(l.habitId);
+    if (lista) lista.push(l);
+    else logsPorHabito.set(l.habitId, [l]);
+  }
+
+  const totalPorHabito = new Map(totales.map((t) => [t.habitId, t.n]));
 
   return habits.map((h) => {
+    const hLogs = logsPorHabito.get(h.id) ?? [];
     const schedule = sanitizeSchedule(h.schedule);
     const doneKeys = new Set(
-      h.logs.map((l) => normalizeDayKey(l.date).getTime()),
+      hLogs.map((l) => normalizeDayKey(l.date).getTime()),
     );
-    const todayLog = h.logs.find(
+    const todayLog = hLogs.find(
       (l) => normalizeDayKey(l.date).getTime() === today.getTime(),
     );
-    const hasEverBeenDone = h._count.logs > 0;
+    const hasEverBeenDone = (totalPorHabito.get(h.id) ?? 0) > 0;
 
     const last30: boolean[] = [];
     for (let i = 0; i < 30; i++) {
@@ -111,12 +149,27 @@ export async function getHabitsWithTodayStatus(): Promise<HabitWithStatus[]> {
  * escudo gastado se recuperaba al instante. Ahora el reloj también avanza
  * mientras estás lleno, y al regenerar se conserva el resto del periodo.
  */
-export async function getOrCreatePlayer() {
-  const player = await prisma.player.upsert({
-    where: { id: "default" },
-    update: {},
-    create: { id: "default", xp: 0 },
-  });
+export async function getOrCreatePlayer(db: Db) {
+  const ahora = new Date();
+  // Drizzle no tiene upsert-sin-cambios: insert + onConflictDoNothing y luego
+  // leer. Los defaults de fecha los ponía Prisma con @default(now()); aquí van
+  // explícitos porque el esquema los declara notNull.
+  await db
+    .insert(playerTable)
+    .values({
+      id: "default",
+      xp: 0,
+      shieldsUpdated: ahora,
+      createdAt: ahora,
+      updatedAt: ahora,
+    })
+    .onConflictDoNothing({ target: playerTable.id });
+
+  const [player] = await db
+    .select()
+    .from(playerTable)
+    .where(eq(playerTable.id, "default"))
+    .limit(1);
 
   const now = new Date();
   const regenMs = SHIELD_REGEN_DAYS * MS_PER_DAY;
@@ -126,10 +179,12 @@ export async function getOrCreatePlayer() {
 
   if (player.shields >= MAX_SHIELDS) {
     // Lleno: no hay nada que ganar, pero el contador arranca de nuevo.
-    return prisma.player.update({
-      where: { id: "default" },
-      data: { shieldsUpdated: now },
-    });
+    const [row] = await db
+      .update(playerTable)
+      .set({ shieldsUpdated: now, updatedAt: now })
+      .where(eq(playerTable.id, "default"))
+      .returning();
+    return row;
   }
 
   const newShields = Math.min(MAX_SHIELDS, player.shields + earned);
@@ -138,16 +193,18 @@ export async function getOrCreatePlayer() {
       ? now
       : new Date(player.shieldsUpdated.getTime() + earned * regenMs);
 
-  return prisma.player.update({
-    where: { id: "default" },
-    data: { shields: newShields, shieldsUpdated },
-  });
+  const [row] = await db
+    .update(playerTable)
+    .set({ shields: newShields, shieldsUpdated, updatedAt: now })
+    .where(eq(playerTable.id, "default"))
+    .returning();
+  return row;
 }
 
-export async function getPlayerLevelInfo(): Promise<
-  LevelInfo & { shields: number }
-> {
-  const player = await getOrCreatePlayer();
+export async function getPlayerLevelInfo(
+  db: Db,
+): Promise<LevelInfo & { shields: number }> {
+  const player = await getOrCreatePlayer(db);
   return { ...getLevelInfo(player.xp), shields: player.shields };
 }
 
@@ -168,6 +225,7 @@ export type MonthDay = {
 export const BACKFILL_MAX_DAYS = 60;
 
 export async function getHabitMonth(
+  db: Db,
   habitId: string,
   year: number,
   monthIndex: number,
@@ -177,15 +235,21 @@ export async function getHabitMonth(
     return [];
   }
 
-  const habit = await prisma.habit.findUnique({
-    where: { id: habitId },
-    include: { logs: true },
-  });
+  const [habit] = await db
+    .select()
+    .from(habitsTable)
+    .where(eq(habitsTable.id, habitId))
+    .limit(1);
   if (!habit) return [];
+
+  const registros = await db
+    .select()
+    .from(habitLogs)
+    .where(eq(habitLogs.habitId, habitId));
 
   const schedule = sanitizeSchedule(habit.schedule);
   const logByDate = new Map<number, { partial: boolean; shielded: boolean }>();
-  for (const l of habit.logs) {
+  for (const l of registros) {
     logByDate.set(normalizeDayKey(l.date).getTime(), {
       partial: !!l.partial,
       shielded: !!l.shielded,
@@ -263,19 +327,30 @@ export type HabitDiagnosis = {
   untouched: HabitUntouched[];
 };
 
-export async function getHabitDiagnosis(): Promise<HabitDiagnosis> {
+export async function getHabitDiagnosis(db: Db): Promise<HabitDiagnosis> {
   const today = dayKey();
   const from = addDays(today, -(DIAGNOSIS_DAYS - 1));
 
   const [habits, logs] = await Promise.all([
-    prisma.habit.findMany({
-      select: { id: true, name: true, icon: true, schedule: true, createdAt: true },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.habitLog.findMany({
-      where: { date: { gte: from } },
-      select: { habitId: true, date: true, partial: true, shielded: true },
-    }),
+    db
+      .select({
+        id: habitsTable.id,
+        name: habitsTable.name,
+        icon: habitsTable.icon,
+        schedule: habitsTable.schedule,
+        createdAt: habitsTable.createdAt,
+      })
+      .from(habitsTable)
+      .orderBy(asc(habitsTable.createdAt)),
+    db
+      .select({
+        habitId: habitLogs.habitId,
+        date: habitLogs.date,
+        partial: habitLogs.partial,
+        shielded: habitLogs.shielded,
+      })
+      .from(habitLogs)
+      .where(gte(habitLogs.date, from)),
   ]);
 
   const entries: LogEntry[] = logs.map((l) => ({
