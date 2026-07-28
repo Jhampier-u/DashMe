@@ -249,7 +249,7 @@ export function habitColorVar(key: HabitColor): string {
 npx vitest run src/lib/color.test.ts
 ```
 
-Esperado: PASS, 9 pruebas.
+Esperado: PASS, 8 pruebas (4 + 3 + 1). La suite completa pasa de 101 a 109.
 
 - [ ] **Paso 5: Commit**
 
@@ -1780,9 +1780,8 @@ dar por hecho que se revisó.
 npx tsc --noEmit && npx eslint . && npx vitest run && npx next build
 ```
 
-Esperado: todo verde, **104 pruebas** (101 al empezar + 9 de `color` + 3 de
-`formatDays`, menos las que se solapen; el número exacto se confirma al
-ejecutar, no se da por bueno de antemano).
+Esperado: todo verde, **112 pruebas** (101 al empezar + 8 de `color` + 3 de
+`formatDays`). El número se confirma ejecutando, no se da por bueno de antemano.
 
 - [ ] **Usar superpowers:finishing-a-development-branch** para decidir cómo
       integrar el trabajo.
