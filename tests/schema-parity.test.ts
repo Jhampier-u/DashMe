@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import { isTable } from "drizzle-orm";
-import * as schema from "@/db/schema";
-import { SCHEMA_SQL } from "@/db/schema-sql";
+import * as schema from "@/modules/core/db/schema";
+import { SCHEMA_SQL } from "@/modules/core/db/schema-sql";
 import { createTestDb } from "./helpers/test-db";
 
 type ColumnaSqlite = {
@@ -20,6 +20,11 @@ const tablas = Object.values(schema).filter(isTable) as Parameters<
  * ejecuta SQLite) y como definiciones de Drizzle en `schema.ts` (lo que ve
  * TypeScript). Nada obliga a que coincidan, y una columna añadida en un solo
  * lado compila, pasa los demás tests y falla al insertar.
+ *
+ * Se compara contra el esquema compuesto de `core/db/schema.ts` —el que
+ * reexporta hábitos y música— porque `SCHEMA_SQL` describe la base entera. Si
+ * aquí solo se mirara el esquema de música, las tablas de los demás módulos
+ * quedarían sin cubrir y el recuento de tablas nunca cuadraría.
  */
 describe("paridad entre el DDL y las definiciones de Drizzle", () => {
   it("compara todas las tablas del esquema", () => {

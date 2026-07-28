@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   mapRecentlyPlayed,
   type RecentlyPlayedItem,
-} from "@/lib/capture/map-recently-played";
+} from "@/modules/musica/lib/capture/map-recently-played";
 
 function item(over: Partial<RecentlyPlayedItem> = {}): RecentlyPlayedItem {
   return {

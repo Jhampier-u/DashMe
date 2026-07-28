@@ -5,7 +5,7 @@ import {
   KEY_SEP,
   normalizeName,
   trackKey,
-} from "@/lib/stats/normalize";
+} from "@/modules/musica/lib/stats/normalize";
 
 describe("normalizeName", () => {
   it("pasa a minúsculas", () => {

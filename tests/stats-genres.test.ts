@@ -3,8 +3,8 @@ import {
   getGenreBreakdown,
   getArtistasSinGeneros,
   guardarGeneros,
-} from "@/lib/stats/genres";
-import type { StatsRange } from "@/lib/stats/range";
+} from "@/modules/musica/lib/stats/genres";
+import type { StatsRange } from "@/modules/musica/lib/stats/range";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

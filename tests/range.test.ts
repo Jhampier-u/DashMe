@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseRange, PRESETS } from "@/lib/stats/range";
+import { parseRange, PRESETS } from "@/modules/musica/lib/stats/range";
 
 // 2026-07-27T12:00:00Z. En America/Guayaquil (UTC-5) son las 07:00 del día 27.
 const AHORA = Date.UTC(2026, 6, 27, 12, 0, 0);

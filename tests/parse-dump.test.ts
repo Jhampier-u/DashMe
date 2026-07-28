@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDumpRecords, type DumpRecord } from "@/lib/import/parse-dump";
+import { parseDumpRecords, type DumpRecord } from "@/modules/musica/lib/import/parse-dump";
 
 const TZ = "America/Guayaquil";
 

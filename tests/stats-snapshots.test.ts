@@ -4,7 +4,7 @@ import {
   getContraste,
   contarTomas,
   EQUIVALENCIAS,
-} from "@/lib/stats/snapshots";
+} from "@/modules/musica/lib/stats/snapshots";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

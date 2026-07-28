@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aplicarDumpManda } from "@/lib/import/dump-wins";
+import { aplicarDumpManda } from "@/modules/musica/lib/import/dump-wins";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

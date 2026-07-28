@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import { artistKey, albumKey, trackKey } from "@/lib/stats/normalize";
+import { artistKey, albumKey, trackKey } from "@/modules/musica/lib/stats/normalize";
 
 /**
  * Constructor de filas de `streams` para tests.

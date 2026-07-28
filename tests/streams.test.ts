@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { NewStreamRow } from "@/db/schema";
-import { streams } from "@/db/schema";
-import { insertStreams } from "@/lib/streams";
+import type { NewStreamRow } from "@/modules/musica/schema";
+import { streams } from "@/modules/musica/schema";
+import { insertStreams } from "@/modules/musica/lib/streams";
 import { createTestDb } from "./helpers/test-db";
 
 function fila(over: Partial<NewStreamRow> = {}): NewStreamRow {

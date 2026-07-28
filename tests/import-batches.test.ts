@@ -3,7 +3,7 @@ import {
   registrarTanda,
   tandaPorHash,
   listarTandas,
-} from "@/lib/import/batches";
+} from "@/modules/musica/lib/import/batches";
 import { createTestDb } from "./helpers/test-db";
 
 const base = {

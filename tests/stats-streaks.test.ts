@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getStreaks } from "@/lib/stats/streaks";
+import { getStreaks } from "@/modules/musica/lib/stats/streaks";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

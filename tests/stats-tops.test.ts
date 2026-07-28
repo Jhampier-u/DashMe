@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getTopArtists, getTopTracks, getTopAlbums } from "@/lib/stats/tops";
-import type { StatsRange } from "@/lib/stats/range";
+import { getTopArtists, getTopTracks, getTopAlbums } from "@/modules/musica/lib/stats/tops";
+import type { StatsRange } from "@/modules/musica/lib/stats/range";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

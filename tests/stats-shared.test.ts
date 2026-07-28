@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { MS_MINIMO_CONTADO, enRango } from "@/lib/stats/shared";
+import { MS_MINIMO_CONTADO, enRango } from "@/modules/musica/lib/stats/shared";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

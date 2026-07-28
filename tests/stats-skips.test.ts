@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getSkipStats, getMostSkippedArtists } from "@/lib/stats/skips";
-import { getByDate } from "@/lib/stats/time";
-import type { StatsRange } from "@/lib/stats/range";
+import { getSkipStats, getMostSkippedArtists } from "@/modules/musica/lib/stats/skips";
+import { getByDate } from "@/modules/musica/lib/stats/time";
+import type { StatsRange } from "@/modules/musica/lib/stats/range";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 

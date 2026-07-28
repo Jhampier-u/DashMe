@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SpotifyApiError } from "@/lib/spotify-core";
+import { SpotifyApiError } from "@/modules/musica/lib/spotify-core";
 
 describe("SpotifyApiError", () => {
   it("conserva status y retryAfterSec", () => {

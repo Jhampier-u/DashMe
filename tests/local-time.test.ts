@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localParts, resolveTimeZone } from "@/lib/stats/local-time";
+import { localParts, resolveTimeZone } from "@/modules/musica/lib/stats/local-time";
 
 describe("localParts", () => {
   it("desplaza al día anterior cuando la hora local va por detrás de UTC", () => {

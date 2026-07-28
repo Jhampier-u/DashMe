@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getHistory } from "@/lib/stats/history";
-import type { StatsRange } from "@/lib/stats/range";
+import { getHistory } from "@/modules/musica/lib/stats/history";
+import type { StatsRange } from "@/modules/musica/lib/stats/range";
 import { createTestDb } from "./helpers/test-db";
 import { seedStreams, stream } from "./helpers/seed-streams";
 
