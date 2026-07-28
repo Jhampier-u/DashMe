@@ -5,8 +5,10 @@ import { db } from "@/db";
 import { streams } from "@/db/schema";
 import { getMe } from "@/lib/spotify";
 import { getCaptureState } from "@/lib/capture/run-capture";
+import { listarArchivos } from "@/lib/import/import-actions";
 import TopBar from "@/components/TopBar";
 import CaptureHealth from "@/components/CaptureHealth";
+import ImportPanel from "@/components/ImportPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +16,11 @@ export default async function AjustesPage() {
   const session = await auth();
   if (!session) redirect("/");
 
-  const [me, estado, conteo] = await Promise.all([
+  const [me, estado, conteo, archivos] = await Promise.all([
     getMe(),
     getCaptureState(),
     db.select({ n: sql<number>`count(*)` }).from(streams),
+    listarArchivos(),
   ]);
 
   return (
@@ -39,6 +42,8 @@ export default async function AjustesPage() {
         gapSuspectedAt={estado?.gapSuspectedAt ?? null}
         totalStreams={conteo[0]?.n ?? 0}
       />
+
+      <ImportPanel archivos={archivos} />
 
       <section className="px-8 py-10">
         <p className="label-mono text-mute mb-4">Zona horaria</p>
