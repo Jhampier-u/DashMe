@@ -1,15 +1,16 @@
-import { listProjects, getProjectMetrics } from "@/lib/projects";
-import { Card } from "@/components/ui/Card";
-import { ProjectsHeader } from "@/components/projects/ProjectsHeader";
-import { ProjectCard } from "@/components/projects/ProjectCard";
-import { AdvancePanel } from "@/components/projects/AdvancePanel";
+import { db } from "@/modules/core/db";
+import { listProjects, getProjectMetrics } from "@/modules/habitos";
+import { Card } from "@/modules/core/ui/Card";
+import { ProjectsHeader } from "@/modules/habitos/components/projects/ProjectsHeader";
+import { ProjectCard } from "@/modules/habitos/components/projects/ProjectCard";
+import { AdvancePanel } from "@/modules/habitos/components/projects/AdvancePanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
   const [projects, metrics] = await Promise.all([
-    listProjects(),
-    getProjectMetrics(),
+    listProjects(db),
+    getProjectMetrics(db),
   ]);
 
   return (

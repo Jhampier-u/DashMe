@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
-import { buttonStyle } from "@/components/ui/Button";
+import { Card } from "@/modules/core/ui/Card";
+import { buttonStyle } from "@/modules/core/ui/Button";
 
 export default function NotFound() {
   return (

@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProjectWithTree } from "@/lib/projects";
-import { Card } from "@/components/ui/Card";
-import { ProjectTree } from "@/components/projects/ProjectTree";
+import { db } from "@/modules/core/db";
+import { getProjectWithTree } from "@/modules/habitos";
+import { Card } from "@/modules/core/ui/Card";
+import { ProjectTree } from "@/modules/habitos/components/projects/ProjectTree";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectDetailPage({
   params,
-}: PageProps<"/projects/[id]">) {
+}: PageProps<"/proyectos/[id]">) {
   const { id } = await params;
-  const result = await getProjectWithTree(id);
+  const result = await getProjectWithTree(db, id);
   if (!result) notFound();
 
   const { project, roots, totalItems, doneItems, lastMovement } = result;
@@ -35,7 +36,7 @@ export default async function ProjectDetailPage({
         }}
       >
         <Link
-          href="/projects"
+          href="/proyectos"
           style={{ fontSize: 12.5, color: "var(--m-ink-2)", textDecoration: "none" }}
         >
           ← Proyectos

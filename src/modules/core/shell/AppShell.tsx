@@ -20,10 +20,10 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio", Icon: IconHome },
-  { href: "/habits", label: "Hábitos", Icon: IconHabits },
-  { href: "/garden", label: "Jardín", Icon: IconGarden },
-  { href: "/tasks", label: "Tareas", Icon: IconTasks },
-  { href: "/projects", label: "Proyectos", Icon: IconProjects },
+  { href: "/habitos", label: "Hábitos", Icon: IconHabits },
+  { href: "/jardin", label: "Jardín", Icon: IconGarden },
+  { href: "/tareas", label: "Tareas", Icon: IconTasks },
+  { href: "/proyectos", label: "Proyectos", Icon: IconProjects },
 ];
 
 function isActive(pathname: string, href: string): boolean {

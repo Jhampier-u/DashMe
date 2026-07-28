@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { buttonStyle } from "@/components/ui/Button";
-import { Stat, StatGrid } from "@/components/ui/Stat";
-import { GardenScene } from "@/components/GardenScene";
-import { getHabitsWithTodayStatus } from "@/lib/habits";
-import { isPlantWilted, stageFor } from "@/lib/garden";
+import { Card } from "@/modules/core/ui/Card";
+import { PageHeader } from "@/modules/core/ui/PageHeader";
+import { buttonStyle } from "@/modules/core/ui/Button";
+import { Stat, StatGrid } from "@/modules/core/ui/Stat";
+import { GardenScene } from "@/modules/habitos/components/GardenScene";
+import { db } from "@/modules/core/db";
+import {
+  getHabitsWithTodayStatus,
+  isPlantWilted,
+  stageFor,
+} from "@/modules/habitos";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +22,7 @@ const STAGES = [
 ];
 
 export default async function GardenPage() {
-  const habits = await getHabitsWithTodayStatus();
+  const habits = await getHabitsWithTodayStatus(db);
 
   const total = habits.length;
   const wateredToday = habits.filter((h) => h.doneToday).length;
@@ -47,7 +51,7 @@ export default async function GardenPage() {
             <p style={{ fontSize: 13, color: "var(--m-ink-2)", marginBottom: 20 }}>
               Crea un hábito para plantar y empezar a regar.
             </p>
-            <Link href="/habits" style={buttonStyle("primary")}>
+            <Link href="/habitos" style={buttonStyle("primary")}>
               Ir a hábitos
             </Link>
           </div>

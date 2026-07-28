@@ -1,15 +1,16 @@
-import { getTasksGrouped, getTaskMetrics } from "@/lib/tasks";
-import { Card } from "@/components/ui/Card";
-import { TasksBoard } from "@/components/tasks/TasksBoard";
-import { TasksHeader } from "@/components/tasks/TasksHeader";
-import { FlowPanel } from "@/components/tasks/FlowPanel";
+import { db } from "@/modules/core/db";
+import { getTasksGrouped, getTaskMetrics } from "@/modules/habitos";
+import { Card } from "@/modules/core/ui/Card";
+import { TasksBoard } from "@/modules/habitos/components/tasks/TasksBoard";
+import { TasksHeader } from "@/modules/habitos/components/tasks/TasksHeader";
+import { FlowPanel } from "@/modules/habitos/components/tasks/FlowPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
   const [grouped, metrics] = await Promise.all([
-    getTasksGrouped(),
-    getTaskMetrics(),
+    getTasksGrouped(db),
+    getTaskMetrics(db),
   ]);
 
   const total =

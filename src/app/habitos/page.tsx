@@ -1,21 +1,26 @@
-import { getHabitsWithTodayStatus, getPlayerLevelInfo, getHabitDiagnosis } from "@/lib/habits";
-import { getTodayQuests } from "@/lib/quests";
-import { Card } from "@/components/ui/Card";
-import { QuestList } from "@/components/home/QuestList";
-import { HabitsHeader } from "@/components/habits/HabitsHeader";
-import { DayStatus } from "@/components/habits/DayStatus";
-import { CriticalBanner } from "@/components/habits/CriticalBanner";
-import { HabitRow } from "@/components/habits/HabitRow";
-import { DiagnosisPanel } from "@/components/habits/DiagnosisPanel";
+import { db } from "@/modules/core/db";
+import {
+  getHabitsWithTodayStatus,
+  getPlayerLevelInfo,
+  getHabitDiagnosis,
+  getTodayQuests,
+} from "@/modules/habitos";
+import { Card } from "@/modules/core/ui/Card";
+import { QuestList } from "@/modules/habitos/components/home/QuestList";
+import { HabitsHeader } from "@/modules/habitos/components/habits/HabitsHeader";
+import { DayStatus } from "@/modules/habitos/components/habits/DayStatus";
+import { CriticalBanner } from "@/modules/habitos/components/habits/CriticalBanner";
+import { HabitRow } from "@/modules/habitos/components/habits/HabitRow";
+import { DiagnosisPanel } from "@/modules/habitos/components/habits/DiagnosisPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function HabitsPage() {
   const [habits, player, quests, diagnosis] = await Promise.all([
-    getHabitsWithTodayStatus(),
-    getPlayerLevelInfo(),
-    getTodayQuests(),
-    getHabitDiagnosis(),
+    getHabitsWithTodayStatus(db),
+    getPlayerLevelInfo(db),
+    getTodayQuests(db),
+    getHabitDiagnosis(db),
   ]);
 
   const scheduled = habits.filter((h) => h.scheduledToday);

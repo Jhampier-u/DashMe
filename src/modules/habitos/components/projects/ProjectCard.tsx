@@ -49,7 +49,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
           {project.icon}
         </span>
         <Link
-          href={`/projects/${project.id}`}
+          href={`/proyectos/${project.id}`}
           style={{
             flex: 1,
             minWidth: 0,
