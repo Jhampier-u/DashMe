@@ -22,32 +22,32 @@ export default function TopBar({
     <header className="px-8 py-5 flex items-center justify-between hairline-b sticky top-0 bg-ink/85 backdrop-blur-md z-50">
       <div className="flex items-center gap-6">
         <Link
-          href="/"
+          href="/musica"
           className="label-mono text-cream hover:text-acid transition-colors"
         >
           LEDGER
         </Link>
         <span className="label-mono text-mute hidden sm:inline">·</span>
         <nav className="hidden sm:flex items-center gap-5">
-          <NavLink href="/" active={active === "portada"}>
+          <NavLink href="/musica" active={active === "portada"}>
             Portada
           </NavLink>
-          <NavLink href="/historial" active={active === "historial"}>
+          <NavLink href="/musica/historial" active={active === "historial"}>
             Historial
           </NavLink>
-          <NavLink href="/biblioteca" active={active === "biblioteca"}>
+          <NavLink href="/musica/biblioteca" active={active === "biblioteca"}>
             Biblioteca
           </NavLink>
-          <NavLink href="/library" active={active === "library"}>
+          <NavLink href="/musica/library" active={active === "library"}>
             Liked
           </NavLink>
-          <NavLink href="/tags" active={active === "tags"}>
+          <NavLink href="/musica/tags" active={active === "tags"}>
             Tags
           </NavLink>
-          <NavLink href="/smart" active={active === "smart"}>
+          <NavLink href="/musica/smart" active={active === "smart"}>
             Smart
           </NavLink>
-          <NavLink href="/ajustes" active={active === "ajustes"}>
+          <NavLink href="/musica/ajustes" active={active === "ajustes"}>
             Ajustes
           </NavLink>
         </nav>

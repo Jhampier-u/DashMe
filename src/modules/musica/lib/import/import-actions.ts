@@ -133,8 +133,8 @@ export async function importarArchivo(
       status: "ok",
     });
 
-    revalidatePath("/ajustes");
-    revalidatePath("/");
+    revalidatePath("/musica/ajustes");
+    revalidatePath("/musica");
 
     return {
       nombre,
@@ -178,8 +178,8 @@ export async function cerrarImportacion(
   await requireSession();
   const borradas = await aplicarDumpManda(db, desde, hasta);
 
-  revalidatePath("/ajustes");
-  revalidatePath("/");
+  revalidatePath("/musica/ajustes");
+  revalidatePath("/musica");
 
   return { borradas };
 }

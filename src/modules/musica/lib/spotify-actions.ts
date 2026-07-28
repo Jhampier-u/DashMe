@@ -176,7 +176,7 @@ export async function createPlaylist(
   });
 
   revalidateTag("playlists-list", "max");
-  if (input.redirectAfter) redirect(`/playlist/${playlist.id}`);
+  if (input.redirectAfter) redirect(`/musica/playlist/${playlist.id}`);
   return playlist;
 }
 
@@ -193,7 +193,7 @@ export async function createPlaylistFromTracks(
   if (uris.length > 0) {
     await addTracksToPlaylist(playlist.id, uris);
   }
-  if (input.redirectAfter) redirect(`/playlist/${playlist.id}`);
+  if (input.redirectAfter) redirect(`/musica/playlist/${playlist.id}`);
   return playlist;
 }
 

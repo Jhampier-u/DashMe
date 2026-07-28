@@ -61,7 +61,7 @@ export async function rellenarGeneros(
     if (etiquetas.length > 0) conEtiquetas += 1;
   }
 
-  revalidatePath("/");
+  revalidatePath("/musica");
 
   return {
     pedidos: lote.length,

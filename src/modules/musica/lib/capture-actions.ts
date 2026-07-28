@@ -13,6 +13,6 @@ import { runCapture, type CaptureResult } from "./capture/run-capture";
 export async function capturarAhora(): Promise<CaptureResult> {
   await requireSession();
   const resultado = await runCapture(true);
-  revalidatePath("/ajustes");
+  revalidatePath("/musica/ajustes");
   return resultado;
 }

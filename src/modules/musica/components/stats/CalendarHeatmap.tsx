@@ -85,7 +85,7 @@ export default function CalendarHeatmap({ buckets }: { buckets: Bucket[] }) {
         <p className="label-mono text-mute">
           tu mejor día ·{" "}
           <Link
-            href={`/historial?desde=${mejor.date}&hasta=${mejor.date}`}
+            href={`/musica/historial?desde=${mejor.date}&hasta=${mejor.date}`}
             className="text-acid hover:underline"
           >
             {mejor.date}
@@ -191,7 +191,7 @@ export default function CalendarHeatmap({ buckets }: { buckets: Bucket[] }) {
                     return (
                       <Link
                         key={fecha}
-                        href={`/historial?desde=${fecha}&hasta=${fecha}`}
+                        href={`/musica/historial?desde=${fecha}&hasta=${fecha}`}
                       >
                         <rect
                           x={x}

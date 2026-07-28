@@ -85,7 +85,7 @@ export async function createSmartPlaylist(input: {
       updatedAt: now,
     })
     .returning();
-  revalidatePath("/smart");
+  revalidatePath("/musica/smart");
   return rowToSmart(result[0]);
 }
 
@@ -112,14 +112,14 @@ export async function updateSmartPlaylist(
     set.rulesJson = JSON.stringify(input.rules);
   }
   await db.update(smartPlaylists).set(set).where(eq(smartPlaylists.id, id));
-  revalidatePath("/smart");
-  revalidatePath(`/smart/${id}`);
+  revalidatePath("/musica/smart");
+  revalidatePath(`/musica/smart/${id}`);
 }
 
 export async function deleteSmartPlaylist(id: number): Promise<void> {
   await requireSession();
   await db.delete(smartPlaylists).where(eq(smartPlaylists.id, id));
-  revalidatePath("/smart");
+  revalidatePath("/musica/smart");
 }
 
 /* ---------------------------------------------------------------- */
@@ -262,8 +262,8 @@ export async function materializeSmartPlaylist(
     })
     .where(eq(smartPlaylists.id, id));
 
-  revalidatePath("/smart");
-  revalidatePath(`/smart/${id}`);
+  revalidatePath("/musica/smart");
+  revalidatePath(`/musica/smart/${id}`);
   revalidateTag(`playlist-${playlistId}`, "max");
   revalidateTag(`playlist-${playlistId}-items`, "max");
   revalidateTag("playlists-list", "max");
