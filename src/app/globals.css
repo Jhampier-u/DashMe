@@ -1,36 +1,8 @@
 @import "tailwindcss";
 
 /*
-  Untap — Pixel art design tokens (dark pastel)
-*/
-:root {
-  --color-bg-deep: #1d1b2e;
-  --color-bg: #2a2640;
-  --color-surface: #3a3554;
-  --color-surface-soft: #4a4368;
-  --color-border: #5a5278;
-  --color-border-soft: #6e6592;
-
-  --color-ink: #f0e6d2;
-  --color-ink-soft: #c4b6d4;
-  /* Subido desde #8a7da0 (~4.0:1): el texto pixel es pequeño y no llegaba a AA. */
-  --color-ink-dim: #a396b8;
-
-  --color-mint: #a8d8b8;
-  --color-mint-dark: #6fa888;
-  --color-peach: #f5c89e;
-  --color-peach-dark: #d4a07a;
-  --color-pink: #f0a8c4;
-  --color-pink-dark: #c47a96;
-  --color-lavender: #c4a8e0;
-  --color-lavender-dark: #9078b0;
-  --color-sky: #a8c8e8;
-  --color-sky-dark: #7898c0;
-}
-
-/*
-  Tokens del lenguaje moderno. Conviven con los pixel de arriba mientras
-  quedan pantallas por migrar; los antiguos se retiran con la última.
+  Tokens del lenguaje moderno. Es el único sistema visual del proyecto:
+  el sistema pixel que convivía con este se retiro por completo.
 */
 :root {
   --m-page: #0f0f13;
@@ -97,25 +69,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-@theme inline {
-  --color-bg-deep: var(--color-bg-deep);
-  --color-bg: var(--color-bg);
-  --color-surface: var(--color-surface);
-  --color-surface-soft: var(--color-surface-soft);
-  --color-border: var(--color-border);
-  --color-ink: var(--color-ink);
-  --color-ink-soft: var(--color-ink-soft);
-  --color-ink-dim: var(--color-ink-dim);
-  --color-mint: var(--color-mint);
-  --color-peach: var(--color-peach);
-  --color-pink: var(--color-pink);
-  --color-lavender: var(--color-lavender);
-  --color-sky: var(--color-sky);
-
-  --font-pixel: var(--font-vt323);
-  --font-display: var(--font-press-start);
-}
-
 html,
 body {
   background: var(--m-page);
@@ -128,89 +81,6 @@ body {
   line-height: 1.5;
 }
 
-/*
-  Las reglas de la estética pixel. Estaban en `body`, donde también afectaban a
-  las pantallas ya migradas: su texto se pintaba sin suavizado. Las aplica
-  PageShell, así que cubren de una vez las pantallas que aún no se han migrado.
-*/
-.pixel-page {
-  font-family: var(--font-vt323), monospace;
-  font-size: 1.25rem;
-  line-height: 1.4;
-  color: var(--color-ink);
-  background: var(--color-bg-deep);
-  image-rendering: pixelated;
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: grayscale;
-  background-image:
-    radial-gradient(circle at 25% 25%, rgba(196, 168, 224, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 75% 75%, rgba(168, 200, 232, 0.04) 1px, transparent 1px);
-  background-size: 12px 12px, 12px 12px;
-  background-position: 0 0, 6px 6px;
-}
-
-.font-display {
-  font-family: var(--font-press-start), monospace;
-}
-
-.pixel-edge {
-  box-shadow:
-    inset 0 -4px 0 0 rgba(0, 0, 0, 0.28),
-    inset 0 4px 0 0 rgba(255, 255, 255, 0.12),
-    0 0 0 4px var(--color-border);
-}
-
-.pixel-edge-tight {
-  box-shadow: 0 0 0 3px var(--color-border);
-}
-
-.pixel-button {
-  position: relative;
-  transition: transform 80ms steps(2), box-shadow 80ms steps(2), filter 100ms;
-  cursor: pointer;
-}
-.pixel-button:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-.pixel-button:active {
-  transform: translate(2px, 2px);
-}
-.pixel-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pixel-window {
-  position: relative;
-  background: var(--color-bg);
-  color: var(--color-ink);
-  padding: 1.25rem 1.5rem;
-  box-shadow:
-    0 0 0 3px var(--color-bg),
-    0 0 0 6px var(--color-border),
-    0 0 0 9px var(--color-bg-deep),
-    inset 0 0 0 1px var(--color-border-soft);
-}
-
-img {
-  image-rendering: pixelated;
-}
-
-.pixel-input {
-  background: var(--color-bg-deep);
-  color: var(--color-ink);
-  border: none;
-  outline: none;
-  padding: 0.6rem 0.8rem;
-  font-family: var(--font-vt323), monospace;
-  font-size: 1.15rem;
-  box-shadow: 0 0 0 3px var(--color-border);
-  width: 100%;
-}
-.pixel-input:focus {
-  box-shadow: 0 0 0 3px var(--color-lavender);
-}
-
 /* Bobble animation for avatars */
 @keyframes untap-bobble {
   0%, 100% { transform: translateY(0); }
@@ -218,32 +88,6 @@ img {
 }
 .untap-bobble {
   animation: untap-bobble 2400ms steps(8, jump-end) infinite;
-}
-
-/* Hover lift for cards */
-.hover-lift {
-  transition: transform 120ms steps(3), box-shadow 120ms;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-}
-
-/* Page fade-in */
-@keyframes untap-page-in {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.untap-page-in {
-  animation: untap-page-in 240ms steps(6, jump-end);
-}
-
-/* Section header reveal */
-@keyframes untap-slide-in {
-  0% { opacity: 0; transform: translateX(-8px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
-.untap-slide-in {
-  animation: untap-slide-in 320ms steps(8, jump-end);
 }
 
 /* Pulse on accent dots */
@@ -288,18 +132,4 @@ img {
     animation: none !important;
     opacity: 1;
   }
-}
-
-/* Theme accent stripe */
-.section-accent {
-  position: relative;
-}
-.section-accent::before {
-  content: "";
-  position: absolute;
-  left: -0.5rem;
-  top: 0.2rem;
-  bottom: 0.2rem;
-  width: 4px;
-  background: var(--accent, var(--color-peach));
 }

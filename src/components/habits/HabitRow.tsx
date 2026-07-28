@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toggleToday, deleteHabit, setHabitAnchor } from "@/app/actions";
 import { emitToggleResult } from "@/lib/events";
-import { useConfirm } from "@/components/PixelConfirm";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { habitColorVar, resolveHabitColor } from "@/lib/color";
 import { plantEmoji, type PlantSpecies } from "@/lib/garden";
 import { DEFAULT_SCHEDULE } from "@/lib/streak";

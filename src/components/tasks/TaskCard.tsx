@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import type { TaskRow, TaskStatus } from "@/lib/tasks";
 import { updateTaskStatus, deleteTask } from "@/app/actions";
 import { emitStatusChange } from "@/lib/events";
-import { useConfirm } from "@/components/PixelConfirm";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const NEXT: Record<TaskStatus, TaskStatus | null> = {
   TODO: "IN_PROGRESS",
