@@ -167,24 +167,31 @@ export default async function DashboardPage() {
         </section>
 
         {/*
-          El hueco es literal a propósito: deja visible qué falta en vez de
-          fingir que la portada está terminada. Se llena en el sub-proyecto 2,
-          cuando Voidtify entre en la app.
+          La puerta ya está abierta: música tiene su propia sección. Los datos
+          cruzados con hábitos —lo que de verdad justifica un widget aquí—
+          llegan más adelante.
         */}
         <section style={seccion}>
-          <h2 style={tituloSeccion}>Música</h2>
           <div
-            className="m-card"
             style={{
-              padding: 28,
-              textAlign: "center",
-              borderStyle: "dashed",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
             }}
           >
-            <p style={{ fontSize: 14, color: "var(--m-ink-2)" }}>
-              Llega en el siguiente paso, cuando Voidtify entre en la app.
-            </p>
+            <h2 style={tituloSeccion}>Música</h2>
+            <Link
+              href="/musica"
+              style={{ fontSize: 13, color: "var(--m-ink-3)" }}
+            >
+              Ver todo
+            </Link>
           </div>
+
+          <p style={{ fontSize: 14, color: "var(--m-ink-2)" }}>
+            Tu biblioteca y tu historial de escucha, en su propia sección. Los
+            datos cruzados con el resto del dashboard llegan más adelante.
+          </p>
         </section>
       </div>
     </main>
