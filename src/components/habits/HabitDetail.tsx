@@ -3,22 +3,10 @@
 import { useEffect, useState } from "react";
 import { fetchHabitStats } from "@/app/actions";
 import { on } from "@/lib/events";
+import { formatDays } from "@/lib/day";
+import { Stat, StatGrid } from "@/components/ui/Stat";
 import type { HabitDetailStats } from "@/lib/stats";
 import { MonthCalendar } from "./MonthCalendar";
-
-const days = (n: number) => (n === 1 ? "1 día" : `${n} días`);
-
-function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div>
-      <div className="m-label">{label}</div>
-      <div className="m-num" style={{ fontSize: 17, fontWeight: 600, marginTop: 4 }}>
-        {value}
-      </div>
-      <div style={{ fontSize: 11, color: "var(--m-ink-3)", marginTop: 2 }}>{hint}</div>
-    </div>
-  );
-}
 
 export function HabitDetail({
   habitId,
@@ -46,22 +34,17 @@ export function HabitDetail({
   return (
     <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--m-line)" }}>
       {stats ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
-            gap: 12,
-          }}
-        >
-          <Stat label="Racha" value={days(stats.currentStreak)} hint="actual" />
-          <Stat label="Mejor" value={days(stats.bestStreak)} hint="histórica" />
+        <StatGrid min={110} gap={12}>
+          <Stat size="sm" label="Racha" value={formatDays(stats.currentStreak)} meta="actual" />
+          <Stat size="sm" label="Mejor" value={formatDays(stats.bestStreak)} meta="histórica" />
           <Stat
+            size="sm"
             label="30 días"
             value={`${Math.round(stats.completionRate30 * 100)}%`}
-            hint={`${stats.doneIn30} de ${stats.scheduledIn30} que tocaban`}
+            meta={`${stats.doneIn30} de ${stats.scheduledIn30} que tocaban`}
           />
-          <Stat label="Total" value={String(stats.totalDone)} hint="veces cumplido" />
-        </div>
+          <Stat size="sm" label="Total" value={String(stats.totalDone)} meta="veces cumplido" />
+        </StatGrid>
       ) : (
         <div style={{ fontSize: 12.5, color: "var(--m-ink-3)" }}>
           Cargando estadísticas…

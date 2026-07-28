@@ -4,24 +4,10 @@
 // la frontera servidor → cliente. Es la misma razón por la que TrendCard lo es.
 
 import { Card } from "@/components/ui/Card";
+import { Stat, StatGrid } from "@/components/ui/Stat";
 import { BarChart } from "@/components/charts/BarChart";
-import { formatDayLabel } from "@/lib/day";
+import { formatDayLabel, formatDays } from "@/lib/day";
 import type { TaskMetrics } from "@/lib/tasks";
-
-function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <Card style={{ padding: "13px 14px" }}>
-      <div className="m-label">{label}</div>
-      <div
-        className="m-num"
-        style={{ fontSize: 21, fontWeight: 600, marginTop: 6, letterSpacing: "-0.02em" }}
-      >
-        {value}
-      </div>
-      <div style={{ fontSize: 11.5, color: "var(--m-ink-2)", marginTop: 3 }}>{hint}</div>
-    </Card>
-  );
-}
 
 export function FlowPanel({ metrics }: { metrics: TaskMetrics }) {
   const { weeks, change, medianLifetime, oldestOpen } = metrics;
@@ -82,24 +68,18 @@ export function FlowPanel({ metrics }: { metrics: TaskMetrics }) {
         </div>
       </Card>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: 12,
-        }}
-      >
+      <StatGrid min={180} gap={12}>
         <Stat
           label="Tiempo de vida"
-          value={medianLifetime === null ? "—" : `${medianLifetime} días`}
-          hint={medianLifetime === null ? "aún no has cerrado nada" : "mediana, últimos 90 días"}
+          value={medianLifetime === null ? "—" : formatDays(medianLifetime)}
+          meta={medianLifetime === null ? "aún no has cerrado nada" : "mediana, últimos 90 días"}
         />
         <Stat
           label="Lo más antiguo abierto"
-          value={oldestOpen === null ? "—" : `${oldestOpen} días`}
-          hint={oldestOpen === null ? "no queda nada abierto" : "desde que se creó"}
+          value={oldestOpen === null ? "—" : formatDays(oldestOpen)}
+          meta={oldestOpen === null ? "no queda nada abierto" : "desde que se creó"}
         />
-      </div>
+      </StatGrid>
     </div>
   );
 }
