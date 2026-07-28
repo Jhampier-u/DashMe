@@ -104,9 +104,14 @@ export default function CalendarHeatmap({ buckets }: { buckets: Bucket[] }) {
                       className="fill-acid"
                       opacity={0.18 + nivel * 0.205}
                     >
+                      {/* Un solo nodo de texto, no varias interpolaciones:
+                          dentro de SVG el navegador normaliza los nodos
+                          adyacentes y el HTML del servidor deja de coincidir
+                          con el del cliente. */}
                       <title>
-                        {b.date} · {b.plays} escuchas ·{" "}
-                        {Math.round(b.ms / 60000)} min
+                        {`${b.date} · ${b.plays} escuchas · ${Math.round(
+                          b.ms / 60000,
+                        )} min`}
                       </title>
                     </rect>
                   );
