@@ -1,4 +1,6 @@
-import { prisma } from "./prisma";
+import { asc, count, eq, gte } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import {
   addDays,
   dayKey,
@@ -35,20 +37,28 @@ const EMPTY_HABIT_STATS: HabitDetailStats = {
   daysSinceCreated: 0,
 };
 
-export async function getHabitStats(habitId: string): Promise<HabitDetailStats> {
-  const habit = await prisma.habit.findUnique({
-    where: { id: habitId },
-    include: { logs: { orderBy: { date: "asc" } } },
-  });
+export async function getHabitStats(
+  db: Db,
+  habitId: string,
+): Promise<HabitDetailStats> {
+  const [habit] = await db
+    .select()
+    .from(habitsTable)
+    .where(eq(habitsTable.id, habitId))
+    .limit(1);
   if (!habit) return EMPTY_HABIT_STATS;
+
+  const logs = await db
+    .select()
+    .from(habitLogs)
+    .where(eq(habitLogs.habitId, habitId))
+    .orderBy(asc(habitLogs.date));
 
   const today = dayKey();
   const schedule = sanitizeSchedule(habit.schedule);
-  const doneKeys = new Set(habit.logs.map((l) => normalizeDayKey(l.date).getTime()));
+  const doneKeys = new Set(logs.map((l) => normalizeDayKey(l.date).getTime()));
   const createdKey = dayKey(habit.createdAt);
-  const firstKey = habit.logs.length
-    ? normalizeDayKey(habit.logs[0].date)
-    : createdKey;
+  const firstKey = logs.length ? normalizeDayKey(logs[0].date) : createdKey;
   // El historial empieza en lo más antiguo que conocemos: la creación o el
   // primer registro (que puede ser anterior si se rellenó hacia atrás).
   const historyStart = new Date(
@@ -69,7 +79,7 @@ export async function getHabitStats(habitId: string): Promise<HabitDetailStats> 
   }
 
   return {
-    totalDone: habit.logs.length,
+    totalDone: logs.length,
     completionRate30: scheduledIn30 === 0 ? 0 : doneIn30 / scheduledIn30,
     doneIn30,
     scheduledIn30,
@@ -112,7 +122,7 @@ export function weekdayFullName(idx: number) {
 
 export const HEATMAP_WEEKS = 12;
 
-export async function getGlobalStats(): Promise<GlobalStats> {
+export async function getGlobalStats(db: Db): Promise<GlobalStats> {
   const today = dayKey();
   // El mapa arranca en el domingo de hace 11 semanas, para que cada columna
   // sea una semana real y cada fila un día de la semana.
@@ -121,10 +131,10 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     -today.getUTCDay() - (HEATMAP_WEEKS - 1) * 7,
   );
 
-  const logs = await prisma.habitLog.findMany({
-    where: { date: { gte: firstSunday } },
-    select: { date: true },
-  });
+  const logs = await db
+    .select({ date: habitLogs.date })
+    .from(habitLogs)
+    .where(gte(habitLogs.date, firstSunday));
 
   const byDay = new Map<number, number>();
   const byWeekday = new Map<number, number>();
@@ -160,7 +170,10 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     if (!bestWeekday || c > bestWeekday.count) bestWeekday = { weekday: wd, count: c };
   }
 
-  const totalCompletions = await prisma.habitLog.count();
+  // Sin filtro de fecha: cuenta también lo que cae fuera del mapa de calor.
+  const [{ n: totalCompletions }] = await db
+    .select({ n: count() })
+    .from(habitLogs);
 
   return {
     totalCompletions,

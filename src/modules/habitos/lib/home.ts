@@ -1,4 +1,6 @@
-import { prisma } from "./prisma";
+import { asc, gte } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { addDays, dayKey, normalizeDayKey } from "./day";
 import { computeStreak, isCriticalDay, isScheduledOn } from "./streak";
 import {
@@ -42,19 +44,29 @@ export type HomeMetrics = {
   best: WeekdayRate | null;
 };
 
-export async function getHomeMetrics(): Promise<HomeMetrics> {
+export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   const today = dayKey();
   const from = addDays(today, -(HISTORY_DAYS - 1));
 
   const [habits, logs] = await Promise.all([
-    prisma.habit.findMany({
-      select: { id: true, name: true, schedule: true, createdAt: true },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.habitLog.findMany({
-      where: { date: { gte: from } },
-      select: { habitId: true, date: true, partial: true, shielded: true },
-    }),
+    db
+      .select({
+        id: habitsTable.id,
+        name: habitsTable.name,
+        schedule: habitsTable.schedule,
+        createdAt: habitsTable.createdAt,
+      })
+      .from(habitsTable)
+      .orderBy(asc(habitsTable.createdAt)),
+    db
+      .select({
+        habitId: habitLogs.habitId,
+        date: habitLogs.date,
+        partial: habitLogs.partial,
+        shielded: habitLogs.shielded,
+      })
+      .from(habitLogs)
+      .where(gte(habitLogs.date, from)),
   ]);
 
   const entries = logs.map((l) => ({
