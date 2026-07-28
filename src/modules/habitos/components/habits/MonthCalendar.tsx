@@ -11,20 +11,14 @@ const MONTHS = [
 ];
 const WEEKDAYS = ["D", "L", "M", "M", "J", "V", "S"];
 
-const NAV_BUTTON = {
-  width: 26,
-  height: 26,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 6,
-  border: "1px solid var(--m-line)",
-  background: "var(--m-elevated)",
-  color: "var(--m-ink-2)",
-  fontSize: 11,
-  cursor: "pointer",
-  fontFamily: "inherit",
-} as const;
+const NAV_BUTTON =
+  "w-[28px] h-[28px] inline-flex items-center justify-center " +
+  "rounded-control border-3 border-line bg-paper text-tinta text-xs leading-none " +
+  "cursor-pointer shadow-hard font-cuerpo " +
+  "transition-[transform,box-shadow] duration-75 ease-out " +
+  "active:translate-x-0.5 active:translate-y-0.5 " +
+  "active:shadow-[2px_2px_0_var(--color-line)] " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line";
 
 export function MonthCalendar({
   habitId,
@@ -90,12 +84,37 @@ export function MonthCalendar({
     return `${day.date}: ${day.done ? "cumplido" : "pendiente"}`;
   }
 
+  /*
+    Seis estados en celdas de treinta y pocos píxeles es el sitio donde el
+    contraste se rompe, así que ninguno se fía solo del tono:
+
+      escudado    fondo sky      + el glifo 🛡, que ya lo distingue por forma
+      mínimo      fondo amarillo + número en tinta
+      hecho       fondo tinta    + número en papel, invertido
+      pendiente   fondo paper-2  + trazo CONTINUO
+      no toca     sin fondo      + trazo DISCONTINUO
+
+    Los dos últimos son los que más se parecerían —papel claro sobre papel
+    claro—, y por eso lo que los separa es el trazo y no el relleno. Bajo
+    daltonismo, o en una pantalla mala, la línea sigue ahí.
+
+    Ninguna combinación baja de AA: tinta sobre sky 6,87:1, sobre amarillo
+    8,49:1, sobre paper-2 9,09:1, y papel sobre tinta 9,76:1.
+  */
   function colors(day: MonthDay) {
-    if (day.shielded) return { bg: "rgba(250, 178, 25, 0.22)", fg: "var(--m-ink)" };
-    if (day.partial) return { bg: "rgba(250, 178, 25, 0.35)", fg: "var(--m-ink)" };
-    if (day.done) return { bg: "var(--m-series)", fg: "#fff" };
-    if (!day.scheduled) return { bg: "transparent", fg: "var(--m-ink-3)" };
-    return { bg: "var(--m-elevated)", fg: "var(--m-ink-2)" };
+    if (day.shielded) {
+      return { bg: "var(--color-sky)", fg: "var(--color-tinta)", dashed: false };
+    }
+    if (day.partial) {
+      return { bg: "var(--color-yellow)", fg: "var(--color-tinta)", dashed: false };
+    }
+    if (day.done) {
+      return { bg: "var(--color-tinta)", fg: "var(--color-paper)", dashed: false };
+    }
+    if (!day.scheduled) {
+      return { bg: "transparent", fg: "var(--color-tinta)", dashed: true };
+    }
+    return { bg: "var(--color-paper-2)", fg: "var(--color-tinta)", dashed: false };
   }
 
   return (
@@ -108,22 +127,40 @@ export function MonthCalendar({
           marginBottom: 10,
         }}
       >
-        <button type="button" onClick={() => shift(-1)} style={NAV_BUTTON} aria-label="Mes anterior">
+        <button type="button" onClick={() => shift(-1)} className={NAV_BUTTON} aria-label="Mes anterior">
           ←
         </button>
-        <span style={{ fontSize: 13, fontWeight: 550 }}>
+        <span
+          style={{
+            fontFamily: "var(--font-vt)",
+            fontSize: 20,
+            lineHeight: 1,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            color: "var(--color-tinta)",
+          }}
+        >
           {MONTHS[month]} {year}
         </span>
-        <button type="button" onClick={() => shift(1)} style={NAV_BUTTON} aria-label="Mes siguiente">
+        <button type="button" onClick={() => shift(1)} className={NAV_BUTTON} aria-label="Mes siguiente">
           →
         </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 }}>
+        {/* Las cabeceras van en Quicksand y no en VT323: a este tamaño la
+            pixelada quedaría por debajo de sus 16px y dejaría de leerse. */}
         {WEEKDAYS.map((w, i) => (
           <div
             key={i}
-            style={{ textAlign: "center", fontSize: 10, color: "var(--m-ink-3)", paddingBottom: 2 }}
+            style={{
+              textAlign: "center",
+              fontFamily: "var(--font-cuerpo)",
+              fontSize: 11,
+              fontWeight: 700,
+              color: "var(--color-tinta)",
+              paddingBottom: 2,
+            }}
           >
             {w}
           </div>
@@ -133,11 +170,16 @@ export function MonthCalendar({
           ? Array.from({ length: 35 }).map((_, i) => (
               <div
                 key={i}
-                style={{ aspectRatio: "1", borderRadius: 5, background: "var(--m-elevated)" }}
+                style={{
+                  aspectRatio: "1",
+                  borderRadius: 6,
+                  background: "var(--color-paper-2)",
+                  border: "2px dashed var(--color-line)",
+                }}
               />
             ))
           : days.map((day) => {
-              const { bg, fg } = colors(day);
+              const { bg, fg, dashed } = colors(day);
               return (
                 <button
                   key={day.date}
@@ -151,13 +193,22 @@ export function MonthCalendar({
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: 5,
-                    fontSize: 11,
-                    fontFamily: "inherit",
+                    borderRadius: 6,
+                    // VT323 en su suelo: 16px. La celda se dimensiona sola con
+                    // `aspectRatio`, así que manda la fuente sobre la celda.
+                    fontFamily: "var(--font-vt)",
+                    fontSize: 16,
+                    lineHeight: 1,
+                    fontVariantNumeric: "tabular-nums",
                     background: bg,
                     color: fg,
-                    border: day.isToday ? "1px solid var(--m-ink-2)" : "1px solid transparent",
-                    opacity: day.inMonth ? (day.isFuture ? 0.35 : 1) : 0.3,
+                    border: `2px ${dashed ? "dashed" : "solid"} var(--color-line)`,
+                    // Hoy se marca por fuera, con un cerco separado del borde.
+                    // Teñir el propio borde lo habría hecho competir con la
+                    // distinción continuo/discontinuo, que aquí vale más.
+                    outline: day.isToday ? "2px solid var(--color-line)" : undefined,
+                    outlineOffset: day.isToday ? 2 : undefined,
+                    opacity: day.inMonth ? (day.isFuture ? 0.45 : 1) : 0.3,
                     cursor: day.editable ? "pointer" : "default",
                   }}
                 >
@@ -167,8 +218,18 @@ export function MonthCalendar({
             })}
       </div>
 
-      <div style={{ fontSize: 11, color: "var(--m-ink-3)", marginTop: 8 }}>
-        Solo los días que tocan, hasta 60 días atrás. 🛡 escudo · tono suave, modo mínimo.
+      {/* La leyenda sigue al dibujo: decía «tono suave» y ya no hay tono
+          suave. Ahora nombra también la distinción por trazo. */}
+      <div
+        style={{
+          fontSize: 11,
+          color: "var(--color-tinta)",
+          marginTop: 10,
+          fontFamily: "var(--font-cuerpo)",
+        }}
+      >
+        Solo los días que tocan, hasta 60 días atrás. 🛡 escudo · amarillo, modo
+        mínimo · trazo discontinuo, no toca.
       </div>
     </div>
   );
