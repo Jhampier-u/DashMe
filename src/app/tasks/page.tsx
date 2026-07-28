@@ -1,8 +1,7 @@
 import { getTasksGrouped, getTaskMetrics } from "@/lib/tasks";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { TasksBoard } from "@/components/tasks/TasksBoard";
-import { NewTaskForm } from "@/components/tasks/NewTaskForm";
+import { TasksHeader } from "@/components/tasks/TasksHeader";
 import { FlowPanel } from "@/components/tasks/FlowPanel";
 
 export const dynamic = "force-dynamic";
@@ -27,15 +26,7 @@ export default async function TasksPage() {
           gap: 16,
         }}
       >
-        <PageHeader
-          title="Tareas"
-          subtitle={
-            total === 0
-              ? "Muévelas hacia la derecha conforme avancen"
-              : `${total} en total · muévelas hacia la derecha conforme avancen`
-          }
-          action={<NewTaskForm />}
-        />
+        <TasksHeader total={total} />
 
         {total === 0 ? (
           <Card style={{ textAlign: "center", padding: 40 }}>

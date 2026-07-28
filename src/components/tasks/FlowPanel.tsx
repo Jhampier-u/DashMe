@@ -1,3 +1,8 @@
+"use client";
+
+// De cliente porque le pasa `renderTooltip` a BarChart, y una función no cruza
+// la frontera servidor → cliente. Es la misma razón por la que TrendCard lo es.
+
 import { Card } from "@/components/ui/Card";
 import { BarChart } from "@/components/charts/BarChart";
 import { formatDayLabel } from "@/lib/day";

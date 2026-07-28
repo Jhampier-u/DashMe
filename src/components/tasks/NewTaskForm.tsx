@@ -5,17 +5,15 @@ import { createTask } from "@/app/actions";
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea } from "@/components/ui/Field";
 
-export function NewTaskForm() {
-  const [open, setOpen] = useState(false);
+/**
+ * Solo el formulario. Quién decide si está abierto es TasksHeader, porque el
+ * botón vive en la cabecera y el formulario debajo, a todo el ancho: metido en
+ * el hueco de la acción se quedaba en 215 px y no cabían los campos.
+ */
+export function NewTaskForm({ onDone }: { onDone: () => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [pending, startTransition] = useTransition();
-
-  function close() {
-    setOpen(false);
-    setTitle("");
-    setDescription("");
-  }
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,16 +23,8 @@ export function NewTaskForm() {
     fd.set("description", description);
     startTransition(async () => {
       await createTask(fd);
-      close();
+      onDone();
     });
-  }
-
-  if (!open) {
-    return (
-      <Button variant="primary" onClick={() => setOpen(true)}>
-        Nueva tarea
-      </Button>
-    );
   }
 
   return (
@@ -59,7 +49,7 @@ export function NewTaskForm() {
         maxLength={400}
       />
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <Button variant="secondary" onClick={close} disabled={pending}>
+        <Button variant="secondary" onClick={onDone} disabled={pending}>
           Cancelar
         </Button>
         <Button type="submit" variant="primary" disabled={pending || !title.trim()}>
