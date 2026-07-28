@@ -1,0 +1,24 @@
+# Dependencias
+node_modules/
+
+# Next
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# Entorno
+.env
+.env*.local
+
+# SQLite (datos personales — no compartir)
+data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Sistema
+.DS_Store
+Thumbs.db

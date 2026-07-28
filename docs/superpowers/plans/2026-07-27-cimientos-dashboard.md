@@ -24,7 +24,7 @@
 
 **Dos desviaciones deliberadas respecto a Voidtify**, ambas justificadas y ambas sin efecto en el almacenamiento físico:
 
-1. **`{ mode: "timestamp_ms" }` para fechas.** Voidtify usa `integer(...)` crudo y maneja números. El código de Untap trabaja con objetos `Date` en todas partes (`normalizeDayKey(l.date)`, `l.date.getTime()`). Con `mode: "timestamp_ms"` Drizzle convierte solo y los 19 archivos puros de `lib/` siguen funcionando sin tocarlos. En disco es el mismo INTEGER epoch en milisegundos.
+1. **`{ mode: "timestamp_ms" }` para fechas.** Voidtify usa `integer(...)` crudo y maneja números. El código de Untap trabaja con objetos `Date` en todas partes (`normalizeDayKey(l.date)`, `l.date.getTime()`). Con `mode: "timestamp_ms"` Drizzle convierte solo y los 18 archivos puros de `lib/` siguen funcionando sin tocarlos. En disco es el mismo INTEGER epoch en milisegundos.
 2. **`{ mode: "boolean" }` para booleanos.** Mismo razonamiento: el código existente espera `true`/`false`. En disco es el mismo INTEGER 0/1.
 
 **No se usa la API relacional de Drizzle** (`db.query.x.findMany({ with: ... })`). Voidtify no la usa y requiere declarar `relations()`. En su lugar, dos `select` y agrupación en JavaScript. Ver Tarea 12 para el patrón exacto y para una trampa importante con `_count`.
@@ -51,7 +51,7 @@
 | `src/modules/core/ui/*` | `Button`, `Card`, `Field`, `Modal`, `PageHeader`, `Stat` |
 | `src/modules/core/shell/*` | `AppShell`, `NavIcons` |
 | `src/modules/habitos/schema.ts` | Las 7 tablas del dominio |
-| `src/modules/habitos/lib/*` | 19 archivos puros + 6 con acceso a datos + 7 de test |
+| `src/modules/habitos/lib/*` | 11 archivos puros + 7 de test + 6 con acceso a datos |
 | `src/modules/habitos/components/*` | Los 33 componentes de dominio |
 | `src/modules/habitos/actions.ts` | Los 18 server actions |
 | `src/modules/habitos/index.ts` | Interfaz pública del módulo |
@@ -222,11 +222,14 @@ Si alguno falla con `Working tree has modifications`, commitea o descarta lo pen
 ```bash
 cd "/c/PROYECTO JUAMPI"
 git log --oneline | wc -l
-git log --oneline --all | grep -c "."
-git log --oneline -- legacy/portafolio | tail -3
+# El commit de merge del subtree: su SEGUNDO padre es la historia original.
+MERGE=$(git log --oneline --grep="Add 'legacy/portafolio/'" --format=%H)
+git log --oneline "$MERGE^2" | tail -3
 ```
 
-Esperado: bastante más de 4 commits en total, y en el último comando deben aparecer los commits originales del Portafolio (`first commit`, `Arrelo`, `mk`). Si `git log -- legacy/portafolio` solo muestra un commit, el subtree se hizo con `--squash` por error: deshaz con `git reset --hard` al commit anterior y repite sin esa bandera.
+Esperado: bastante más de 4 commits en total, y en el segundo comando los commits originales del Portafolio (`first commit`, `Arrelo`, `mk`).
+
+**No uses `git log -- legacy/portafolio`.** La simplificación de historia de git se detiene en el commit de merge, porque los commits originales tocaban `index.html` y no `legacy/portafolio/index.html`. Da un solo commit aunque la historia esté entera, y parece un `--squash` que no ocurrió. Comprueba siempre por el segundo padre, o por SHA: `git log -1 9a9fe62` debe resolver.
 
 - [ ] **Paso 3: Confirmar que no quedaron `.git` anidados**
 
@@ -359,6 +362,26 @@ export default defineConfig({
   out: "./drizzle",
   dbCredentials: { url: "./data/juampi.db" },
 });
+```
+
+- [ ] **Paso 4b: Excluir `legacy/` de TypeScript y ESLint**
+
+Sin esto, `tsc` y `eslint` recorren el código sin migrar de `legacy/` y escupen
+decenas de errores por imports que ya no existen. El criterio de aceptación 4
+("`tsc` y `lint` limpios") sería imposible de cumplir mientras `legacy/` exista.
+
+En `tsconfig.json`:
+
+```json
+"exclude": ["node_modules", "legacy"]
+```
+
+En `eslint.config.mjs`, dentro de `globalIgnores([...])`:
+
+```js
+// Zona de aterrizaje de los repos absorbidos: código todavía sin migrar,
+// se vacía conforme avanzan los sub-proyectos. Desaparece con ella.
+"legacy/**",
 ```
 
 - [ ] **Paso 5: Instalar y verificar**
@@ -723,6 +746,27 @@ git commit -m "feat(core): conexión única a SQLite con auto-creación de tabla
 
 Los tests no pueden usar `src/modules/core/db/index.ts`: tiene `server-only` y escribe en disco. Esta es su alternativa.
 
+- [ ] **Paso 0: Enseñar a vitest a resolver el alias `@/`**
+
+vitest **no** lee los `paths` de `tsconfig.json`. Los tests de Untap solo usaban
+rutas relativas (`./day`), así que nunca hizo falta; a partir de aquí sí. Sin esto,
+cualquier test que importe con `@/` falla al resolver el módulo.
+
+En `vitest.config.mts`:
+
+```ts
+import { fileURLToPath } from "node:url";
+// ...
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  test: { environment: "node", include: ["src/**/*.test.ts"] },
+});
+```
+
 - [ ] **Paso 1: Escribir el test que falla**
 
 `src/modules/core/db/testing.test.ts`:
@@ -827,7 +871,7 @@ git commit -m "test(core): base en memoria para tests"
 Estos 19 archivos no tocan la base. Se mueven sin tocar una línea. Incluye los 7 de test, cuyas expectativas **no deben cambiar** en todo el plan.
 
 **Files:**
-- Move: 19 archivos de `legacy/untap/src/lib/` a `src/modules/habitos/lib/`
+- Move: 18 archivos de `legacy/untap/src/lib/` a `src/modules/habitos/lib/`
 
 - [ ] **Paso 1: Mover**
 
@@ -841,7 +885,7 @@ done
 ls src/modules/habitos/lib | wc -l
 ```
 
-Esperado: `19`.
+Esperado: `18`.
 
 - [ ] **Paso 2: Ejecutar los tests**
 
@@ -915,6 +959,20 @@ grep -rn "@/components/\|@/lib/" src || echo "SIN IMPORTS VIEJOS"
 ```
 
 Esperado: `SIN IMPORTS VIEJOS`.
+
+**Los alias no son el único caso.** Algunos componentes se importan entre sí con
+rutas **relativas** que el `sed` de arriba no toca, y que se rompen al mover archivos
+a módulos distintos. Búscalas explícitamente:
+
+```bash
+npx tsc --noEmit 2>&1 | grep -oE "Cannot find module '\./[^']+'" | sort -u
+```
+
+En este repo apareció `ConfirmDialog.tsx` importando `./ui/Modal` y `./ui/Button`,
+que ahora viven en `core/`. Corrígelas a `@/modules/core/ui/...`.
+
+Ignora `./quests` si aparece desde `lib/events.ts`: ese archivo se migra en la
+Tarea 13 y el error se resuelve solo.
 
 - [ ] **Paso 4: Verificar**
 
@@ -2045,10 +2103,10 @@ npm run lint
 npx tsc --noEmit
 npm run test
 npm run build
-git log --oneline -- legacy/portafolio | tail -3
+for sha in 9a9fe62 70f434b b2465fe 6aba138 518aef2; do git log -1 --format="%h %s" $sha; done
 ```
 
-Esperado: los cuatro comandos en verde y el `git log` mostrando los commits originales del Portafolio (`first commit`, `Arrelo`, `mk`).
+Esperado: los cuatro comandos en verde y los cinco SHA originales resolviendo a su mensaje de commit.
 
 Si `npm run build` falla por `better-sqlite3`, revisa que `serverExternalPackages` esté en `next.config.ts`.
 
@@ -2066,7 +2124,7 @@ git log --oneline | head -20
 
 Repasa los ocho del spec, cada uno con su comprobación:
 
-- [ ] 1. `git log --oneline -- legacy/portafolio` muestra la historia original de los cuatro repos
+- [ ] 1. Los SHA originales de los cuatro repos resuelven (`git log -1 9a9fe62` y compañía)
 - [ ] 2. `npm run build` pasa
 - [ ] 3. `npm run test` pasa — los 7 archivos migrados intactos más los 7 nuevos
 - [ ] 4. `npm run lint` y `npx tsc --noEmit` limpios
@@ -2078,8 +2136,9 @@ Repasa los ocho del spec, cada uno con su comprobación:
 Verifica el 8 explícitamente:
 
 ```bash
-git log --oneline -- legacy/voidtify | head -3
 find legacy/voidtify -newer package.json -type f -not -path "*/node_modules/*" | head
 ```
 
-El segundo comando no debe devolver nada: si algún archivo de Voidtify se modificó durante este trabajo, se salió del alcance.
+No debe devolver nada: si algún archivo de Voidtify se modificó durante este trabajo, se salió del alcance.
+
+**Y no toques `C:\Voidtify`**, que es la instalación real y tiene 158 MB de datos que el sub-proyecto 2 debe migrar. Está fuera de este repo y fuera de este alcance.

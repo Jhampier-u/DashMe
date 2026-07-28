@@ -1,0 +1,102 @@
+import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import { tasks } from "@/modules/habitos/schema";
+import { dayKey } from "./day";
+import {
+  lifetimeDays,
+  median,
+  oldestOpenDays,
+  periodChange,
+  weeklyCounts,
+  type PeriodChange,
+  type WeekBucket,
+} from "./flow";
+
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+export const TASK_STATUSES: TaskStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
+
+export const STATUS_LABEL: Record<TaskStatus, string> = {
+  TODO: "Por iniciar",
+  IN_PROGRESS: "En proceso",
+  DONE: "Completadas",
+};
+
+export type TaskRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  order: number;
+  createdAt: Date;
+  completedAt: Date | null;
+};
+
+export async function getTasksGrouped(
+  db: Db,
+): Promise<Record<TaskStatus, TaskRow[]>> {
+  const all = await db
+    .select()
+    .from(tasks)
+    .orderBy(asc(tasks.order), asc(tasks.createdAt));
+  const grouped: Record<TaskStatus, TaskRow[]> = {
+    TODO: [],
+    IN_PROGRESS: [],
+    DONE: [],
+  };
+  for (const t of all) {
+    const s = (t.status as TaskStatus) ?? "TODO";
+    if (s in grouped) {
+      grouped[s].push({ ...t, status: s });
+    }
+  }
+  return grouped;
+}
+
+/** Semanas que se pintan; se cargan el doble para poder comparar periodos. */
+export const FLOW_WEEKS = 12;
+/** Ventana de cierres sobre la que se calcula la mediana de vida. */
+export const LIFETIME_WINDOW_DAYS = 90;
+
+export type TaskMetrics = {
+  weeks: WeekBucket[];
+  change: PeriodChange;
+  /** Mediana de días entre crear y cerrar. `null` si aún no se ha cerrado nada. */
+  medianLifetime: number | null;
+  /** Días que lleva esperando la tarea abierta más antigua. */
+  oldestOpen: number | null;
+};
+
+export async function getTaskMetrics(db: Db): Promise<TaskMetrics> {
+  const today = dayKey();
+  const [done, open] = await Promise.all([
+    db
+      .select({ createdAt: tasks.createdAt, completedAt: tasks.completedAt })
+      .from(tasks)
+      .where(and(eq(tasks.status, "DONE"), isNotNull(tasks.completedAt))),
+    db
+      .select({ createdAt: tasks.createdAt })
+      .from(tasks)
+      .where(ne(tasks.status, "DONE")),
+  ]);
+
+  const completions = done
+    .map((t) => t.completedAt)
+    .filter((d): d is Date => d !== null);
+
+  // Se piden el doble de semanas: la primera mitad es el periodo de referencia.
+  const buckets = weeklyCounts(completions, FLOW_WEEKS * 2, today);
+
+  const cutoff = new Date(today.getTime());
+  cutoff.setUTCDate(cutoff.getUTCDate() - LIFETIME_WINDOW_DAYS);
+  const recent = done.filter(
+    (t) => t.completedAt !== null && t.completedAt >= cutoff,
+  ) as { createdAt: Date; completedAt: Date }[];
+
+  return {
+    weeks: buckets.slice(FLOW_WEEKS),
+    change: periodChange(buckets),
+    medianLifetime: median(lifetimeDays(recent)),
+    oldestOpen: oldestOpenDays(open.map((t) => t.createdAt), today),
+  };
+}

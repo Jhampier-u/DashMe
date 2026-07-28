@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/*
+  Tokens del lenguaje moderno. Es el único sistema visual del proyecto:
+  el sistema pixel que convivía con este se retiro por completo.
+*/
+:root {
+  --m-page: #0f0f13;
+  --m-surface: #17171d;
+  --m-elevated: #1e1e26;
+  --m-line: rgba(255, 255, 255, 0.09);
+
+  --m-ink: #f2f2f5;
+  --m-ink-2: #a8a8b4;
+  /*
+    --m-ink-3, --m-crit y --m-series-strong están fijados por contraste AA
+    (medidos sobre --m-surface): no los "afines" a ojo sin recalcular.
+  */
+  --m-ink-3: #8a8a95;
+
+  --m-series: #3987e5;
+  --m-series-strong: #2a6fc4;
+  --m-track: rgba(255, 255, 255, 0.09);
+
+  --m-good: #0ca30c;
+  --m-warn: #fab219;
+  --m-crit: #e26060;
+  /* Fondo destructivo con texto blanco: 5,27:1. --m-crit es para texto, no
+     llega a contraste como fondo. */
+  --m-crit-strong: #c33a3a;
+
+  /*
+    Colores de identidad de hábito. Son tres porque con la lista de todos los
+    pares ningún conjunto de cuatro pasa la separación bajo daltonismo. Paleta
+    validada sobre --m-surface: peor par aqua↔naranja ΔE 9.4 (deutan), peor par
+    con visión normal violeta↔aqua ΔE 24.6, los tres ≥ 3:1 de contraste.
+    El azul queda fuera por ser --m-series; verde, amarillo y rojo por ser los
+    colores de estado.
+  */
+  --h-aqua: #199e70;
+  --h-violet: #9085e9;
+  --h-orange: #d95926;
+
+  --m-radius: 10px;
+  --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.m-root {
+  font-family: var(--m-font);
+  color: var(--m-ink);
+  background: var(--m-page);
+}
+
+.m-card {
+  background: var(--m-surface);
+  border: 1px solid var(--m-line);
+  border-radius: var(--m-radius);
+  padding: 18px;
+}
+
+.m-label {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--m-ink-3);
+}
+
+.m-num {
+  font-variant-numeric: tabular-nums;
+}
+
+html,
+body {
+  background: var(--m-page);
+  color: var(--m-ink);
+}
+
+body {
+  font-family: var(--m-font);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Bobble animation for avatars */
+@keyframes untap-bobble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.untap-bobble {
+  animation: untap-bobble 2400ms steps(8, jump-end) infinite;
+}
+
+/* Pulse on accent dots */
+@keyframes untap-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+.untap-pulse {
+  animation: untap-pulse 1400ms steps(8, jump-end) infinite;
+}
+
+/* Toast de logro: la animación cubre toda la vida del toast (duración
+   inyectada desde el componente) y se queda en el último frame. */
+@keyframes untap-popin {
+  0% { transform: scale(0.6); opacity: 0; }
+  6% { transform: scale(1.08); opacity: 1; }
+  12% { transform: scale(1); }
+  88% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+.untap-popin {
+  animation-name: untap-popin;
+  animation-timing-function: steps(24, jump-end);
+  animation-fill-mode: forwards;
+}
+
+/* Respeta a quien pide menos movimiento: nada de bucles infinitos. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .untap-bobble,
+  .untap-pulse {
+    animation: none !important;
+  }
+  .untap-popin {
+    animation: none !important;
+    opacity: 1;
+  }
+}
