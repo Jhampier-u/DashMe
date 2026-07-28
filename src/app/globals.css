@@ -68,10 +68,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+/*
+  El documento ya es de papel. Las secciones que aún no se han repintado no se
+  rompen: cada una monta su contenido dentro de un `.m-root` —o de
+  `.musica-root`, en el caso de música— que impone su propio fondo oscuro y su
+  propia tinta clara. Es el mismo mecanismo que las protegió mientras se
+  repintaba hábitos, usado ahora al revés.
+
+  Cada vez que una sección se repinte, pierde su escudo y se queda con este
+  fondo. Cuando no quede ninguno, `--m-page` y `--m-ink` se podrán borrar.
+*/
 html,
 body {
-  background: var(--m-page);
-  color: var(--m-ink);
+  background: var(--color-paper);
+  color: var(--color-tinta);
 }
 
 /*
