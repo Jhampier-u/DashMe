@@ -960,6 +960,20 @@ grep -rn "@/components/\|@/lib/" src || echo "SIN IMPORTS VIEJOS"
 
 Esperado: `SIN IMPORTS VIEJOS`.
 
+**Los alias no son el único caso.** Algunos componentes se importan entre sí con
+rutas **relativas** que el `sed` de arriba no toca, y que se rompen al mover archivos
+a módulos distintos. Búscalas explícitamente:
+
+```bash
+npx tsc --noEmit 2>&1 | grep -oE "Cannot find module '\./[^']+'" | sort -u
+```
+
+En este repo apareció `ConfirmDialog.tsx` importando `./ui/Modal` y `./ui/Button`,
+que ahora viven en `core/`. Corrígelas a `@/modules/core/ui/...`.
+
+Ignora `./quests` si aparece desde `lib/events.ts`: ese archivo se migra en la
+Tarea 13 y el error se resuelve solo.
+
 - [ ] **Paso 4: Verificar**
 
 ```bash
