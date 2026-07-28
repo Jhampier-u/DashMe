@@ -112,3 +112,30 @@
   --font-vt: var(--font-vt323), "Courier New", ui-monospace, monospace;
   --font-cuerpo: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
 }
+
+/* ==========================================================================
+   Identidad de hábito
+
+   Los tres `--h-*` vienen de `globals.css`, donde valían el aqua, el violeta y
+   el naranja validados sobre superficie oscura. Cambian de valor y no de
+   papel, que es justo lo que pedía el spec: siguen siendo el acento de la fila
+   y el tinte del cartel de la planta.
+
+   LOS NOMBRES YA NO DESCRIBEN EL COLOR, y no es un descuido. `aqua`, `violet` y
+   `orange` son claves guardadas en la base de datos, y `habitColorVar()` está
+   obligada por `color.test.ts` a devolver exactamente `var(--h-aqua)`.
+   Renombrarlas costaría una migración de filas y un test tocado, y los tests no
+   se tocan. Lo que ve el usuario son las etiquetas de `HABIT_COLORS`, que sí
+   se han puesto al día: Menta, Lavanda y Rosa.
+
+   No van en `@theme` porque `--h-*` no es un espacio de nombres de Tailwind:
+   aquí solo se les da valor, y quien los consume lo hace por `var()`.
+
+   La separación bajo daltonismo de esta terna la afirma `contraste.test.ts`
+   (peor par rosa~menta en deuteranopía, ΔE 15.9 contra un umbral de 9).
+   ========================================================================== */
+:root {
+  --h-aqua: var(--color-mint);
+  --h-violet: var(--color-lav);
+  --h-orange: var(--color-pink);
+}

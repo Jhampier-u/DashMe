@@ -36,17 +36,9 @@
      llega a contraste como fondo. */
   --m-crit-strong: #c33a3a;
 
-  /*
-    Colores de identidad de hábito. Son tres porque con la lista de todos los
-    pares ningún conjunto de cuatro pasa la separación bajo daltonismo. Paleta
-    validada sobre --m-surface: peor par aqua↔naranja ΔE 9.4 (deutan), peor par
-    con visión normal violeta↔aqua ΔE 24.6, los tres ≥ 3:1 de contraste.
-    El azul queda fuera por ser --m-series; verde, amarillo y rojo por ser los
-    colores de estado.
-  */
-  --h-aqua: #199e70;
-  --h-violet: #9085e9;
-  --h-orange: #d95926;
+  /* Los --h-* de identidad de hábito se fueron a tokens.css: ahora los define
+     el sistema pixel. Siguen llamándose igual y siguen valiendo para todo el
+     proyecto. */
 
   --m-radius: 10px;
   --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
