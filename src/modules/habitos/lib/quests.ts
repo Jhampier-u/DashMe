@@ -1,4 +1,12 @@
-import { prisma } from "./prisma";
+import { and, asc, count, eq, gte, lt } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import {
+  dailyQuests,
+  habits as habitsTable,
+  habitLogs,
+  projectItems,
+  tasks,
+} from "@/modules/habitos/schema";
 import { dayKey, localDayRange } from "./day";
 import { isScheduledOn } from "./streak";
 
@@ -109,25 +117,51 @@ export type QuestCompletion = {
  * salía del guion (misión ya completada, hábito borrado, backfill…).
  * Recalcular es igual de barato aquí y no puede quedar desfasado.
  */
-async function computeProgress(now: Date): Promise<Record<QuestKind, number>> {
+async function computeProgress(
+  db: Db,
+  now: Date,
+): Promise<Record<QuestKind, number>> {
   const today = dayKey(now);
   const { start, end } = localDayRange(now);
   const earlyCutoff = new Date(start.getTime());
   earlyCutoff.setHours(EARLY_QUEST_HOUR, 0, 0, 0);
 
-  const [todayLogs, habits, tasksDone, itemsDone] = await Promise.all([
-    prisma.habitLog.findMany({
-      where: { date: today, shielded: false },
-      select: { habitId: true, partial: true, createdAt: true },
-    }),
-    prisma.habit.findMany({ select: { id: true, schedule: true } }),
-    prisma.task.count({
-      where: { status: "DONE", completedAt: { gte: start, lt: end } },
-    }),
-    prisma.projectItem.count({
-      where: { status: "DONE", completedAt: { gte: start, lt: end } },
-    }),
+  const [todayLogs, habits, tasksDoneRows, itemsDoneRows] = await Promise.all([
+    db
+      .select({
+        habitId: habitLogs.habitId,
+        partial: habitLogs.partial,
+        createdAt: habitLogs.createdAt,
+      })
+      .from(habitLogs)
+      .where(and(eq(habitLogs.date, today), eq(habitLogs.shielded, false))),
+    db
+      .select({ id: habitsTable.id, schedule: habitsTable.schedule })
+      .from(habitsTable),
+    db
+      .select({ n: count() })
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.status, "DONE"),
+          gte(tasks.completedAt, start),
+          lt(tasks.completedAt, end),
+        ),
+      ),
+    db
+      .select({ n: count() })
+      .from(projectItems)
+      .where(
+        and(
+          eq(projectItems.status, "DONE"),
+          gte(projectItems.completedAt, start),
+          lt(projectItems.completedAt, end),
+        ),
+      ),
   ]);
+
+  const tasksDone = tasksDoneRows[0]?.n ?? 0;
+  const itemsDone = itemsDoneRows[0]?.n ?? 0;
 
   const scheduledToday = habits.filter((h) => isScheduledOn(h.schedule, today));
   const fullyDone = new Set(
@@ -148,25 +182,31 @@ async function computeProgress(now: Date): Promise<Record<QuestKind, number>> {
   };
 }
 
-async function ensureRows(today: Date) {
+async function ensureRows(db: Db, today: Date) {
   const kinds = pickQuestsForDate(today, 3);
   for (const kind of kinds) {
     const def = QUEST_DEFS[kind];
-    await prisma.dailyQuest.upsert({
-      where: { date_kind: { date: today, kind } },
-      update: {},
-      create: {
+    // onConflictDoNothing, no DoUpdate: resincronizar no debe tocar lo que ya
+    // existe. Con DoUpdate se resetearían target y xpReward de una misión ya
+    // en curso, y el jugador vería cambiar el premio a mitad del día.
+    await db
+      .insert(dailyQuests)
+      .values({
+        id: crypto.randomUUID(),
         date: today,
         kind,
         target: def.target,
         xpReward: def.xpReward,
-      },
-    });
+      })
+      .onConflictDoNothing({
+        target: [dailyQuests.date, dailyQuests.kind],
+      });
   }
-  return prisma.dailyQuest.findMany({
-    where: { date: today },
-    orderBy: { kind: "asc" },
-  });
+  return db
+    .select()
+    .from(dailyQuests)
+    .where(eq(dailyQuests.date, today))
+    .orderBy(asc(dailyQuests.kind));
 }
 
 export type QuestSyncResult = {
@@ -180,12 +220,13 @@ export type QuestSyncResult = {
  * que marcar y desmarcar en bucle no genera XP.
  */
 export async function syncDailyQuests(
+  db: Db,
   now: Date = new Date(),
 ): Promise<QuestSyncResult> {
   const today = dayKey(now);
   const [rows, progress] = await Promise.all([
-    ensureRows(today),
-    computeProgress(now),
+    ensureRows(db, today),
+    computeProgress(db, now),
   ]);
 
   let xpDelta = 0;
@@ -199,12 +240,14 @@ export async function syncDailyQuests(
     const reached = value >= row.target;
 
     if (reached && !row.completed) {
-      // updateMany con guardia: si dos acciones corren a la vez, solo una paga.
-      const { count } = await prisma.dailyQuest.updateMany({
-        where: { id: row.id, completed: false },
-        data: { progress: value, completed: true, completedAt: now },
-      });
-      if (count === 1) {
+      // Update con guardia sobre `completed`: si dos acciones corren a la vez,
+      // solo una encuentra la fila sin completar y solo una paga.
+      const pagadas = await db
+        .update(dailyQuests)
+        .set({ progress: value, completed: true, completedAt: now })
+        .where(and(eq(dailyQuests.id, row.id), eq(dailyQuests.completed, false)))
+        .returning({ id: dailyQuests.id });
+      if (pagadas.length === 1) {
         xpDelta += row.xpReward;
         completed.push({
           kind,
@@ -214,16 +257,17 @@ export async function syncDailyQuests(
         });
       }
     } else if (!reached && row.completed) {
-      const { count } = await prisma.dailyQuest.updateMany({
-        where: { id: row.id, completed: true },
-        data: { progress: value, completed: false, completedAt: null },
-      });
-      if (count === 1) xpDelta -= row.xpReward;
+      const devueltas = await db
+        .update(dailyQuests)
+        .set({ progress: value, completed: false, completedAt: null })
+        .where(and(eq(dailyQuests.id, row.id), eq(dailyQuests.completed, true)))
+        .returning({ id: dailyQuests.id });
+      if (devueltas.length === 1) xpDelta -= row.xpReward;
     } else if (row.progress !== value) {
-      await prisma.dailyQuest.update({
-        where: { id: row.id },
-        data: { progress: value },
-      });
+      await db
+        .update(dailyQuests)
+        .set({ progress: value })
+        .where(eq(dailyQuests.id, row.id));
     }
   }
 
@@ -231,12 +275,14 @@ export async function syncDailyQuests(
 }
 
 /** Misiones de hoy para pintar el panel. No concede ni retira XP. */
-export async function getTodayQuests(): Promise<DailyQuestRow[]> {
-  const now = new Date();
+export async function getTodayQuests(
+  db: Db,
+  now: Date = new Date(),
+): Promise<DailyQuestRow[]> {
   const today = dayKey(now);
   const [rows, progress] = await Promise.all([
-    ensureRows(today),
-    computeProgress(now),
+    ensureRows(db, today),
+    computeProgress(db, now),
   ]);
   return rows
     .filter((r) => QUEST_DEFS[r.kind as QuestKind])
