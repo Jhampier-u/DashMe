@@ -746,6 +746,27 @@ git commit -m "feat(core): conexión única a SQLite con auto-creación de tabla
 
 Los tests no pueden usar `src/modules/core/db/index.ts`: tiene `server-only` y escribe en disco. Esta es su alternativa.
 
+- [ ] **Paso 0: Enseñar a vitest a resolver el alias `@/`**
+
+vitest **no** lee los `paths` de `tsconfig.json`. Los tests de Untap solo usaban
+rutas relativas (`./day`), así que nunca hizo falta; a partir de aquí sí. Sin esto,
+cualquier test que importe con `@/` falla al resolver el módulo.
+
+En `vitest.config.mts`:
+
+```ts
+import { fileURLToPath } from "node:url";
+// ...
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  test: { environment: "node", include: ["src/**/*.test.ts"] },
+});
+```
+
 - [ ] **Paso 1: Escribir el test que falla**
 
 `src/modules/core/db/testing.test.ts`:
