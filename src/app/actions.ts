@@ -61,7 +61,6 @@ const LIMITS = {
 // "orange" y guardaba el fallback. Elegir violeta guardaba otro color.
 const HABIT_COLOR_KEYS = HABIT_COLORS.map((c) => c.key);
 const PROJECT_ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
-const PROJECT_COLORS = ["lavender", "mint", "peach", "sky", "pink"];
 
 const SPECIES_KEYS = PLANT_SPECIES.map((s) => s.key);
 
@@ -511,7 +510,6 @@ export async function createProject(formData: FormData) {
       name,
       description: text(formData.get("description"), LIMITS.projectDescription),
       icon: oneOf(formData.get("icon"), PROJECT_ICONS, "📁"),
-      color: oneOf(formData.get("color"), PROJECT_COLORS, "lavender"),
     },
   });
   refresh();

@@ -33,7 +33,6 @@ export type ProjectSummary = {
   name: string;
   description: string | null;
   icon: string;
-  color: string;
   createdAt: Date;
   totalItems: number;
   doneItems: number;
@@ -74,7 +73,6 @@ export async function listProjects(): Promise<ProjectSummary[]> {
     name: p.name,
     description: p.description,
     icon: p.icon,
-    color: p.color,
     createdAt: p.createdAt,
     totalItems: p.items.length,
     doneItems: p.items.filter((i) => i.status === "DONE").length,
