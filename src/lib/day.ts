@@ -104,3 +104,11 @@ const DAY_MONTH = new Intl.DateTimeFormat("es", {
 export function formatDayLabel(iso: string): string {
   return DAY_MONTH.format(new Date(`${iso}T00:00:00Z`));
 }
+
+/**
+ * «1 día» / «N días». Existe porque el ternario suelto se copió cuatro veces y
+ * en dos de ellas salió mal.
+ */
+export function formatDays(n: number): string {
+  return n === 1 ? "1 día" : `${n} días`;
+}

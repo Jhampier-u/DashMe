@@ -5,6 +5,7 @@ import {
   dayKeyFromISO,
   daysBetween,
   formatDayLabel,
+  formatDays,
   isoFromDayKey,
   localDayRange,
   normalizeDayKey,
@@ -119,5 +120,21 @@ describe("localDayRange", () => {
     // arranca a medianoche local del 27
     expect(start.getDate()).toBe(27);
     expect(start.getHours()).toBe(0);
+  });
+});
+
+describe("formatDays", () => {
+  it("usa el singular con uno", () => {
+    expect(formatDays(1)).toBe("1 día");
+  });
+
+  it("usa el plural con cero y con más de uno", () => {
+    expect(formatDays(0)).toBe("0 días");
+    expect(formatDays(2)).toBe("2 días");
+    expect(formatDays(30)).toBe("30 días");
+  });
+
+  it("usa el plural con negativos, que no deberían llegar pero llegan", () => {
+    expect(formatDays(-1)).toBe("-1 días");
   });
 });
