@@ -20,6 +20,15 @@ import {
   isScheduledOn,
   sanitizeSchedule,
 } from "./streak";
+import { daysSince } from "./flow";
+import {
+  averageRate,
+  buildHabitSpecs,
+  complianceSeries,
+  weekdayRates,
+  worstWeekday,
+  type LogEntry,
+} from "./metrics";
 
 /** Ventana máxima que se lee de historial para calcular rachas. */
 const STREAK_LOOKBACK_DAYS = 400;
@@ -224,3 +233,128 @@ export async function getHabitMonth(
 }
 
 export { DEFAULT_SCHEDULE, isScheduledOn, sanitizeSchedule };
+
+/** Ventana del diagnóstico: cuatro semanas exactas. */
+export const DIAGNOSIS_DAYS = 28;
+
+export type HabitRanking = {
+  id: string;
+  name: string;
+  icon: string;
+  /** Cumplimiento sobre los días que le tocaban a él. `null` si no tocó ninguno. */
+  rate: number | null;
+  /** Días que le tocaban dentro de la ventana. */
+  scheduled: number;
+};
+
+export type HabitUntouched = {
+  id: string;
+  name: string;
+  days: number;
+  /** Si nunca se ha cumplido, se cuenta desde que se creó y se dice. */
+  from: "completion" | "creation";
+};
+
+export type HabitDiagnosis = {
+  ranking: HabitRanking[];
+  /** Siete posiciones, 0=domingo. `null` donde no hay datos. */
+  weekdays: (number | null)[];
+  worst: { weekday: number; rate: number } | null;
+  untouched: HabitUntouched[];
+};
+
+export async function getHabitDiagnosis(): Promise<HabitDiagnosis> {
+  const today = dayKey();
+  const from = addDays(today, -(DIAGNOSIS_DAYS - 1));
+
+  const [habits, logs] = await Promise.all([
+    prisma.habit.findMany({
+      select: { id: true, name: true, icon: true, schedule: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.habitLog.findMany({
+      where: { date: { gte: from } },
+      select: { habitId: true, date: true, partial: true, shielded: true },
+    }),
+  ]);
+
+  const entries: LogEntry[] = logs.map((l) => ({
+    habitId: l.habitId,
+    day: normalizeDayKey(l.date),
+    partial: l.partial,
+    shielded: l.shielded,
+  }));
+
+  const specs = buildHabitSpecs(
+    habits.map((h) => ({
+      id: h.id,
+      schedule: h.schedule,
+      createdKey: dayKey(h.createdAt),
+    })),
+    entries,
+  );
+
+  // El ranking mide cada hábito sobre SUS días: uno de lunes y viernes con 7 de
+  // 8 está al 88%, no al 25%. Por eso se llama a complianceSeries con un solo
+  // hábito en vez de repartir el agregado.
+  const ranking: HabitRanking[] = habits.map((habit) => {
+    const spec = specs.find((s) => s.id === habit.id)!;
+    const series = complianceSeries(
+      [spec],
+      entries.filter((e) => e.habitId === habit.id),
+      from,
+      today,
+    );
+    return {
+      id: habit.id,
+      name: habit.name,
+      icon: habit.icon,
+      rate: averageRate(series),
+      scheduled: series.filter((d) => d.scheduled > 0).length,
+    };
+  });
+
+  // Del peor al mejor. Los que no tuvieron ningún día programado van al final:
+  // no se les puede reprochar nada.
+  ranking.sort((a, b) => {
+    if (a.rate === null) return b.rate === null ? 0 : 1;
+    if (b.rate === null) return -1;
+    return a.rate - b.rate;
+  });
+
+  const overall = complianceSeries(specs, entries, from, today);
+
+  const lastByHabit = new Map<string, number>();
+  for (const entry of entries) {
+    if (entry.shielded) continue;
+    const t = entry.day.getTime();
+    const previous = lastByHabit.get(entry.habitId);
+    if (previous === undefined || t > previous) lastByHabit.set(entry.habitId, t);
+  }
+
+  const untouched: HabitUntouched[] = habits
+    .map((habit) => {
+      const last = lastByHabit.get(habit.id);
+      return last === undefined
+        ? {
+            id: habit.id,
+            name: habit.name,
+            days: daysSince(habit.createdAt, today),
+            from: "creation" as const,
+          }
+        : {
+            id: habit.id,
+            name: habit.name,
+            days: daysSince(new Date(last), today),
+            from: "completion" as const,
+          };
+    })
+    .sort((a, b) => b.days - a.days);
+
+  return {
+    ranking,
+    weekdays: weekdayRates(overall),
+    worst: worstWeekday(overall),
+    untouched,
+  };
+}

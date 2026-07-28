@@ -1,4 +1,4 @@
-import { getHabitsWithTodayStatus, getPlayerLevelInfo } from "@/lib/habits";
+import { getHabitsWithTodayStatus, getPlayerLevelInfo, getHabitDiagnosis } from "@/lib/habits";
 import { getTodayQuests } from "@/lib/quests";
 import { Card } from "@/components/ui/Card";
 import { QuestList } from "@/components/home/QuestList";
@@ -6,14 +6,16 @@ import { HabitsHeader } from "@/components/habits/HabitsHeader";
 import { DayStatus } from "@/components/habits/DayStatus";
 import { CriticalBanner } from "@/components/habits/CriticalBanner";
 import { HabitRow } from "@/components/habits/HabitRow";
+import { DiagnosisPanel } from "@/components/habits/DiagnosisPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function HabitsPage() {
-  const [habits, player, quests] = await Promise.all([
+  const [habits, player, quests, diagnosis] = await Promise.all([
     getHabitsWithTodayStatus(),
     getPlayerLevelInfo(),
     getTodayQuests(),
+    getHabitDiagnosis(),
   ]);
 
   const scheduled = habits.filter((h) => h.scheduledToday);
@@ -66,6 +68,8 @@ export default async function HabitsPage() {
                 />
               ))}
             </div>
+
+            <DiagnosisPanel diagnosis={diagnosis} />
           </>
         )}
       </div>

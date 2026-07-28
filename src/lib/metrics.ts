@@ -184,10 +184,12 @@ export function periodDelta(
   };
 }
 
-export type WeekdayRate = { weekday: number; rate: number };
-
-/** Día de la semana (0=domingo) con mejor tasa media de cumplimiento. */
-export function bestWeekday(days: DayCompliance[]): WeekdayRate | null {
+/**
+ * Cumplimiento medio de cada día de la semana, indexado 0=domingo..6=sábado.
+ * Un día de la semana sin ningún dato vale `null`, no cero: nunca haber medido
+ * un jueves no es lo mismo que haber fallado todos los jueves.
+ */
+export function weekdayRates(days: DayCompliance[]): (number | null)[] {
   const sums = new Array(7).fill(0);
   const counts = new Array(7).fill(0);
 
@@ -198,11 +200,38 @@ export function bestWeekday(days: DayCompliance[]): WeekdayRate | null {
     counts[weekday] += 1;
   }
 
-  let best: WeekdayRate | null = null;
+  return sums.map((sum, weekday) =>
+    counts[weekday] === 0 ? null : sum / counts[weekday],
+  );
+}
+
+export type WeekdayRate = { weekday: number; rate: number };
+
+function pickWeekday(
+  days: DayCompliance[],
+  better: (candidate: number, current: number) => boolean,
+): WeekdayRate | null {
+  const rates = weekdayRates(days);
+  // Bucle normal y no `forEach`: TypeScript no sigue las asignaciones hechas
+  // dentro de un callback, y el estrechamiento de `picked` se rompe.
+  let picked: WeekdayRate | null = null;
   for (let weekday = 0; weekday < 7; weekday++) {
-    if (counts[weekday] === 0) continue;
-    const rate = sums[weekday] / counts[weekday];
-    if (!best || rate > best.rate) best = { weekday, rate };
+    const rate = rates[weekday];
+    if (rate === null) continue;
+    if (picked === null || better(rate, picked.rate)) picked = { weekday, rate };
   }
-  return best;
+  return picked;
+}
+
+/** Día de la semana con mejor tasa media de cumplimiento. */
+export function bestWeekday(days: DayCompliance[]): WeekdayRate | null {
+  return pickWeekday(days, (candidate, current) => candidate > current);
+}
+
+/**
+ * Día de la semana con peor tasa. Sale de la misma función que el mejor: si
+ * cada uno recorriera los días por su cuenta, podrían llegar a contradecirse.
+ */
+export function worstWeekday(days: DayCompliance[]): WeekdayRate | null {
+  return pickWeekday(days, (candidate, current) => candidate < current);
 }

@@ -7,6 +7,8 @@ import {
   complianceSeries,
   periodDelta,
   rollingMean,
+  weekdayRates,
+  worstWeekday,
   type DayCompliance,
   type HabitSpec,
   type LogEntry,
@@ -273,5 +275,60 @@ describe("bestWeekday", () => {
 
   it("devuelve null sin datos", () => {
     expect(bestWeekday([day("2026-07-20", null)])).toBeNull();
+  });
+});
+
+describe("weekdayRates", () => {
+  it("devuelve siete posiciones, de domingo a sábado", () => {
+    // 2026-07-26 es domingo y 2026-07-27 lunes.
+    const rates = weekdayRates([day("2026-07-26", 0.4), day("2026-07-27", 0.8)]);
+    expect(rates).toHaveLength(7);
+    expect(rates[0]).toBeCloseTo(0.4, 6);
+    expect(rates[1]).toBeCloseTo(0.8, 6);
+  });
+
+  it("promedia las repeticiones del mismo día de la semana", () => {
+    // Ambos lunes.
+    const rates = weekdayRates([day("2026-07-20", 0.4), day("2026-07-27", 1)]);
+    expect(rates[1]).toBeCloseTo(0.7, 6);
+  });
+
+  it("un día de la semana sin datos vale null, no cero", () => {
+    const rates = weekdayRates([day("2026-07-27", 1)]);
+    expect(rates[1]).toBeCloseTo(1, 6);
+    expect(rates[2]).toBeNull();
+  });
+
+  it("los días sin nada programado no cuentan", () => {
+    const rates = weekdayRates([day("2026-07-27", null)]);
+    expect(rates[1]).toBeNull();
+  });
+});
+
+describe("worstWeekday", () => {
+  it("elige el día de la semana con peor tasa", () => {
+    // 2026-07-20 lunes, 21 martes, 22 miércoles
+    const days = [
+      day("2026-07-20", 0.9),
+      day("2026-07-21", 0.2),
+      day("2026-07-22", 0.6),
+    ];
+    expect(worstWeekday(days)).toEqual({ weekday: 2, rate: 0.2 });
+  });
+
+  it("devuelve null sin datos", () => {
+    expect(worstWeekday([day("2026-07-20", null)])).toBeNull();
+  });
+
+  it("mejor y peor salen de la misma serie y no se contradicen", () => {
+    const days = [
+      day("2026-07-20", 0.9),
+      day("2026-07-21", 0.2),
+      day("2026-07-22", 0.6),
+    ];
+    const best = bestWeekday(days)!;
+    const worst = worstWeekday(days)!;
+    expect(best.rate).toBeGreaterThanOrEqual(worst.rate);
+    expect(best.weekday).not.toBe(worst.weekday);
   });
 });
