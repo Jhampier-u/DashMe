@@ -15,6 +15,11 @@ import {
   normalizeDayKey,
 } from "@/lib/day";
 import {
+  DEFAULT_HABIT_COLOR,
+  HABIT_COLORS,
+  type HabitColor,
+} from "@/lib/color";
+import {
   computeStreak,
   isScheduledOn,
   previousScheduledDay,
@@ -50,7 +55,11 @@ const LIMITS = {
   itemTitle: 200,
 } as const;
 
-const HABIT_COLORS = ["mint", "peach", "pink", "lavender", "sky"] as const;
+// Las claves salen de lib/color.ts y no de una lista propia: tener aquí una
+// copia fue justo el fallo. Al pasar el selector a tres colores, esta lista se
+// quedó con los cinco antiguos, así que `oneOf` rechazaba "aqua", "violet" y
+// "orange" y guardaba el fallback. Elegir violeta guardaba otro color.
+const HABIT_COLOR_KEYS = HABIT_COLORS.map((c) => c.key);
 const PROJECT_ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
 const PROJECT_COLORS = ["lavender", "mint", "peach", "sky", "pink"];
 
@@ -323,7 +332,11 @@ export async function createHabit(formData: FormData) {
   if (!name) return;
 
   const icon = text(formData.get("icon"), LIMITS.habitIcon) ?? "⭐";
-  const color = oneOf(formData.get("color"), HABIT_COLORS, "mint");
+  const color = oneOf<HabitColor>(
+    formData.get("color"),
+    HABIT_COLOR_KEYS,
+    DEFAULT_HABIT_COLOR,
+  );
   const plantSpecies = oneOf<PlantSpecies>(
     formData.get("plantSpecies"),
     SPECIES_KEYS,
