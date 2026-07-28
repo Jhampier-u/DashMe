@@ -6,8 +6,8 @@ import {
   playlistTrackTotal,
   type SpotifyPlaylist,
   type SpotifyUser,
-} from "@/modules/musica/lib/spotify";
-import { sanitizeDescription } from "@/modules/musica/lib/sanitize";
+  sanitizeDescription,
+} from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import CreatePlaylistButton from "@/modules/musica/components/CreatePlaylistDialog";
 import MergePlaylistsButton from "@/modules/musica/components/MergePlaylistsDialog";

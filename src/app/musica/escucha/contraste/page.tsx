@@ -2,15 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
 import { db } from "@/modules/core/db";
-import { getMe } from "@/modules/musica/lib/spotify";
-import { resolveTimeZone, localParts } from "@/modules/musica/lib/stats/local-time";
 import {
+  getMe,
+  resolveTimeZone,
+  localParts,
   getContraste,
   contarTomas,
   type Contraste,
   type Entidad,
   type SpotifyRange,
-} from "@/modules/musica/lib/stats/snapshots";
+} from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 
 export const dynamic = "force-dynamic";

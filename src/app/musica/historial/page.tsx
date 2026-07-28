@@ -2,10 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
 import { db } from "@/modules/core/db";
-import { getMe } from "@/modules/musica/lib/spotify";
-import { parseRange } from "@/modules/musica/lib/stats/range";
-import { resolveTimeZone } from "@/modules/musica/lib/stats/local-time";
-import { getHistory } from "@/modules/musica/lib/stats/history";
+import { getMe, parseRange, resolveTimeZone, getHistory } from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import RangePicker from "@/modules/musica/components/stats/RangePicker";
 

@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
-import { getMe } from "@/modules/musica/lib/spotify";
-import { listSmartPlaylists } from "@/modules/musica/lib/smart-actions";
-import { listTags } from "@/modules/musica/lib/tag-actions";
+import { getMe, listSmartPlaylists, listTags } from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import SmartPlaylistsManager from "@/modules/musica/components/SmartPlaylistsManager";
 

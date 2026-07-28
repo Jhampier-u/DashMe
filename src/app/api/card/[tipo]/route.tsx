@@ -3,11 +3,14 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import { auth } from "@/modules/core/auth";
 import { db } from "@/modules/core/db";
-import { parseRange } from "@/modules/musica/lib/stats/range";
-import { resolveTimeZone, localParts } from "@/modules/musica/lib/stats/local-time";
-import { getTotals } from "@/modules/musica/lib/stats/totals";
-import { getTopArtists } from "@/modules/musica/lib/stats/tops";
-import { getStreaks } from "@/modules/musica/lib/stats/streaks";
+import {
+  parseRange,
+  resolveTimeZone,
+  localParts,
+  getTotals,
+  getTopArtists,
+  getStreaks,
+} from "@/modules/musica";
 
 export const dynamic = "force-dynamic";
 

@@ -2,15 +2,25 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
 import { db } from "@/modules/core/db";
-import { getMe } from "@/modules/musica/lib/spotify";
-import { parseRange } from "@/modules/musica/lib/stats/range";
-import { resolveTimeZone, localParts } from "@/modules/musica/lib/stats/local-time";
-import { getTotals } from "@/modules/musica/lib/stats/totals";
-import { getTopArtists, getTopTracks, getTopAlbums } from "@/modules/musica/lib/stats/tops";
-import { getByHour, getByWeekday, getByMonth, getByDate } from "@/modules/musica/lib/stats/time";
-import { getStreaks } from "@/modules/musica/lib/stats/streaks";
-import { getSkipStats, getMostSkippedArtists } from "@/modules/musica/lib/stats/skips";
-import { getGenreBreakdown, PROFUNDIDAD } from "@/modules/musica/lib/stats/genres";
+import {
+  getMe,
+  parseRange,
+  resolveTimeZone,
+  localParts,
+  getTotals,
+  getTopArtists,
+  getTopTracks,
+  getTopAlbums,
+  getByHour,
+  getByWeekday,
+  getByMonth,
+  getByDate,
+  getStreaks,
+  getSkipStats,
+  getMostSkippedArtists,
+  getGenreBreakdown,
+  PROFUNDIDAD,
+} from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import RangePicker from "@/modules/musica/components/stats/RangePicker";
 import StatTiles from "@/modules/musica/components/stats/StatTiles";

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
-import { getMe } from "@/modules/musica/lib/spotify";
-import { listTags } from "@/modules/musica/lib/tag-actions";
+import { getMe, listTags } from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import TagsManager from "@/modules/musica/components/TagsManager";
 

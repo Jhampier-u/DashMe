@@ -8,11 +8,11 @@ import {
   getAllMyPlaylists,
   type PlaylistDetail,
   type PlaylistTrackItem,
-} from "@/modules/musica/lib/spotify";
-import { getTagsForTracks } from "@/modules/musica/lib/tag-actions";
+  getTagsForTracks,
+  sanitizeDescription,
+} from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import PlaylistTracksTable from "@/modules/musica/components/PlaylistTracksTable";
-import { sanitizeDescription } from "@/modules/musica/lib/sanitize";
 
 export default async function PlaylistPage({
   params,

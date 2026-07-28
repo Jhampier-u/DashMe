@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
-import { getMe, getLikedSongs, type SavedTrackItem } from "@/modules/musica/lib/spotify";
+import { getMe, getLikedSongs, type SavedTrackItem } from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 
 const PAGE_SIZE = 50;

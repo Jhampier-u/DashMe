@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/modules/core/auth";
-import { getMe, getLikedSongs } from "@/modules/musica/lib/spotify";
+import { getMe, getLikedSongs } from "@/modules/musica";
 import TopBar from "@/modules/musica/components/TopBar";
 import StatsScanner from "@/modules/musica/components/StatsScanner";
 

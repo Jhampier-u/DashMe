@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { runCapture } from "@/modules/musica/lib/capture/run-capture";
+import { runCapture } from "@/modules/musica";
 
 /** Siempre dinámico: nunca debe servirse una respuesta cacheada. */
 export const dynamic = "force-dynamic";
