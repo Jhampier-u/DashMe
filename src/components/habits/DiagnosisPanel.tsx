@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { weekdayName } from "@/lib/stats";
+import { weekdayFullName, weekdayName } from "@/lib/stats";
 import type { HabitDiagnosis } from "@/lib/habits";
 
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -110,8 +110,8 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
               })}
             </div>
             <p style={{ fontSize: 12.5, color: "var(--m-ink-2)" }}>
-              Tu peor día es el <strong>{weekdayName(worst.weekday).toLowerCase()}</strong>,
-              con un {pct(worst.rate)} de cumplimiento.
+              Tu peor día es el <strong>{weekdayFullName(worst.weekday)}</strong>, con un{" "}
+              {pct(worst.rate)} de cumplimiento.
             </p>
           </>
         )}

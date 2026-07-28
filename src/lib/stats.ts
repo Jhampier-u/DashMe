@@ -96,8 +96,18 @@ export type GlobalStats = {
 
 const WEEKDAY_NAMES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
+const WEEKDAY_FULL = [
+  "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado",
+];
+
+/** Abreviatura, para etiquetas de eje donde no cabe más. */
 export function weekdayName(idx: number) {
   return WEEKDAY_NAMES[idx] ?? "?";
+}
+
+/** Nombre completo, para cuando el día va dentro de una frase. */
+export function weekdayFullName(idx: number) {
+  return WEEKDAY_FULL[idx] ?? "?";
 }
 
 export const HEATMAP_WEEKS = 12;
