@@ -1,0 +1,141 @@
+/* ==========================================================================
+   Sistema visual pixel-kawaii · tokens
+
+   La paleta, las tres fuentes y la forma. Se consumen como utilidades de
+   Tailwind (`bg-paper`, `text-tinta`, `border-line`, `shadow-hard`,
+   `rounded-card`, `font-pixel`...), que es el modelo que ya usa música.
+
+   Los valores NO están elegidos a ojo: salen de `contraste.ts` y los afirma
+   `contraste.test.ts`. Los ratios anotados aquí son los que ese test mide, así
+   que si alguien "afina" un hexadecimal el build lo canta. Ese es el punto.
+
+   ---------------------------------------------------------------------------
+   POR QUÉ LA TINTA NO SE LLAMA `--color-ink`
+
+   El spec la nombra `--ink`, pero `--color-ink` y `--color-ink-2` ya están
+   ocupados por el `@theme` de música (#0c0a09 y #15110f, su fondo oscuro), con
+   67 usos de `bg-ink` / `text-ink-2` repartidos por 21 archivos de la sección.
+   El espacio de nombres de `@theme` es único: dos declaraciones de
+   `--color-ink` producen un solo `bg-ink`, y el pastel se comería el fondo de
+   música — que este paso se compromete a no tocar.
+
+   Así que la tinta entra como `--color-tinta` / `--color-tinta-2`. Es el mismo
+   token del spec con otro nombre, en español como el resto del repo. El día que
+   música se repinte y libere `ink`, renombrarlo es un `sed`.
+   ---------------------------------------------------------------------------
+*/
+
+/*
+  `static` obliga a Tailwind a emitir TODAS estas variables, se usen o no en una
+  utilidad. Sin él las poda, y un `style={{ background: "var(--color-pink)" }}`
+  —que es exactamente cómo están escritos hoy los componentes de hábitos, con
+  sus `var(--m-*)`— se quedaría en nada, sin error y sin aviso. La paleta es un
+  contrato publicado: se publica entera.
+*/
+@theme static {
+  /*
+    Papel y tinta. Ratios WCAG medidos (los afirma `contraste.test.ts`):
+
+      tinta   #4a3a52 sobre paper   #fff5fb ..... 9.76:1  (AA y AAA de cuerpo)
+      tinta   #4a3a52 sobre paper-2 #ffeaf6 ..... 9.09:1  (idem)
+      tinta-2 #8a738f sobre paper   #fff5fb ..... 4.00:1  (AA de texto GRANDE;
+                                                           no vale para cuerpo)
+      line    #4a3a52 sobre paper   #fff5fb ..... 9.76:1  (line == tinta)
+  */
+  --color-paper: #fff5fb;
+  --color-paper-2: #ffeaf6;
+  --color-tinta: #4a3a52;
+  --color-tinta-2: #8a738f;
+  --color-line: #4a3a52;
+
+  /*
+    Los acentos. REGLA DURA: el pastel es fondo o borde, NUNCA color de texto.
+    Sobre crema no llegan a contraste de texto por naturaleza; lo que sí hacen
+    es aguantar tinta encima. Ratio de `--color-tinta` sobre cada uno:
+
+      pink   #ff9ec7 ..... 5.43:1      peach  #ffd6a5 ..... 7.64:1
+      lav    #c4b5fd ..... 5.64:1      sky    #a5d8ff ..... 6.87:1
+      mint   #a7f0c8 ..... 7.90:1      yellow #ffe6a7 ..... 8.49:1
+
+    Los seis pasan 4.5:1 tal cual: no hubo que oscurecer ninguno.
+  */
+  --color-pink: #ff9ec7;
+  --color-lav: #c4b5fd;
+  --color-mint: #a7f0c8;
+  --color-peach: #ffd6a5;
+  --color-sky: #a5d8ff;
+  --color-yellow: #ffe6a7;
+
+  /*
+    Los tres que identifican hábitos son pink, lav y mint. Son exactamente tres
+    por la misma razón que lo eran en el sistema anterior: con la lista completa
+    de pares, ningún conjunto de cuatro mantiene la separación bajo daltonismo.
+
+    ΔE CIE76 medido tras simular cada visión (Viénot 1999):
+
+                      normal   deutan   protan
+      pink ~ lav       35.2     33.8     23.6
+      pink ~ mint      75.4     15.9     37.7
+      lav  ~ mint      69.4     47.5     56.6
+      ------------------------------------------
+      peor par         35.2     15.9     23.6
+      umbral exigido   20        9        9
+
+    El par que manda es pink~mint en deuteranopía. No se declaran aparte: son
+    estos mismos tokens, y `ACENTOS_HABITO` en `contraste.ts` es quien fija
+    cuáles son los tres.
+  */
+
+  /*
+    Forma. La sombra sin desenfoque es lo que hace que se lea como sticker en
+    vez de como material design: es la regla que más define el resultado.
+  */
+  --shadow-hard: 4px 4px 0 var(--color-line);
+  --radius-control: 10px;
+  --radius-card: 14px;
+
+  /*
+    Las tres fuentes, cada una con su papel. Los nombres `--font-press-start`,
+    `--font-vt323` y `--font-quicksand` los inyecta `next/font` desde
+    `src/app/layout.tsx`; aquí solo se les pone el alias por el que se usan.
+    Es el mismo patrón que música con Fraunces y JetBrains: si el alias y la
+    variable de next/font se llamaran igual, una taparía a la otra.
+
+    LÍMITES QUE NO SE NEGOCIAN (por debajo son ilegibles, no "pequeñas"):
+      font-pixel  Press Start 2P .... nunca por debajo de 14px, máx 4 palabras
+      font-vt     VT323 ............. nunca por debajo de 16px
+      font-cuerpo Quicksand ......... lo que haya que leer de verdad
+
+    Si un título no cabe se acorta el texto; no se encoge la fuente.
+  */
+  --font-pixel: var(--font-press-start), "Courier New", ui-monospace, monospace;
+  --font-vt: var(--font-vt323), "Courier New", ui-monospace, monospace;
+  --font-cuerpo: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ==========================================================================
+   Identidad de hábito
+
+   Los tres `--h-*` vienen de `globals.css`, donde valían el aqua, el violeta y
+   el naranja validados sobre superficie oscura. Cambian de valor y no de
+   papel, que es justo lo que pedía el spec: siguen siendo el acento de la fila
+   y el tinte del cartel de la planta.
+
+   LOS NOMBRES YA NO DESCRIBEN EL COLOR, y no es un descuido. `aqua`, `violet` y
+   `orange` son claves guardadas en la base de datos, y `habitColorVar()` está
+   obligada por `color.test.ts` a devolver exactamente `var(--h-aqua)`.
+   Renombrarlas costaría una migración de filas y un test tocado, y los tests no
+   se tocan. Lo que ve el usuario son las etiquetas de `HABIT_COLORS`, que sí
+   se han puesto al día: Menta, Lavanda y Rosa.
+
+   No van en `@theme` porque `--h-*` no es un espacio de nombres de Tailwind:
+   aquí solo se les da valor, y quien los consume lo hace por `var()`.
+
+   La separación bajo daltonismo de esta terna la afirma `contraste.test.ts`
+   (peor par rosa~menta en deuteranopía, ΔE 15.9 contra un umbral de 9).
+   ========================================================================== */
+:root {
+  --h-aqua: var(--color-mint);
+  --h-violet: var(--color-lav);
+  --h-orange: var(--color-pink);
+}

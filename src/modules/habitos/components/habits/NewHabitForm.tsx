@@ -19,23 +19,45 @@ const WEEKDAYS = [
   { index: 0, label: "D" },
 ];
 
-const CHIP = {
-  minWidth: 34,
-  height: 34,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 7,
-  cursor: "pointer",
-  fontFamily: "inherit",
-  fontSize: 13,
-} as const;
+/*
+  Los selectores son rejillas de teclas, y es donde el estilo se luce: cada una
+  con su trazo de 3px, su sombra dura y su hundido al pulsar.
+
+  Lo elegido se marca con `aria-pressed:`, la variante de Tailwind que lee el
+  atributo que ya estaba puesto. Así el estado visual y el accesible no pueden
+  separarse: son el mismo dato. Antes eran dos cosas distintas —un `aria-pressed`
+  por un lado y un borde azul por otro— y nada garantizaba que coincidieran.
+*/
+const CHIP =
+  "min-w-[36px] h-[36px] inline-flex items-center justify-center " +
+  // Sin tamaño de letra: lo pone cada rejilla, que es lo único que cambia
+  // entre ellas. Así no hay dos utilidades de tamaño peleándose.
+  "rounded-control border-3 border-line bg-paper text-tinta font-cuerpo " +
+  "cursor-pointer shadow-hard " +
+  "transition-[transform,box-shadow] duration-75 ease-out " +
+  "active:translate-x-0.5 active:translate-y-0.5 " +
+  "active:shadow-[2px_2px_0_var(--color-line)] " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+  "aria-pressed:bg-sky";
 
 const LABEL = {
   display: "block",
+  fontFamily: "var(--font-cuerpo)",
   fontSize: 12,
-  color: "var(--m-ink-2)",
-  marginBottom: 6,
+  fontWeight: 700,
+  color: "var(--color-tinta)",
+  marginBottom: 8,
+} as const;
+
+/** La superficie de `Card`, a mano: esto es un `<form>` y `Card` es un `<div>`. */
+const SUPERFICIE = {
+  background: "var(--color-paper)",
+  border: "3px solid var(--color-line)",
+  borderRadius: "var(--radius-card)",
+  boxShadow: "var(--shadow-hard)",
+  padding: 18,
+  color: "var(--color-tinta)",
+  fontFamily: "var(--font-cuerpo)",
 } as const;
 
 export function NewHabitForm({ onDone }: { onDone: () => void }) {
@@ -85,8 +107,7 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      className="m-card"
-      style={{ display: "flex", flexDirection: "column", gap: 16 }}
+      style={{ ...SUPERFICIE, display: "flex", flexDirection: "column", gap: 16 }}
     >
       <Field
         label="Nombre"
@@ -107,12 +128,7 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
               onClick={() => setIcon(choice)}
               aria-pressed={icon === choice}
               aria-label={`Icono ${choice}`}
-              style={{
-                ...CHIP,
-                fontSize: 16,
-                background: icon === choice ? "rgba(57,135,229,0.16)" : "var(--m-elevated)",
-                border: `1px solid ${icon === choice ? "var(--m-series)" : "var(--m-line)"}`,
-              }}
+              className={`${CHIP} text-base`}
             >
               {choice}
             </button>
@@ -131,13 +147,15 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
               aria-pressed={color === choice.key}
               aria-label={choice.label}
               title={choice.label}
-              style={{
-                ...CHIP,
-                flex: 1,
-                background: habitColorVar(choice.key),
-                border: `2px solid ${color === choice.key ? "var(--m-ink)" : "transparent"}`,
-              }}
-            />
+              // La muestra ES el color, así que `aria-pressed:bg-sky` sobra:
+              // se quita del juego y lo elegido se marca con un ✓ en tinta.
+              // Que la selección tenga forma y no solo tono importa el doble
+              // aquí, que es justo el sitio donde se eligen colores.
+              className={`${CHIP} flex-1 text-[15px]`}
+              style={{ background: habitColorVar(choice.key) }}
+            >
+              {color === choice.key ? "✓" : ""}
+            </button>
           ))}
         </div>
       </div>
@@ -151,15 +169,7 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
               type="button"
               onClick={() => setSpecies(option.key)}
               aria-pressed={species === option.key}
-              style={{
-                ...CHIP,
-                gap: 6,
-                padding: "0 12px",
-                fontSize: 12.5,
-                color: "var(--m-ink)",
-                background: species === option.key ? "rgba(57,135,229,0.16)" : "var(--m-elevated)",
-                border: `1px solid ${species === option.key ? "var(--m-series)" : "var(--m-line)"}`,
-              }}
+              className={`${CHIP} gap-1.5 px-3 text-[12.5px]`}
             >
               {option.sample} {option.label}
             </button>
@@ -178,20 +188,14 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
                 type="button"
                 onClick={() => toggleDay(day.index)}
                 aria-pressed={on}
-                style={{
-                  ...CHIP,
-                  flex: 1,
-                  color: on ? "var(--m-ink)" : "var(--m-ink-3)",
-                  background: on ? "rgba(57,135,229,0.16)" : "var(--m-elevated)",
-                  border: `1px solid ${on ? "var(--m-series)" : "var(--m-line)"}`,
-                }}
+                className={`${CHIP} flex-1 text-[13px]`}
               >
                 {day.label}
               </button>
             );
           })}
         </div>
-        <p style={{ fontSize: 11.5, color: "var(--m-ink-3)", marginTop: 6 }}>
+        <p style={{ fontSize: 11.5, marginTop: 8 }}>
           La racha y las misiones solo cuentan en estos días.
         </p>
       </div>
@@ -216,12 +220,10 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
           type="checkbox"
           checked={isAnchor}
           onChange={(e) => setIsAnchor(e.target.checked)}
-          style={{ width: 15, height: 15, accentColor: "var(--m-series)" }}
+          style={{ width: 16, height: 16, accentColor: "var(--color-tinta)" }}
         />
-        <span style={{ fontSize: 13 }}>Hábito ancla</span>
-        <span style={{ fontSize: 11.5, color: "var(--m-ink-3)" }}>
-          el más importante · da XP extra
-        </span>
+        <span style={{ fontSize: 13, fontWeight: 700 }}>Hábito ancla</span>
+        <span style={{ fontSize: 11.5 }}>el más importante · da XP extra</span>
       </label>
 
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>

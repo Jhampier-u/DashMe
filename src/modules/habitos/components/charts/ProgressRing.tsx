@@ -3,10 +3,24 @@ type Props = {
   max: number;
   size?: number;
   stroke?: number;
+  /**
+   * Los dos colores del anillo, por si quien lo usa no vive en el lenguaje
+   * oscuro. Traen por defecto los de siempre, así que la portada —el otro sitio
+   * donde se usa, y que este paso no repinta— no se entera de que existen.
+   */
+  track?: string;
+  fill?: string;
 };
 
 /** Anillo de progreso. Decorativo: la cifra siempre va escrita al lado. */
-export function ProgressRing({ value, max, size = 66, stroke = 5 }: Props) {
+export function ProgressRing({
+  value,
+  max,
+  size = 66,
+  stroke = 5,
+  track = "var(--m-track)",
+  fill = "var(--m-series)",
+}: Props) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const ratio = max === 0 ? 0 : Math.min(1, Math.max(0, value / max));
@@ -19,7 +33,7 @@ export function ProgressRing({ value, max, size = 66, stroke = 5 }: Props) {
         cy={center}
         r={radius}
         fill="none"
-        stroke="var(--m-track)"
+        stroke={track}
         strokeWidth={stroke}
       />
       {ratio > 0 ? (
@@ -28,7 +42,7 @@ export function ProgressRing({ value, max, size = 66, stroke = 5 }: Props) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="var(--m-series)"
+          stroke={fill}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${(circumference * ratio).toFixed(2)} ${circumference.toFixed(2)}`}

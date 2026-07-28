@@ -18,10 +18,17 @@
  */
 export type HabitColor = "aqua" | "violet" | "orange";
 
+/**
+ * Las claves son las de la base de datos y no se tocan; las etiquetas son lo
+ * que lee quien elige un color, así que siguen al valor. Con el sistema pixel
+ * los tres pasaron a menta, lavanda y rosa —ver `tokens.css`—, y una muestra
+ * rosa rotulada «Naranja» habría sido peor que el desajuste de nombres que ya
+ * arrastran las claves por dentro.
+ */
 export const HABIT_COLORS: { key: HabitColor; label: string }[] = [
-  { key: "aqua", label: "Aqua" },
-  { key: "violet", label: "Violeta" },
-  { key: "orange", label: "Naranja" },
+  { key: "aqua", label: "Menta" },
+  { key: "violet", label: "Lavanda" },
+  { key: "orange", label: "Rosa" },
 ];
 
 export const DEFAULT_HABIT_COLOR: HabitColor = "aqua";

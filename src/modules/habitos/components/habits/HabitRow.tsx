@@ -30,19 +30,54 @@ type Props = {
 const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"];
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
-const ICON_BUTTON = {
-  width: 28,
-  height: 28,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 7,
-  border: "1px solid var(--m-line)",
-  background: "var(--m-elevated)",
-  color: "var(--m-ink-2)",
-  fontSize: 12,
-  cursor: "pointer",
-  fontFamily: "inherit",
+/*
+  Los botones de icono van en clases y no en un objeto de estilo porque llevan
+  `:active`, `:focus-visible` y `:disabled`, y nada de eso se puede escribir en
+  línea. Se hunden igual que `<Button>`: 2px hacia la sombra y la sombra a 2px.
+  Aquí no hace falta el `!` de la sombra porque no hay ninguna en línea a la que
+  ganarle.
+
+  Los glifos van todos en tinta. El aviso de cada uno lo da el fondo —que es la
+  regla dura del sistema— y, donde importa, el `aria-label`, que no ha cambiado.
+*/
+const ICON_BUTTON =
+  "w-[30px] h-[30px] shrink-0 inline-flex items-center justify-center " +
+  "rounded-control border-3 border-line text-tinta text-[13px] leading-none " +
+  "cursor-pointer shadow-hard font-cuerpo " +
+  "transition-[transform,box-shadow] duration-75 ease-out " +
+  "active:translate-x-0.5 active:translate-y-0.5 " +
+  "active:shadow-[2px_2px_0_var(--color-line)] " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+  "disabled:opacity-50 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0";
+
+/**
+ * El estado de hoy deja de ser texto de color y pasa a ser un sello: fondo
+ * macizo y tinta encima. Es la regla dura del sistema —el pastel es fondo,
+ * nunca texto— y de paso se lee mejor de lejos que una palabra teñida.
+ *
+ * «Hecho» va en tinta maciza con la letra en papel, invertido. No usa ningún
+ * pastel a propósito: menta, lavanda y rosa son identidad de hábito, y un sello
+ * verde junto a una fila cuyo acento ES menta habría hecho que el color dejara
+ * de significar nada. El amarillo sí es del armazón, así que el mínimo lo usa.
+ */
+const SELLO = {
+  base: {
+    fontFamily: "var(--font-cuerpo)",
+    fontSize: 11.5,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+    padding: "3px 8px",
+    borderRadius: 999,
+    border: "2px solid var(--color-line)",
+  },
+  hecho: { background: "var(--color-tinta)", color: "var(--color-paper)" },
+  minimo: { background: "var(--color-yellow)", color: "var(--color-tinta)" },
+  pendiente: { background: "var(--color-paper-2)", color: "var(--color-tinta)" },
+  noToca: {
+    background: "transparent",
+    color: "var(--color-tinta)",
+    borderStyle: "dashed" as const,
+  },
 } as const;
 
 export function HabitRow(p: Props) {
@@ -74,73 +109,100 @@ export function HabitRow(p: Props) {
   const custom = schedule !== DEFAULT_SCHEDULE;
 
   const state = !p.scheduledToday
-    ? { text: "Hoy no toca", color: "var(--m-ink-3)" }
+    ? { text: "Hoy no toca", sello: SELLO.noToca }
     : p.doneToday && p.partialToday
-      ? { text: "Mínimo", color: "var(--m-warn)" }
+      ? { text: "Mínimo", sello: SELLO.minimo }
       : p.doneToday
-        ? { text: "Hecho", color: "var(--m-good)" }
-        : { text: "Pendiente", color: "var(--m-ink-2)" };
+        ? { text: "Hecho", sello: SELLO.hecho }
+        : { text: "Pendiente", sello: SELLO.pendiente };
+
+  // El botón de marcar solo se comporta como tecla cuando de verdad se puede
+  // pulsar. Si hoy no toca, se queda plano: prometer un hundido que no llega
+  // sería mentir con la forma.
+  const marcable = p.scheduledToday && !pending;
 
   return (
     <div
       style={{
-        background: "var(--m-surface)",
-        border: `1px solid ${p.criticalToday ? "rgba(226, 96, 96, 0.45)" : "var(--m-line)"}`,
-        borderRadius: 10,
+        /*
+          El día crítico se marca con el fondo, no con el filo. Antes era un
+          borde rojo translúcido; ahora todo lleva trazo de 3px, así que teñirlo
+          no se distinguiría. El amarillo es el aviso del armazón —ni menta, ni
+          lavanda, ni rosa, que son identidad— y lleva además el ▲ junto al
+          sello, para que el aviso no dependa solo del tono.
+        */
+        background: p.criticalToday ? "var(--color-yellow)" : "var(--color-paper)",
+        border: "3px solid var(--color-line)",
+        borderRadius: "var(--radius-card)",
         // La franja de identidad va por dentro para no desplazar el contenido
-        // ni romper el radio, que es lo que pasaria subiendo el borde a 3px.
-        boxShadow: `inset 3px 0 0 ${accent}`,
+        // ni romper el radio. Ahora convive con la sombra dura en la misma
+        // declaración: una hacia dentro, la otra hacia fuera.
+        boxShadow: `inset 8px 0 0 ${accent}, var(--shadow-hard)`,
         padding: 14,
-        paddingLeft: 17,
-        opacity: pending ? 0.5 : p.scheduledToday ? 1 : 0.65,
+        paddingLeft: 24,
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
+        opacity: pending ? 0.5 : p.scheduledToday ? 1 : 0.7,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/*
+          Marcar es lo que más se repite en toda la aplicación, así que aquí es
+          donde el hundido tiene que notarse. El área de pulsar deja de ser
+          transparente y pasa a ser una tecla de verdad: relleno, trazo de 3px y
+          sombra dura que se encoge al pulsar. Es una tecla dentro de una
+          tarjeta, y esa acumulación de trazos es el estilo, no un descuido.
+        */}
         <button
           type="button"
           onClick={() => mark(false)}
           disabled={pending || !p.scheduledToday}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flex: 1,
-            minWidth: 0,
-            background: "transparent",
-            border: 0,
-            padding: 0,
-            textAlign: "left",
-            cursor: p.scheduledToday ? "pointer" : "default",
-            fontFamily: "inherit",
-          }}
+          className={
+            marcable
+              ? "flex-1 min-w-0 flex items-center gap-3 text-left cursor-pointer " +
+                "rounded-control border-3 border-line bg-paper-2 shadow-hard px-3 py-2 " +
+                "font-cuerpo text-tinta " +
+                "transition-[transform,box-shadow] duration-75 ease-out " +
+                "active:translate-x-0.5 active:translate-y-0.5 " +
+                "active:shadow-[2px_2px_0_var(--color-line)] " +
+                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line"
+              : "flex-1 min-w-0 flex items-center gap-3 text-left cursor-default " +
+                "rounded-control border-3 border-dashed border-line bg-transparent px-3 py-2 " +
+                "font-cuerpo text-tinta"
+          }
           aria-label={
             p.doneToday ? `Desmarcar ${p.name}` : `Marcar ${p.name} como hecho`
           }
         >
-          <span style={{ fontSize: 22 }} aria-hidden>
+          <span style={{ fontSize: 24 }} aria-hidden>
             {plant}
           </span>
           <span style={{ minWidth: 0, flex: 1 }}>
-            <span
-              style={{
-                display: "block",
-                fontSize: 14,
-                fontWeight: 550,
-                color: "var(--m-ink)",
-              }}
-            >
+            <span style={{ display: "block", fontSize: 14, fontWeight: 700 }}>
               {p.isAnchor ? "👑 " : ""}
               {p.icon} {p.name}
             </span>
+            {/* La racha es un dato, así que va en VT323. 16px es su suelo. */}
             <span
-              className="m-num"
-              style={{ display: "block", fontSize: 12, color: "var(--m-ink-3)", marginTop: 3 }}
+              style={{
+                display: "block",
+                fontFamily: "var(--font-vt)",
+                fontSize: 16,
+                lineHeight: 1.1,
+                fontVariantNumeric: "tabular-nums",
+                marginTop: 2,
+              }}
             >
               {p.streak === 1 ? "1 día de racha" : `${p.streak} días de racha`}
             </span>
           </span>
-          <span style={{ fontSize: 12.5, color: state.color, whiteSpace: "nowrap" }}>
-            {state.text}
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {p.criticalToday ? (
+              <span aria-hidden style={{ fontSize: 13 }}>
+                ▲
+              </span>
+            ) : null}
+            <span style={{ ...SELLO.base, ...state.sello }}>{state.text}</span>
           </span>
         </button>
 
@@ -149,7 +211,7 @@ export function HabitRow(p: Props) {
             type="button"
             onClick={() => mark(true)}
             disabled={pending}
-            style={{ ...ICON_BUTTON, color: "var(--m-warn)" }}
+            className={`${ICON_BUTTON} bg-yellow`}
             title={`Modo mínimo: ${p.minimalGoal}`}
             aria-label={`Marcar ${p.name} en modo mínimo: ${p.minimalGoal}`}
           >
@@ -161,7 +223,9 @@ export function HabitRow(p: Props) {
           type="button"
           onClick={() => startTransition(() => setHabitAnchor(p.id, !p.isAnchor))}
           disabled={pending}
-          style={{ ...ICON_BUTTON, color: p.isAnchor ? "var(--m-warn)" : "var(--m-ink-3)" }}
+          // Ancla encendida: fondo amarillo. Apagada: papel. El estado ya iba
+          // además en `aria-pressed`, que no se toca.
+          className={`${ICON_BUTTON} ${p.isAnchor ? "bg-yellow" : "bg-paper"}`}
           aria-pressed={p.isAnchor}
           aria-label={
             p.isAnchor
@@ -175,7 +239,7 @@ export function HabitRow(p: Props) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           disabled={pending}
-          style={ICON_BUTTON}
+          className={`${ICON_BUTTON} bg-paper`}
           aria-expanded={open}
           aria-label={open ? `Ocultar detalles de ${p.name}` : `Ver detalles de ${p.name}`}
         >
@@ -185,7 +249,9 @@ export function HabitRow(p: Props) {
           type="button"
           onClick={remove}
           disabled={pending}
-          style={{ ...ICON_BUTTON, color: "var(--m-crit)" }}
+          // Peach es el acento destructivo del armazón, el mismo que la
+          // variante `danger` de `<Button>` y el banner crítico.
+          className={`${ICON_BUTTON} bg-peach`}
           aria-label={`Borrar ${p.name}`}
         >
           ✕
@@ -193,15 +259,13 @@ export function HabitRow(p: Props) {
       </div>
 
       {p.intention ? (
-        <div style={{ fontSize: 12.5, color: "var(--m-ink-2)", marginTop: 10, fontStyle: "italic" }}>
+        <div style={{ fontSize: 12.5, marginTop: 10, fontStyle: "italic" }}>
           {p.intention}
         </div>
       ) : null}
 
       {p.minimalGoal ? (
-        <div style={{ fontSize: 12, color: "var(--m-ink-3)", marginTop: 6 }}>
-          Modo mínimo: {p.minimalGoal}
-        </div>
+        <div style={{ fontSize: 12, marginTop: 6 }}>Modo mínimo: {p.minimalGoal}</div>
       ) : null}
 
       {custom ? (
@@ -209,20 +273,31 @@ export function HabitRow(p: Props) {
           {WEEKDAY_ORDER.map((weekday) => {
             const on = schedule[weekday] === "1";
             return (
+              /*
+                Celda de 24px para que quepa VT323 a 18: por debajo de 16 deja
+                de leerse, así que manda la fuente sobre el tamaño de la celda.
+
+                Los días que tocan van sellados —tinta maciza, letra en papel— y
+                los que no, con trazo discontinuo sobre nada. La diferencia es
+                de forma además de tono: en una celda de 24px, fiarlo todo al
+                color es lo que hace que dos estados se confundan.
+              */
               <span
                 key={weekday}
                 title={on ? "Toca" : "No toca"}
                 style={{
-                  width: 20,
-                  height: 20,
+                  width: 24,
+                  height: 24,
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: 5,
-                  fontSize: 10.5,
-                  background: on ? "rgba(57, 135, 229, 0.18)" : "transparent",
-                  border: `1px solid ${on ? "transparent" : "var(--m-line)"}`,
-                  color: on ? "var(--m-ink)" : "var(--m-ink-3)",
+                  borderRadius: 6,
+                  fontFamily: "var(--font-vt)",
+                  fontSize: 18,
+                  lineHeight: 1,
+                  background: on ? "var(--color-tinta)" : "transparent",
+                  border: `2px ${on ? "solid" : "dashed"} var(--color-line)`,
+                  color: on ? "var(--color-paper)" : "var(--color-tinta)",
                 }}
               >
                 {WEEKDAY_LABELS[weekday]}

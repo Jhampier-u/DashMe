@@ -32,7 +32,17 @@ export function HabitDetail({
   }, [habitId, version]);
 
   return (
-    <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--m-line)" }}>
+    // El corte discontinuo separa el detalle de la fila sin meter un cuarto
+    // trazo macizo: dentro ya hay el de la fila, el de la tecla y el de cada
+    // tarjeta de `Stat`.
+    <div
+      style={{
+        marginTop: 14,
+        paddingTop: 14,
+        borderTop: "3px dashed var(--color-line)",
+        color: "var(--color-tinta)",
+      }}
+    >
       {stats ? (
         <StatGrid min={110} gap={12}>
           <Stat size="sm" label="Racha" value={formatDays(stats.currentStreak)} meta="actual" />
@@ -46,9 +56,7 @@ export function HabitDetail({
           <Stat size="sm" label="Total" value={String(stats.totalDone)} meta="veces cumplido" />
         </StatGrid>
       ) : (
-        <div style={{ fontSize: 12.5, color: "var(--m-ink-3)" }}>
-          Cargando estadísticas…
-        </div>
+        <div style={{ fontSize: 12.5 }}>Cargando estadísticas…</div>
       )}
       <MonthCalendar habitId={habitId} habitName={habitName} />
     </div>

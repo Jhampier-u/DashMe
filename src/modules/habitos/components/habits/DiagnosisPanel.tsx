@@ -8,6 +8,31 @@ function pct(rate: number | null): string {
   return rate === null ? "—" : `${Math.round(rate * 100)}%`;
 }
 
+/**
+ * Los porcentajes son datos, así que van en VT323 y en su suelo de 16px.
+ * Ninguno depende del color para leerse: la cifra está siempre escrita.
+ */
+const CIFRA = {
+  fontFamily: "var(--font-vt)",
+  fontSize: 16,
+  lineHeight: 1,
+  fontVariantNumeric: "tabular-nums",
+  color: "var(--color-tinta)",
+} as const;
+
+/**
+ * La pista de las barras lleva trazo propio. Sin él, una barra al 4% sobre
+ * papel sería un punto perdido en el aire: el carril tiene que verse aunque
+ * esté casi vacío.
+ */
+const PISTA = {
+  height: 12,
+  background: "var(--color-paper-2)",
+  border: "2px solid var(--color-line)",
+  borderRadius: 999,
+  overflow: "hidden",
+} as const;
+
 export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
   const { ranking, weekdays, worst, untouched } = diagnosis;
   const conDatos = ranking.filter((h) => h.rate !== null);
@@ -24,7 +49,7 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
     >
       <Card title="Qué se te está cayendo">
         {conDatos.length === 0 ? (
-          <p style={{ fontSize: 12.5, color: "var(--m-ink-2)" }}>
+          <p style={{ fontSize: 12.5 }}>
             Aún no hay días medidos en las últimas cuatro semanas.
           </p>
         ) : (
@@ -39,27 +64,30 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                     marginBottom: 5,
                   }}
                 >
-                  <span style={{ color: "var(--m-ink)" }}>
+                  <span>
                     {habit.icon} {habit.name}
                   </span>
-                  <span className="m-num" style={{ color: "var(--m-ink-2)" }}>
-                    {pct(habit.rate)}
-                  </span>
+                  <span style={CIFRA}>{pct(habit.rate)}</span>
                 </div>
-                <div style={{ height: 5, background: "var(--m-track)", borderRadius: 3 }}>
+                <div style={PISTA}>
+                  {/*
+                    Peach por debajo de la mitad, sky por encima. El color es
+                    refuerzo, no información: el porcentaje va escrito justo
+                    encima, así que quien no distinga los dos tonos lo tiene
+                    igual de claro.
+                  */}
                   <div
                     style={{
                       height: "100%",
                       width: `${Math.round((habit.rate ?? 0) * 100)}%`,
                       background:
-                        (habit.rate ?? 0) < 0.5 ? "var(--m-crit)" : "var(--m-series)",
-                      borderRadius: 3,
+                        (habit.rate ?? 0) < 0.5 ? "var(--color-peach)" : "var(--color-sky)",
                     }}
                   />
                 </div>
               </div>
             ))}
-            <p style={{ fontSize: 11, color: "var(--m-ink-3)", marginTop: 2 }}>
+            <p style={{ fontSize: 11, marginTop: 2 }}>
               Cada uno sobre los días que le tocaban, en las últimas cuatro semanas.
             </p>
           </div>
@@ -68,9 +96,7 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
 
       <Card title="Qué día se te cae">
         {worst === null ? (
-          <p style={{ fontSize: 12.5, color: "var(--m-ink-2)" }}>
-            Aún no hay historial suficiente.
-          </p>
+          <p style={{ fontSize: 12.5 }}>Aún no hay historial suficiente.</p>
         ) : (
           <>
             <div style={{ display: "flex", gap: 5, marginBottom: 12 }}>
@@ -88,19 +114,25 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                         marginBottom: 5,
                       }}
                     >
+                      {/* El peor día se marca con relleno peach Y con la
+                          etiqueta en negrita. La etiqueta no puede ir teñida:
+                          el pastel es fondo, nunca texto. */}
                       <div
                         style={{
                           width: "100%",
-                          height: rate === null ? 0 : `${Math.max(3, rate * 100)}%`,
-                          background: esPeor ? "var(--m-crit)" : "rgba(57,135,229,0.55)",
-                          borderRadius: "3px 3px 0 0",
+                          height: rate === null ? 0 : `${Math.max(4, rate * 100)}%`,
+                          background: esPeor ? "var(--color-peach)" : "var(--color-sky)",
+                          border: rate === null ? "none" : "2px solid var(--color-line)",
+                          borderBottom: "none",
+                          borderRadius: "6px 6px 0 0",
                         }}
                       />
                     </div>
                     <div
                       style={{
                         fontSize: 10.5,
-                        color: esPeor ? "var(--m-crit)" : "var(--m-ink-3)",
+                        fontWeight: esPeor ? 700 : 400,
+                        color: "var(--color-tinta)",
                       }}
                     >
                       {weekdayName(weekday)}
@@ -109,7 +141,7 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                 );
               })}
             </div>
-            <p style={{ fontSize: 12.5, color: "var(--m-ink-2)" }}>
+            <p style={{ fontSize: 12.5 }}>
               Tu peor día es el <strong>{weekdayFullName(worst.weekday)}</strong>, con un{" "}
               {pct(worst.rate)} de cumplimiento.
             </p>
@@ -119,7 +151,7 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
 
       <Card title="Lo que llevas más sin tocar">
         {masAbandonado === undefined ? (
-          <p style={{ fontSize: 12.5, color: "var(--m-ink-2)" }}>Sin hábitos.</p>
+          <p style={{ fontSize: 12.5 }}>Sin hábitos.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             {untouched.map((habit, i) => (
@@ -127,13 +159,11 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                 key={habit.id}
                 style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5 }}
               >
-                <span style={{ color: i === 0 ? "var(--m-ink)" : "var(--m-ink-2)" }}>
-                  {habit.name}
-                </span>
-                <span
-                  className="m-num"
-                  style={{ color: i === 0 ? "var(--m-warn)" : "var(--m-ink-3)" }}
-                >
+                {/* El primero es el más abandonado. Antes se marcaba tiñendo
+                    el número; ahora con el grosor, que es lo único que queda
+                    cuando el color de texto está reservado a la tinta. */}
+                <span style={{ fontWeight: i === 0 ? 700 : 400 }}>{habit.name}</span>
+                <span style={{ ...CIFRA, fontWeight: i === 0 ? 700 : 400 }}>
                   {habit.from === "creation"
                     ? "sin cumplir"
                     : habit.days === 0
@@ -144,7 +174,7 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                 </span>
               </div>
             ))}
-            <p style={{ fontSize: 11, color: "var(--m-ink-3)", marginTop: 2 }}>
+            <p style={{ fontSize: 11, marginTop: 2 }}>
               No es la racha: uno de lunes y viernes puede tenerla viva y llevar cinco
               días sin tocarse.
             </p>

@@ -27,22 +27,46 @@ export default async function HabitsPage() {
   const done = scheduled.filter((h) => h.doneToday).length;
 
   return (
-    <main className="m-root" style={{ minHeight: "100%", padding: "20px 16px 48px" }}>
+    /*
+      Se cae la clase `.m-root`. Era lo que imponía fondo oscuro, tinta casi
+      blanca y system-ui a todo lo de dentro, y con ella puesta las piezas ya
+      repintadas seguían heredando la fuente equivocada. Ahora la pantalla pone
+      su propio papel.
+
+      Las secciones que aún no han llegado a su turno conservan `.m-root` en sus
+      propias páginas, así que esto no las roza.
+
+      El aire crece: 16px entre bloques se quedaba corto en cuanto cada uno pasó
+      a llevar trazo de 3px y sombra dura. Con más peso alrededor hace falta más
+      sitio entre medias, y la sombra necesita margen por abajo y por la derecha
+      para no morderse con el bloque siguiente.
+    */
+    <main
+      style={{
+        minHeight: "100%",
+        padding: "24px 16px 56px",
+        background: "var(--color-paper)",
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
+      }}
+    >
       <div
         style={{
           maxWidth: 1040,
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: 20,
         }}
       >
         <HabitsHeader total={habits.length} />
 
         {habits.length === 0 ? (
           <Card style={{ textAlign: "center", padding: 40 }}>
-            <p style={{ fontSize: 15, marginBottom: 6 }}>Aún no tienes hábitos.</p>
-            <p style={{ fontSize: 13, color: "var(--m-ink-2)" }}>
+            <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
+              Aún no tienes hábitos.
+            </p>
+            <p style={{ fontSize: 13 }}>
               Crea el primero y empieza a construir una racha.
             </p>
           </Card>
@@ -52,7 +76,7 @@ export default async function HabitsPage() {
             <DayStatus initial={player} done={done} scheduled={scheduled.length} />
             <QuestList quests={quests} />
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {habits.map((habit) => (
                 <HabitRow
                   key={habit.id}
