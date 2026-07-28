@@ -160,13 +160,16 @@ describe("parseDumpRecords", () => {
     expect(filas[0].localHour).toBe(13);
   });
 
-  it("convierte los booleanos a 0 y 1", () => {
+  it("conserva los booleanos como booleanos", () => {
+    // La columna es INTEGER en SQL, pero Drizzle la declara con
+    // `{ mode: "boolean" }` y hace la conversión a 0/1 al escribir. Del lado
+    // de TypeScript son booleanos, y tratarlos como números no compila.
     const { filas } = parseDumpRecords(
       [registro({ shuffle: true, skipped: false })],
       TZ,
     );
-    expect(filas[0].shuffle).toBe(1);
-    expect(filas[0].skipped).toBe(0);
+    expect(filas[0].shuffle).toBe(true);
+    expect(filas[0].skipped).toBe(false);
   });
 
   it("acepta booleanos nulos o ausentes", () => {
@@ -357,11 +360,16 @@ export type ParseResult = {
   hasta: number | null;
 };
 
-/** `true`/`false` a 1/0; ausente o nulo se queda en NULL. */
-function booleano(v: boolean | null | undefined): number | null {
-  if (v === true) return 1;
-  if (v === false) return 0;
-  return null;
+/**
+ * Normaliza un booleano opcional del dump.
+ *
+ * No hay conversión a 0/1 que hacer aquí: la columna es `INTEGER` en SQL, pero
+ * Drizzle la declara con `{ mode: "boolean" }` y traduce al escribir. Lo único
+ * que falta es que un campo ausente quede como `null` explícito y no como
+ * `undefined`, que al insertar significaría "usa el valor por defecto".
+ */
+function booleano(v: boolean | null | undefined): boolean | null {
+  return v ?? null;
 }
 
 export function parseDumpRecords(
