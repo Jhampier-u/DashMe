@@ -157,7 +157,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.expiresAt = (account.expires_at ?? 0) * 1000;
 
         // Persistir el refresh token para que el cron pueda operar sin cookie.
-        // El import es dinámico a propósito: `@/db` arrastra better-sqlite3
+        // El import es dinámico a propósito: `@/modules/core/db` arrastra better-sqlite3
         // (módulo nativo) y no debe acabar en ningún bundle que no sea Node.
         // Un fallo aquí no debe impedir el login: la app sigue funcionando por
         // navegador y /ajustes avisará de que la captura no está configurada.
