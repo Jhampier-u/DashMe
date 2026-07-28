@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Album Story Maker</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0d0d0d; --surface: #141414; --surface2: #1c1c1c;
+  --border: #262626; --accent: #e2b84a; --text: #f0ede8;
+  --muted: #5a5a5a; --font-d: 'Bebas Neue', sans-serif; --font-m: 'DM Mono', monospace;
+}
+
+body { background: var(--bg); color: var(--text); font-family: var(--font-m); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* HEADER */
+header { padding: 14px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.logo { font-family: var(--font-d); font-size: 24px; letter-spacing: 4px; color: var(--accent); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+.header-right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.theme-pill { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-right: 2px; }
+.vsep { width: 1px; height: 20px; background: var(--border); margin: 0 8px; }
+.color-btn { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all .18s; outline: none; }
+.color-btn.active { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 8px rgba(255,255,255,.2); }
+
+/* Custom color picker */
+.picker-wrap { position: relative; display: flex; align-items: center; }
+.picker-btn {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px dashed var(--muted); cursor: pointer;
+  background: conic-gradient(red,#ff0,lime,cyan,blue,magenta,red);
+  transition: all .18s; outline: none; position: relative; flex-shrink: 0;
+}
+.picker-btn:hover { border-color: #fff; transform: scale(1.1); }
+.picker-btn.active { border-color: #fff; border-style: solid; transform: scale(1.18); box-shadow: 0 0 8px rgba(255,255,255,.3); }
+.picker-btn input[type="color"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  width: 100%; height: 100%; border: none; padding: 0;
+}
+.hex-input-wrap { display: flex; align-items: center; gap: 4px; overflow: hidden; max-width: 0; transition: max-width .25s ease, opacity .25s; opacity: 0; }
+.hex-input-wrap.visible { max-width: 90px; opacity: 1; }
+.hex-prefix { font-size: 11px; color: var(--muted); }
+.hex-input {
+  width: 68px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-m); font-size: 11px;
+  padding: 3px 6px; border-radius: 3px; outline: none; letter-spacing: 1px;
+}
+.hex-input:focus { border-color: var(--accent); }
+.mode-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.mode-btn { padding: 5px 12px; font-family: var(--font-m); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); background: transparent; border: none; cursor: pointer; transition: all .15s; }
+.mode-btn.active { background: var(--surface); color: var(--text); }
+
+/* LAYOUT */
+.app { display: flex; flex: 1; overflow: hidden; }
+
+/* EDITOR */
+.editor { width: 340px; min-width: 340px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.editor::-webkit-scrollbar { width: 4px; }
+.editor::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.section-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 5px; }
+input[type="text"], input[type="url"] {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font-m); font-size: 12px; padding: 9px 12px; border-radius: 3px;
+  outline: none; transition: border-color .2s; width: 100%;
+}
+input:focus { border-color: var(--accent); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Cover */
+.cover-drop { aspect-ratio: 1; border: 1.5px dashed var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color .2s, background .2s; position: relative; overflow: hidden; background: var(--surface2); min-height: 140px; }
+.cover-drop:hover { border-color: var(--accent); }
+.cover-drop.dragover { border-color: var(--accent); background: rgba(226,184,74,.05); }
+.cover-drop img.preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+.upload-hint { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; text-align: center; pointer-events: none; }
+.upload-hint svg { opacity: .4; }
+
+/* Rating */
+.rating-row { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.r-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-family: var(--font-m); font-size: 11px; padding: 7px 2px; cursor: pointer; border-radius: 2px; transition: all .12s; text-align: center; }
+.r-btn:hover { border-color: var(--accent); color: var(--accent); }
+.r-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.custom-rating-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.custom-rating-row input { width: 72px; text-align: center; }
+.custom-rating-row span { font-size: 11px; color: var(--muted); }
+
+/* Tracks input */
+.tracks-list { display: flex; flex-direction: column; gap: 6px; }
+.track-row { display: flex; gap: 6px; align-items: center; }
+.track-row input { flex: 1; }
+.track-num-badge {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 2px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--muted); font-family: var(--font-d); letter-spacing: 1px;
+}
+.btn-icon {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 2px;
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  font-size: 16px; line-height: 1; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+.btn-add {
+  background: var(--surface2); border: 1px dashed var(--border); color: var(--muted);
+  font-family: var(--font-m); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 8px; border-radius: 3px; cursor: pointer;
+  transition: all .15s; width: 100%; text-align: center;
+}
+.btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Export */
+.export-btn { background: var(--accent); color: #000; border: none; font-family: var(--font-d); font-size: 17px; letter-spacing: 3px; padding: 13px; border-radius: 3px; cursor: pointer; transition: opacity .15s, transform .1s; width: 100%; margin-top: 4px; }
+.export-btn:hover { opacity: .88; }
+.export-btn:active { transform: scale(.98); }
+.export-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* PREVIEW */
+.preview-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; background: #080808; position: relative; overflow: hidden; }
+.preview-panel::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, #1a1a1a 0%, #080808 70%); }
+.preview-badge { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; background: var(--surface); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); z-index: 2; white-space: nowrap; }
+.story-wrapper { width: 320px; height: 569px; position: relative; z-index: 1; border-radius: 12px; overflow: hidden; box-shadow: 0 32px 100px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.04); }
+
+/* ═══════════════════════════════
+   STORY TEMPLATE — 1080 × 1920
+   scale: 320/1080 ≈ 0.2963
+═══════════════════════════════ */
+#story-template {
+  width: 1080px; height: 1920px;
+  position: absolute; top: 0; left: 0;
+  transform-origin: top left; transform: scale(0.2963);
+  overflow: hidden; font-family: var(--font-d);
+  --t-bg:#0a0a0a; --t-text:#f0ede8; --t-accent:#e2b84a;
+  --t-muted:#4a4a4a; --t-grad:#0a0a0a;
+  --t-tag-bg:rgba(226,184,74,.13); --t-tag-bd:rgba(226,184,74,.28);
+  --t-sep:rgba(255,255,255,.07);
+}
+
+/* ── GOLD ── */
+#story-template[data-color="gold"][data-mode="dark"]  { --t-bg:#0a0a0a; --t-text:#f0ede8; --t-accent:#e2b84a; --t-muted:#4a4a4a; --t-grad:#0a0a0a; --t-tag-bg:rgba(226,184,74,.13); --t-tag-bd:rgba(226,184,74,.28); --t-sep:rgba(255,255,255,.07); }
+#story-template[data-color="gold"][data-mode="light"] { --t-bg:#faf7f0; --t-text:#1a1a1a; --t-accent:#a87c10; --t-muted:#aaa;    --t-grad:#faf7f0; --t-tag-bg:rgba(168,124,16,.13); --t-tag-bd:rgba(168,124,16,.28); --t-sep:rgba(0,0,0,.09); }
+/* ── RED ── */
+#story-template[data-color="red"][data-mode="dark"]   { --t-bg:#0f0808; --t-text:#f5ece8; --t-accent:#e04040; --t-muted:#4a3030; --t-grad:#0f0808; --t-tag-bg:rgba(224,64,64,.13);  --t-tag-bd:rgba(224,64,64,.28);  --t-sep:rgba(255,255,255,.07); }
+#story-template[data-color="red"][data-mode="light"]  { --t-bg:#fdf4f2; --t-text:#1a0808; --t-accent:#c63528; --t-muted:#bbb;    --t-grad:#fdf4f2; --t-tag-bg:rgba(198,53,40,.13);  --t-tag-bd:rgba(198,53,40,.28);  --t-sep:rgba(0,0,0,.09); }
+/* ── BLUE ── */
+#story-template[data-color="blue"][data-mode="dark"]  { --t-bg:#060e1c; --t-text:#ddeeff; --t-accent:#4b9fff; --t-muted:#2a3a5a; --t-grad:#060e1c; --t-tag-bg:rgba(75,159,255,.13); --t-tag-bd:rgba(75,159,255,.28); --t-sep:rgba(255,255,255,.07); }
+#story-template[data-color="blue"][data-mode="light"] { --t-bg:#f0f6ff; --t-text:#080e1a; --t-accent:#1a6fd4; --t-muted:#aac;    --t-grad:#f0f6ff; --t-tag-bg:rgba(26,111,212,.13); --t-tag-bd:rgba(26,111,212,.28); --t-sep:rgba(0,0,0,.09); }
+/* ── GREEN ── */
+#story-template[data-color="green"][data-mode="dark"]  { --t-bg:#060f09; --t-text:#e8f5ec; --t-accent:#5acc7e; --t-muted:#2e4a36; --t-grad:#060f09; --t-tag-bg:rgba(90,204,126,.13); --t-tag-bd:rgba(90,204,126,.28); --t-sep:rgba(255,255,255,.07); }
+#story-template[data-color="green"][data-mode="light"] { --t-bg:#f0faf3; --t-text:#060f09; --t-accent:#2a8a4a; --t-muted:#9ab;    --t-grad:#f0faf3; --t-tag-bg:rgba(42,138,74,.13);  --t-tag-bd:rgba(42,138,74,.28);  --t-sep:rgba(0,0,0,.09); }
+/* ── PURPLE ── */
+#story-template[data-color="purple"][data-mode="dark"]  { --t-bg:#0c0814; --t-text:#ede8f5; --t-accent:#b06ef5; --t-muted:#3a2a5a; --t-grad:#0c0814; --t-tag-bg:rgba(176,110,245,.13); --t-tag-bd:rgba(176,110,245,.28); --t-sep:rgba(255,255,255,.07); }
+#story-template[data-color="purple"][data-mode="light"] { --t-bg:#faf5ff; --t-text:#1a0828; --t-accent:#7c3aed; --t-muted:#bba;    --t-grad:#faf5ff; --t-tag-bg:rgba(124,58,237,.13);  --t-tag-bd:rgba(124,58,237,.28);  --t-sep:rgba(0,0,0,.09); }
+
+/* ── TEMPLATE ELEMENTS ── */
+#t-bg { position: absolute; inset: 0; background: var(--t-bg); }
+
+#t-cover { position: absolute; top: 0; left: 0; right: 0; height: 56%; overflow: hidden; }
+#t-cover-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: none; }
+#t-cover-placeholder { width: 100%; height: 100%; background: linear-gradient(145deg, #1c1c1c, #2a2a2a); display: flex; align-items: center; justify-content: center; }
+#t-cover-placeholder span { font-family: 'DM Mono', monospace; font-size: 40px; color: #333; letter-spacing: 4px; }
+.t-grad-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 45%; background: linear-gradient(to bottom, transparent, var(--t-bg)); pointer-events: none; }
+.t-grad-top    { position: absolute; top: 0; left: 0; right: 0; height: 30%; background: linear-gradient(to bottom, rgba(0,0,0,.45), transparent); pointer-events: none; }
+
+/* Content: empieza justo debajo, flex-start con gaps controlados */
+#t-content {
+  position: absolute; top: 56%; bottom: 0; left: 0; right: 0;
+  padding: 56px 80px 90px;
+  display: flex; flex-direction: column; gap: 28px;
+}
+
+/* Bloque superior: etiquetas + título + meta */
+.t-top-block { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
+
+.t-eyebrow { font-family: 'DM Mono', monospace; font-size: 28px; letter-spacing: 12px; color: var(--t-accent); text-transform: uppercase; font-weight: 300; margin-bottom: 6px; }
+.t-artist  { font-family: 'DM Mono', monospace; font-size: 42px; color: var(--t-text); letter-spacing: 6px; text-transform: uppercase; opacity: .50; font-style: italic; font-weight: 300; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 15px; }
+.t-album   { font-family: 'Bebas Neue', sans-serif; font-size: 152px; line-height: .87; color: var(--t-text); letter-spacing: 2px; word-break: break-word; margin-bottom: 20px; }
+
+.t-meta-row { display: flex; align-items: center; gap: 26px; font-family: 'DM Mono', monospace; font-size: 30px; color: var(--t-muted); letter-spacing: 5px; }
+.t-meta-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t-accent); opacity: .7; flex-shrink: 0; }
+#t-genre-tag { background: var(--t-tag-bg); border: 1px solid var(--t-tag-bd); padding: 8px 26px; border-radius: 40px; color: var(--t-accent); font-size: 28px; letter-spacing: 3px; }
+
+.t-divider { height: 1px; background: linear-gradient(to right, var(--t-accent), transparent); opacity: .35; flex-shrink: 0; }
+
+/* Bloque inferior: ocupa TODO el espacio restante */
+.t-bottom { flex: 1; display: flex; align-items: flex-start; gap: 40px; min-height: 0; }
+
+/* Score: fijo a la izquierda */
+.t-score-block { flex-shrink: 0; width: 260px; display: flex; flex-direction: column; align-items: flex-start; }
+.t-score     { font-family: 'Bebas Neue', sans-serif; font-size: 300px; line-height: .82; color: var(--t-accent); letter-spacing: -8px; }
+.t-score-sub { font-family: 'DM Mono', monospace; font-size: 24px; letter-spacing: 6px; color: var(--t-muted); text-transform: uppercase; margin-top: 12px; }
+
+/* Tracks: ocupa el resto, MÁS a la derecha */
+.t-tracks-block { flex: 1; display: flex; flex-direction: column; height: 100%; padding-left: 20px; min-width: 0; }
+.t-tracks-header { font-family: 'DM Mono', monospace; font-size: 24px; letter-spacing: 8px; color: var(--t-accent); text-transform: uppercase; opacity: .55; margin-bottom: 22px; flex-shrink: 0; }
+
+/* Lista de tracks: ocupa todo el alto disponible */
+#t-tracks-list { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+/* Cada track se estira para llenar el espacio — al agregar más, cada uno se hace más chico */
+.t-track-item {
+  flex: 1;
+  display: flex; align-items: center; gap: 22px;
+  border-bottom: 1px solid var(--t-sep);
+  min-height: 0; overflow: hidden;
+}
+.t-track-item:first-of-type { border-top: 1px solid var(--t-sep); }
+.t-track-num  { font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: var(--t-accent); opacity: .40; width: 52px; flex-shrink: 0; line-height: 1; }
+.t-track-name { font-family: 'DM Mono', monospace; font-size: 38px; color: var(--t-text); font-weight: 300; line-height: 1; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.t-link { font-family: 'DM Mono', monospace; font-size: 26px; color: var(--t-muted); letter-spacing: 1px; word-break: break-all; opacity: .5; display: none; flex-shrink: 0; margin-top: 20px; }
+
+#t-grain { position: absolute; inset: 0; pointer-events: none; opacity: .045; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 300px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">STORY MAKER</div>
+    <div class="logo-sub">Generador de historias de álbumes</div>
+  </div>
+  <div class="header-right">
+    <span class="theme-pill">COLOR</span>
+    <button class="color-btn active" data-color="gold"   style="background:linear-gradient(135deg,#e2b84a,#c49a1a)" title="Dorado"   onclick="setColor(this)"></button>
+    <button class="color-btn"        data-color="red"    style="background:linear-gradient(135deg,#e04040,#c63528)" title="Rojo"     onclick="setColor(this)"></button>
+    <button class="color-btn"        data-color="blue"   style="background:linear-gradient(135deg,#4b9fff,#1a6fd4)" title="Azul"     onclick="setColor(this)"></button>
+    <button class="color-btn"        data-color="green"  style="background:linear-gradient(135deg,#5acc7e,#2a8a4a)" title="Verde"    onclick="setColor(this)"></button>
+    <button class="color-btn"        data-color="purple" style="background:linear-gradient(135deg,#b06ef5,#7c3aed)" title="Morado 💜" onclick="setColor(this)"></button>
+
+    <!-- Custom color picker -->
+    <div class="picker-wrap">
+      <button class="picker-btn" id="picker-btn" title="Color personalizado" onclick="openPicker(event)">
+        <input type="color" id="color-input" value="#e2b84a" oninput="onColorInput(this.value)" onchange="onColorInput(this.value)">
+      </button>
+      <div class="hex-input-wrap" id="hex-wrap">
+        <span class="hex-prefix">#</span>
+        <input class="hex-input" id="hex-input" type="text" maxlength="6" placeholder="e2b84a"
+               oninput="onHexType(this.value)" spellcheck="false">
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="dark"  onclick="setMode(this)">🌙 Oscuro</button>
+      <button class="mode-btn"        data-mode="light" onclick="setMode(this)">☀️ Claro</button>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <div class="editor">
+
+    <div class="section-label">Portada</div>
+    <div class="cover-drop" id="cover-drop"
+         onclick="document.getElementById('file-in').click()"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
+      <img class="preview-img" id="editor-cover-img" src="" alt="">
+      <div class="upload-hint" id="upload-hint">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0-3 3m3-3 3 3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Arrastra o haz clic<br>para subir portada</span>
+      </div>
+    </div>
+    <input type="file" id="file-in" accept="image/*" style="display:none" onchange="handleFile(this)">
+
+    <div class="section-label">Información</div>
+    <div>
+      <label>Artista / Banda</label>
+      <input type="text" id="i-artist" placeholder="ej. Radiohead" oninput="sync()">
+    </div>
+    <div>
+      <label>Nombre del álbum</label>
+      <input type="text" id="i-album" placeholder="ej. OK Computer" oninput="sync()">
+    </div>
+    <div class="two-col">
+      <div><label>Año</label><input type="text" id="i-year" placeholder="1997" oninput="sync()"></div>
+      <div><label>Género</label><input type="text" id="i-genre" placeholder="Alt. Rock" oninput="sync()"></div>
+    </div>
+
+    <div class="section-label">Calificación</div>
+    <div class="rating-row" id="rating-row"></div>
+    <div class="custom-rating-row">
+      <span>Decimal:</span>
+      <input type="text" id="i-custom" placeholder="8.4" oninput="customRating(this.value)">
+      <span>/ 10</span>
+    </div>
+
+    <div class="section-label">Canciones favoritas</div>
+    <div class="tracks-list" id="tracks-list"></div>
+    <button class="btn-add" id="btn-add-track" onclick="addTrack()">+ Agregar canción</button>
+
+    <div class="section-label">Link</div>
+    <div>
+      <label>Spotify, Apple Music…</label>
+      <input type="text" id="i-link" placeholder="open.spotify.com/album/..." oninput="sync()">
+    </div>
+
+    <button class="export-btn" id="export-btn" onclick="exportStory()">⬇ EXPORTAR HISTORIA</button>
+  </div>
+
+  <div class="preview-panel">
+    <div class="preview-badge">Vista previa · 1080 × 1920</div>
+    <div class="story-wrapper">
+      <div id="story-template" data-color="gold" data-mode="dark">
+        <div id="t-bg"></div>
+        <div id="t-cover">
+          <img id="t-cover-img" src="" alt="">
+          <div id="t-cover-placeholder"><span>PORTADA</span></div>
+          <div class="t-grad-bottom"></div>
+          <div class="t-grad-top"></div>
+        </div>
+        <div id="t-content">
+          <div class="t-top-block">
+            <div class="t-eyebrow">Mis favoritas</div>
+            <div class="t-artist" id="t-artist">Artista</div>
+            <div class="t-album"  id="t-album">Álbum</div>
+            <div class="t-meta-row">
+              <span id="t-year">—</span>
+              <div class="t-meta-dot"></div>
+              <span id="t-genre-tag">Género</span>
+            </div>
+          </div>
+          <div class="t-divider"></div>
+          <div class="t-bottom">
+            <div class="t-score-block">
+              <div class="t-score" id="t-score">—</div>
+              <div class="t-score-sub">PUNTUACIÓN</div>
+            </div>
+            <div class="t-tracks-block">
+              <div class="t-tracks-header">Top tracks</div>
+              <div id="t-tracks-list"></div>
+              <div class="t-link" id="t-link"></div>
+            </div>
+          </div>
+        </div>
+        <div id="t-grain"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentColor = 'gold';
+let currentMode  = 'dark';
+let trackCount   = 0;
+
+// ── Rating ──
+const ratingRow = document.getElementById('rating-row');
+for (let i = 1; i <= 10; i++) {
+  const b = document.createElement('button');
+  b.className = 'r-btn'; b.textContent = i;
+  b.onclick = () => {
+    document.querySelectorAll('.r-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('i-custom').value = '';
+    document.getElementById('t-score').textContent = i;
+  };
+  ratingRow.appendChild(b);
+}
+function customRating(v) {
+  document.querySelectorAll('.r-btn').forEach(x => x.classList.remove('active'));
+  document.getElementById('t-score').textContent = v.trim() || '—';
+}
+
+// ── Tracks ──
+function addTrack(value = '') {
+  trackCount++;
+  const n = trackCount;
+  const list = document.getElementById('tracks-list');
+
+  const row = document.createElement('div');
+  row.className = 'track-row';
+  row.dataset.id = n;
+
+  const badge = document.createElement('div');
+  badge.className = 'track-num-badge';
+  badge.textContent = String(n).padStart(2, '0');
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = `Canción ${n}`;
+  inp.value = value;
+  inp.oninput = syncTracks;
+
+  const del = document.createElement('button');
+  del.className = 'btn-icon';
+  del.innerHTML = '×';
+  del.title = 'Eliminar';
+  del.onclick = () => { row.remove(); renumberTracks(); syncTracks(); };
+
+  row.appendChild(badge);
+  row.appendChild(inp);
+  row.appendChild(del);
+  list.appendChild(row);
+
+  inp.focus();
+}
+
+function renumberTracks() {
+  const rows = document.querySelectorAll('#tracks-list .track-row');
+  rows.forEach((row, i) => {
+    row.querySelector('.track-num-badge').textContent = String(i + 1).padStart(2, '0');
+  });
+  trackCount = rows.length;
+}
+
+function syncTracks() {
+  const rows = document.querySelectorAll('#tracks-list .track-row');
+  const names = Array.from(rows).map(r => r.querySelector('input').value.trim());
+  const filled = names.filter(n => n).length;
+
+  // Font scales down only when there are many tracks
+  const nameFontSize = filled <= 3 ? 42 : filled <= 5 ? 36 : filled <= 7 ? 30 : 24;
+  const numFontSize  = filled <= 3 ? 48 : filled <= 5 ? 40 : filled <= 7 ? 34 : 26;
+
+  const container = document.getElementById('t-tracks-list');
+  container.innerHTML = '';
+
+  names.forEach((name, i) => {
+    if (!name) return;
+    const item = document.createElement('div');
+    item.className = 't-track-item';
+
+    const num = document.createElement('div');
+    num.className = 't-track-num';
+    num.style.fontSize = numFontSize + 'px';
+    num.textContent = String(i + 1).padStart(2, '0');
+
+    const title = document.createElement('div');
+    title.className = 't-track-name';
+    title.style.fontSize = nameFontSize + 'px';
+    title.textContent = name;
+
+    item.appendChild(num);
+    item.appendChild(title);
+    container.appendChild(item);
+  });
+}
+
+// ── Cover ──
+function loadCoverURL(url) {
+  const edImg = document.getElementById('editor-cover-img');
+  edImg.src = url; edImg.style.display = 'block';
+  document.getElementById('upload-hint').style.opacity = '0';
+  const tImg = document.getElementById('t-cover-img');
+  tImg.src = url; tImg.style.display = 'block';
+  document.getElementById('t-cover-placeholder').style.display = 'none';
+}
+function handleFile(inp) { const f = inp.files[0]; if (f) loadCoverURL(URL.createObjectURL(f)); }
+function onDragOver(e)   { e.preventDefault(); document.getElementById('cover-drop').classList.add('dragover'); }
+function onDragLeave()   { document.getElementById('cover-drop').classList.remove('dragover'); }
+function onDrop(e)       {
+  e.preventDefault(); document.getElementById('cover-drop').classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadCoverURL(URL.createObjectURL(f));
+}
+
+// ── Sync general ──
+function sync() {
+  const artist = document.getElementById('i-artist').value.trim();
+  const album  = document.getElementById('i-album').value.trim();
+  const year   = document.getElementById('i-year').value.trim();
+  const genre  = document.getElementById('i-genre').value.trim();
+  const link   = document.getElementById('i-link').value.trim();
+
+  document.getElementById('t-artist').textContent = artist || 'Artista';
+  document.getElementById('t-album').textContent  = album  || 'Álbum';
+  document.getElementById('t-year').textContent   = year   || '—';
+  document.getElementById('t-genre-tag').textContent = genre || 'Género';
+
+  const len = (album || 'Álbum').length;
+  document.getElementById('t-album').style.fontSize = len <= 10 ? '152px' : len <= 16 ? '118px' : len <= 22 ? '88px' : '68px';
+
+  const tLink = document.getElementById('t-link');
+  tLink.textContent = link;
+  tLink.style.display = link ? 'block' : 'none';
+}
+
+// ── Theme ──
+let usingCustom = false;
+
+function applyTheme() {
+  const t = document.getElementById('story-template');
+  if (!usingCustom) {
+    // Clear any inline custom vars so CSS rules take over
+    clearCustomVars(t);
+    t.dataset.color = currentColor;
+    t.dataset.mode  = currentMode;
+  }
+}
+
+function setColor(btn) {
+  usingCustom = false;
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('picker-btn').classList.remove('active');
+  document.getElementById('hex-wrap').classList.remove('visible');
+  btn.classList.add('active');
+  currentColor = btn.dataset.color;
+  applyTheme();
+}
+
+function setMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = btn.dataset.mode;
+  if (usingCustom) {
+    const hex = document.getElementById('hex-input').value ||
+                document.getElementById('color-input').value.replace('#','');
+    if (hex.length === 6) applyCustomColor('#' + hex);
+  } else {
+    applyTheme();
+  }
+}
+
+// ── Custom color ──
+function openPicker(e) {
+  // Try EyeDropper API first (Chrome 95+)
+  if (window.EyeDropper) {
+    e.preventDefault();
+    const dropper = new EyeDropper();
+    dropper.open().then(result => {
+      activateCustom(result.sRGBHex);
+    }).catch(() => {
+      // User cancelled — fall through to color input
+      document.getElementById('color-input').click();
+    });
+  }
+  // else: native color input opens via its own click (input is inside button)
+}
+
+function onColorInput(hex) {
+  activateCustom(hex);
+}
+
+function onHexType(val) {
+  const clean = val.replace(/[^0-9a-fA-F]/g, '');
+  document.getElementById('hex-input').value = clean;
+  if (clean.length === 6) {
+    activateCustom('#' + clean);
+    document.getElementById('color-input').value = '#' + clean;
+  }
+}
+
+function activateCustom(hex) {
+  usingCustom = true;
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('picker-btn').classList.add('active');
+  document.getElementById('hex-wrap').classList.add('visible');
+  // Update the hex text input
+  document.getElementById('hex-input').value = hex.replace('#','').toUpperCase();
+  document.getElementById('color-input').value = hex;
+  applyCustomColor(hex);
+}
+
+function applyCustomColor(hex) {
+  const t = document.getElementById('story-template');
+  t.dataset.color = 'custom';
+  t.dataset.mode  = currentMode;
+
+  const [r, g, b] = hexToRgb(hex);
+  const isDark = currentMode === 'dark';
+
+  // Dark mode: bg = casi negro con tinte sutil del acento (92% negro)
+  // Light mode: bg = casi blanco con tinte sutil (93% blanco)
+  const bg     = isDark
+    ? mixRgb(r, g, b,   0,   0,   0, 0.92)   // 8% accent + 92% black
+    : mixRgb(r, g, b, 255, 255, 255, 0.93);   // 7% accent + 93% white
+
+  const text   = isDark ? '#f2eeea' : '#141010';
+
+  // Muted: tono oscuro/claro neutro con apenas un toque del color
+  const muted  = isDark
+    ? mixRgb(r, g, b,  40,  40,  40, 0.72)   // 28% accent + 72% dark gray
+    : '#aaaaaa';
+
+  // En light mode el acento se oscurece para contrastar con fondo claro
+  const finalAccent = isDark ? hex : darken(r, g, b, 0.65);
+
+  const tagBg = `rgba(${r},${g},${b},${isDark ? .13 : .10})`;
+  const tagBd = `rgba(${r},${g},${b},${isDark ? .30 : .25})`;
+  const sep   = isDark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.09)';
+
+  t.style.setProperty('--t-bg',     bg);
+  t.style.setProperty('--t-grad',   bg);
+  t.style.setProperty('--t-text',   text);
+  t.style.setProperty('--t-accent', finalAccent);
+  t.style.setProperty('--t-muted',  muted);
+  t.style.setProperty('--t-tag-bg', tagBg);
+  t.style.setProperty('--t-tag-bd', tagBd);
+  t.style.setProperty('--t-sep',    sep);
+}
+
+function clearCustomVars(t) {
+  ['--t-bg','--t-grad','--t-text','--t-accent','--t-muted','--t-tag-bg','--t-tag-bd','--t-sep']
+    .forEach(v => t.style.removeProperty(v));
+}
+
+// ── Color math helpers ──
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return [
+    parseInt(h.slice(0,2), 16),
+    parseInt(h.slice(2,4), 16),
+    parseInt(h.slice(4,6), 16),
+  ];
+}
+
+// Mix accent RGB with a base color RGB; t = how much of base (0 = pure accent, 1 = pure base)
+function mixRgb(r, g, b, br, bg, bb, t) {
+  const mix = (a, ba) => Math.round(a * (1 - t) + ba * t);
+  return `rgb(${mix(r,br)},${mix(g,bg)},${mix(b,bb)})`;
+}
+
+// Darken by multiplying by factor (0–1)
+function darken(r, g, b, factor) {
+  return `rgb(${Math.round(r*factor)},${Math.round(g*factor)},${Math.round(b*factor)})`;
+}
+
+// ── Export ──
+async function exportStory() {
+  const btn = document.getElementById('export-btn');
+  btn.disabled = true; btn.textContent = 'GENERANDO…';
+  await document.fonts.ready;
+
+  const tmpl    = document.getElementById('story-template');
+  const wrapper = document.querySelector('.story-wrapper');
+
+  tmpl.style.transform = 'none';
+  tmpl.style.position  = 'fixed';
+  tmpl.style.top       = '0';
+  tmpl.style.left      = '-1200px';
+  tmpl.style.zIndex    = '99999';
+  document.body.appendChild(tmpl);
+
+  await new Promise(r => setTimeout(r, 100));
+
+  try {
+    const canvas = await html2canvas(tmpl, {
+      scale: 1, useCORS: true, allowTaint: true,
+      backgroundColor: null, logging: false, width: 1080, height: 1920,
+    });
+    const a = document.createElement('a');
+    a.download = `story-${document.getElementById('i-artist').value || 'album'}-${Date.now()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } catch (err) {
+    console.error(err);
+    alert('Error al exportar. Revisa la consola.');
+  } finally {
+    tmpl.style.transform = 'scale(0.2963)';
+    tmpl.style.position  = 'absolute';
+    tmpl.style.top = '0'; tmpl.style.left = '0'; tmpl.style.zIndex = '';
+    wrapper.appendChild(tmpl);
+    btn.disabled = false; btn.textContent = '⬇ EXPORTAR HISTORIA';
+  }
+}
+
+// Arrancar con 3 tracks vacíos
+addTrack(); addTrack(); addTrack();
+</script>
+</body>
+</html>
