@@ -163,7 +163,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // navegador y /ajustes avisará de que la captura no está configurada.
         if (account.refresh_token) {
           try {
-            const { saveCredentials } = await import("@/lib/credentials");
+            const { saveCredentials } = await import(
+              "@/modules/musica/lib/credentials"
+            );
             await saveCredentials({
               spotifyUserId:
                 (profile as { id?: string } | undefined)?.id ?? "me",
