@@ -111,3 +111,8 @@ export function periodChange(buckets: WeekBucket[]): PeriodChange {
       previous === 0 ? null : Math.round(((current - previous) / previous) * 100),
   };
 }
+
+/** Días de calendario transcurridos desde un instante hasta hoy. */
+export function daysSince(moment: Date, today: Date = dayKey()): number {
+  return daysBetween(today, dayKey(moment));
+}

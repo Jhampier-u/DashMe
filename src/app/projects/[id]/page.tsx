@@ -1,19 +1,10 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { PixelWindow } from "@/components/PixelWindow";
-import { PageShell } from "@/components/PageShell";
-import { ProjectTreeRoot } from "@/components/ProjectTreeRoot";
+import { notFound } from "next/navigation";
 import { getProjectWithTree } from "@/lib/projects";
+import { Card } from "@/components/ui/Card";
+import { ProjectTree } from "@/components/projects/ProjectTree";
 
 export const dynamic = "force-dynamic";
-
-const TONE_BG: Record<string, string> = {
-  lavender: "var(--color-lavender)",
-  mint: "var(--color-mint)",
-  peach: "var(--color-peach)",
-  sky: "var(--color-sky)",
-  pink: "var(--color-pink)",
-};
 
 export default async function ProjectDetailPage({
   params,
@@ -21,94 +12,81 @@ export default async function ProjectDetailPage({
   const { id } = await params;
   const result = await getProjectWithTree(id);
   if (!result) notFound();
-  const { project, roots, totalItems, doneItems } = result;
-  const accent = TONE_BG[project.color] ?? TONE_BG.lavender;
+
+  const { project, roots, totalItems, doneItems, lastMovement } = result;
   const percent = totalItems === 0 ? 0 : doneItems / totalItems;
 
+  const movement =
+    lastMovement.from === "creation"
+      ? "sin avances todavía"
+      : lastMovement.days === 0
+        ? "último avance hoy"
+        : `último avance hace ${lastMovement.days} días`;
+
   return (
-    <PageShell accent={accent}>
-      <div className="flex items-center gap-3 untap-slide-in">
+    <main className="m-root" style={{ minHeight: "100%", padding: "20px 16px 48px" }}>
+      <div
+        style={{
+          maxWidth: 820,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
         <Link
           href="/projects"
-          className="pixel-button font-display text-[0.55rem] px-2 py-2"
-          style={{
-            background: "var(--color-surface)",
-            color: "var(--color-ink)",
-            boxShadow: "0 0 0 3px var(--color-border)",
-          }}
+          style={{ fontSize: 12.5, color: "var(--m-ink-2)", textDecoration: "none" }}
         >
-          ◄
+          ← Proyectos
         </Link>
-        <div
-          className="flex-1 pixel-edge-tight px-4 py-3 flex items-center gap-3"
-          style={{ background: accent, color: "var(--color-bg-deep)" }}
-        >
-          <span className="text-3xl untap-bobble">{project.icon}</span>
-          <div className="flex-1">
-            <h1 className="font-display text-base sm:text-lg tracking-widest">
-              {project.name.toUpperCase()}
+
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 22 }} aria-hidden>
+              {project.icon}
+            </span>
+            <h1 style={{ fontSize: 22, fontWeight: 650, letterSpacing: "-0.02em" }}>
+              {project.name}
             </h1>
-            {project.description ? (
-              <p className="text-base mt-1 opacity-80">{project.description}</p>
-            ) : null}
           </div>
+          {project.description ? (
+            <p style={{ fontSize: 13.5, color: "var(--m-ink-2)", marginTop: 6 }}>
+              {project.description}
+            </p>
+          ) : null}
         </div>
+
+        <Card>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: 8,
+            }}
+          >
+            <span className="m-num" style={{ fontSize: 15, fontWeight: 600 }}>
+              {doneItems} de {totalItems} · {Math.round(percent * 100)}%
+            </span>
+            <span style={{ fontSize: 11.5, color: "var(--m-ink-3)" }}>{movement}</span>
+          </div>
+          <div style={{ height: 5, background: "var(--m-track)", borderRadius: 3 }}>
+            <div
+              style={{
+                height: "100%",
+                width: `${Math.round(percent * 100)}%`,
+                background: "var(--m-series)",
+                borderRadius: 3,
+              }}
+            />
+          </div>
+        </Card>
+
+        <Card title="Subtareas">
+          <ProjectTree projectId={project.id} roots={roots} />
+        </Card>
       </div>
-
-      <section className="grid grid-cols-3 gap-4">
-        <div
-          className="p-4 text-center pixel-edge-tight hover-lift"
-          style={{ background: "var(--color-bg)" }}
-        >
-          <div className="font-display text-xl" style={{ color: accent }}>
-            {totalItems}
-          </div>
-          <div className="text-base mt-1 opacity-80">tareas</div>
-        </div>
-        <div
-          className="p-4 text-center pixel-edge-tight hover-lift"
-          style={{ background: "var(--color-bg)" }}
-        >
-          <div className="font-display text-xl text-[var(--color-mint)]">
-            {doneItems}
-          </div>
-          <div className="text-base mt-1 opacity-80">completadas</div>
-        </div>
-        <div
-          className="p-4 text-center pixel-edge-tight hover-lift"
-          style={{ background: "var(--color-bg)" }}
-        >
-          <div className="font-display text-xl text-[var(--color-peach)]">
-            {Math.round(percent * 100)}%
-          </div>
-          <div className="text-base mt-1 opacity-80">progreso</div>
-        </div>
-      </section>
-
-      <div
-        className="h-4 pixel-edge-tight"
-        style={{ background: "var(--color-bg-deep)" }}
-      >
-        <div
-          className="h-full"
-          style={{
-            width: `${Math.round(percent * 100)}%`,
-            background: accent,
-            transition: "width 300ms steps(8)",
-          }}
-        />
-      </div>
-
-      <section>
-        <PixelWindow title="Árbol de tareas">
-          <ProjectTreeRoot projectId={project.id} roots={roots} />
-        </PixelWindow>
-      </section>
-
-      <div className="text-center text-[var(--color-ink-dim)] text-base">
-        💡 Click en el círculo para cambiar estado · Click en el título para
-        renombrar · <strong>+</strong> para anidar subtareas infinitamente
-      </div>
-    </PageShell>
+    </main>
   );
 }
