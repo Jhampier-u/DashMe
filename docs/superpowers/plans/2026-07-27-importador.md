@@ -931,7 +931,9 @@ export async function importarArchivo(
     return { ...vacio, error: "Nombre de archivo no permitido." };
   }
 
-  const disponibles = await fs.readdir(DIRECTORIO).catch(() => []);
+  // La anotación de retorno es necesaria: sin ella TypeScript infiere `never[]`
+  // para el `catch`, la unión resuelve a `never` y `.includes(nombre)` no compila.
+  const disponibles = await fs.readdir(DIRECTORIO).catch((): string[] => []);
   if (!disponibles.includes(nombre)) {
     return { ...vacio, error: "El archivo no está en data/import." };
   }
