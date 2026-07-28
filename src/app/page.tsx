@@ -6,8 +6,9 @@ import { parseRange } from "@/lib/stats/range";
 import { resolveTimeZone, localParts } from "@/lib/stats/local-time";
 import { getTotals } from "@/lib/stats/totals";
 import { getTopArtists, getTopTracks, getTopAlbums } from "@/lib/stats/tops";
-import { getByHour, getByWeekday, getByMonth } from "@/lib/stats/time";
+import { getByHour, getByWeekday, getByMonth, getByDate } from "@/lib/stats/time";
 import { getStreaks } from "@/lib/stats/streaks";
+import { getSkipStats, getMostSkippedArtists } from "@/lib/stats/skips";
 import TopBar from "@/components/TopBar";
 import RangePicker from "@/components/stats/RangePicker";
 import StatTiles from "@/components/stats/StatTiles";
@@ -15,6 +16,8 @@ import TopList from "@/components/stats/TopList";
 import HourClock from "@/components/stats/HourClock";
 import WeekdayBars from "@/components/stats/WeekdayBars";
 import MonthlyChart from "@/components/stats/MonthlyChart";
+import CalendarHeatmap from "@/components/stats/CalendarHeatmap";
+import SkipPanel from "@/components/stats/SkipPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -49,18 +52,33 @@ export default async function Portada({
   const range = parseRange(params, ahora, timeZone);
   const hoy = localParts(ahora, timeZone).localDate;
 
-  const [me, totals, artistas, canciones, albumes, horas, semana, meses, rachas] =
-    await Promise.all([
-      getMe(),
-      getTotals(db, range),
-      getTopArtists(db, range, "plays", 10),
-      getTopTracks(db, range, "plays", 10),
-      getTopAlbums(db, range, "plays", 10),
-      getByHour(db, range),
-      getByWeekday(db, range),
-      getByMonth(db, range),
-      getStreaks(db, hoy),
-    ]);
+  const [
+    me,
+    totals,
+    artistas,
+    canciones,
+    albumes,
+    horas,
+    semana,
+    meses,
+    dias,
+    rachas,
+    skips,
+    masSaltados,
+  ] = await Promise.all([
+    getMe(),
+    getTotals(db, range),
+    getTopArtists(db, range, "plays", 10),
+    getTopTracks(db, range, "plays", 10),
+    getTopAlbums(db, range, "plays", 10),
+    getByHour(db, range),
+    getByWeekday(db, range),
+    getByMonth(db, range),
+    getByDate(db, range),
+    getStreaks(db, hoy),
+    getSkipStats(db, range),
+    getMostSkippedArtists(db, range),
+  ]);
 
   const minutos = Math.round(totals.msTotal / 60000);
   const vacio = totals.reproducciones === 0;
@@ -166,12 +184,24 @@ export default async function Portada({
             />
           </section>
 
+          {/* ---------------- Calendario ---------------- */}
+          <section className="px-8 py-12 hairline-b fade-in">
+            <CalendarHeatmap buckets={dias} />
+          </section>
+
           {/* ---------------- Semana ---------------- */}
           <section className="px-8 py-12 hairline-b">
             <div className="max-w-2xl">
               <WeekdayBars buckets={semana} />
             </div>
           </section>
+
+          {/* ---------------- Abandono ---------------- */}
+          {skips.conDatos > 0 && (
+            <section className="px-8 py-12 hairline-b fade-in">
+              <SkipPanel stats={skips} artistas={masSaltados} />
+            </section>
+          )}
         </>
       )}
 

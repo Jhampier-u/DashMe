@@ -88,3 +88,29 @@ export async function getByMonth(
     ORDER BY month ASC
   `);
 }
+
+export type DayBucket = { date: string; plays: number; ms: number };
+
+/**
+ * Un punto por día con escuchas, sin rellenar los vacíos.
+ *
+ * Rellenar aquí sería peor que en los meses: ocho años son casi tres mil
+ * puntos, la mayoría a cero en los periodos inactivos. El mapa de calor que lo
+ * dibuja ya genera la rejilla completa de fechas y solo necesita saber cuáles
+ * tuvieron actividad.
+ */
+export async function getByDate(
+  db: Db,
+  range: StatsRange,
+): Promise<DayBucket[]> {
+  return db.all<DayBucket>(sql`
+    SELECT
+      ${streams.localDate}      AS date,
+      COUNT(*)                  AS plays,
+      SUM(${streams.msPlayed})  AS ms
+    FROM ${streams}
+    WHERE ${enRango(range)}
+    GROUP BY ${streams.localDate}
+    ORDER BY date ASC
+  `);
+}
