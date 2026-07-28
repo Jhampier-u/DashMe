@@ -21,6 +21,7 @@ import CalendarHeatmap from "@/components/stats/CalendarHeatmap";
 import SkipPanel from "@/components/stats/SkipPanel";
 import ShareCards from "@/components/stats/ShareCards";
 import GenrePanel from "@/components/stats/GenrePanel";
+import PlaylistFromTops from "@/components/stats/PlaylistFromTops";
 
 export const dynamic = "force-dynamic";
 
@@ -215,9 +216,10 @@ export default async function Portada({
             />
           </section>
 
-          {/* ---------------- Compartir ---------------- */}
-          <section className="px-8 py-12 hairline-b fade-in">
+          {/* ---------------- Compartir y exportar ---------------- */}
+          <section className="px-8 py-12 hairline-b fade-in flex flex-col gap-12">
             <ShareCards range={range} />
+            <PlaylistFromTops rangeParams={params} etiqueta={range.label} />
           </section>
 
           {/* ---------------- Abandono ---------------- */}

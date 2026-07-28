@@ -89,3 +89,56 @@ export async function getTopAlbums(
     LIMIT ${limite}
   `);
 }
+
+export type TopTrackUri = { key: string; name: string; artistName: string; uri: string };
+
+/**
+ * Top canciones con su URI de Spotify, para materializar playlists.
+ *
+ * Una misma canción puede aparecer con varios URIs a lo largo de los años
+ * —reediciones, cambios de catálogo, versiones por país—, así que se toma el
+ * más frecuente en vez de uno cualquiera: es el que más probablemente siga
+ * vivo hoy.
+ *
+ * Las filas sin URI quedan fuera. Vienen del dump básico o de pistas locales, y
+ * no hay nada que añadir a una playlist sin identificador.
+ */
+export async function getTopTrackUris(
+  db: Db,
+  range: StatsRange,
+  limite = 50,
+): Promise<TopTrackUri[]> {
+  return db.all<TopTrackUri>(sql`
+    WITH contadas_por_uri AS (
+      SELECT
+        ${streams.trackKey}   AS key,
+        ${streams.trackUri}   AS uri,
+        COUNT(*)              AS veces
+      FROM ${streams}
+      WHERE ${enRango(range)} AND ${contadas()}
+        AND ${streams.trackUri} IS NOT NULL
+      GROUP BY ${streams.trackKey}, ${streams.trackUri}
+    ),
+    mejor_uri AS (
+      SELECT key, uri, veces,
+             ROW_NUMBER() OVER (PARTITION BY key ORDER BY veces DESC) AS puesto
+      FROM contadas_por_uri
+    ),
+    totales AS (
+      SELECT
+        ${streams.trackKey}        AS key,
+        MAX(${streams.trackName})  AS name,
+        MAX(${streams.artistName}) AS artistName,
+        COUNT(*)                   AS plays
+      FROM ${streams}
+      WHERE ${enRango(range)} AND ${contadas()}
+        AND ${streams.trackUri} IS NOT NULL
+      GROUP BY ${streams.trackKey}
+    )
+    SELECT t.key AS key, t.name AS name, t.artistName AS artistName, m.uri AS uri
+    FROM totales t
+    JOIN mejor_uri m ON m.key = t.key AND m.puesto = 1
+    ORDER BY t.plays DESC
+    LIMIT ${limite}
+  `);
+}
