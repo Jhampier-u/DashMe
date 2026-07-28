@@ -20,7 +20,6 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
     fd.set("name", name);
     fd.set("description", description);
     fd.set("icon", icon);
-    fd.set("color", "lavender");
     startTransition(async () => {
       await createProject(fd);
       onDone();

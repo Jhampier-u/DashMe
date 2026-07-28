@@ -16,7 +16,7 @@ model Habit {
   id           String     @id @default(cuid())
   name         String
   icon         String     @default("star")
-  color        String     @default("moss")
+  color        String     @default("aqua")
   plantSpecies String     @default("flower") // flower | tree | mushroom | cactus | herb
   minimalGoal  String?
   isAnchor     Boolean    @default(false)
@@ -81,7 +81,6 @@ model Project {
   name        String
   description String?
   icon        String        @default("📁")
-  color       String        @default("lavender")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   items       ProjectItem[]

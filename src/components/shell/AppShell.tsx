@@ -94,9 +94,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SoundToggle />
       </header>
 
-      {/* Contenedor, no `<main>`: cada pantalla ya trae el suyo (Inicio
-          directamente, y las demás a través de PageShell). Anidar dos `<main>`
-          es HTML inválido y confunde a los lectores de pantalla.
+      {/* Contenedor, no `<main>`: cada pantalla ya trae el suyo. Anidar dos
+          `<main>` es HTML inválido y confunde a los lectores de pantalla.
           El `_` de la clase es cómo Tailwind escribe los espacios: `calc` los
           exige alrededor del `+`. */}
       <div className="lg:ml-52 pb-[calc(4.75rem_+_env(safe-area-inset-bottom))] lg:pb-0">

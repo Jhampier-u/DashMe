@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { toggleToday, deleteHabit, setHabitAnchor } from "@/app/actions";
 import { emitToggleResult } from "@/lib/events";
-import { useConfirm } from "@/components/PixelConfirm";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { habitColorVar, resolveHabitColor } from "@/lib/color";
 import { plantEmoji, type PlantSpecies } from "@/lib/garden";
 import { DEFAULT_SCHEDULE } from "@/lib/streak";
 import { HabitDetail } from "./HabitDetail";
@@ -12,6 +13,7 @@ type Props = {
   id: string;
   name: string;
   icon: string;
+  color: string;
   streak: number;
   doneToday: boolean;
   partialToday: boolean;
@@ -67,6 +69,7 @@ export function HabitRow(p: Props) {
   }
 
   const plant = plantEmoji(p.plantSpecies, p.streak, p.doneToday, p.hasEverBeenDone);
+  const accent = habitColorVar(resolveHabitColor(p.color));
   const schedule = (p.schedule || DEFAULT_SCHEDULE).padEnd(7, "0");
   const custom = schedule !== DEFAULT_SCHEDULE;
 
@@ -84,7 +87,11 @@ export function HabitRow(p: Props) {
         background: "var(--m-surface)",
         border: `1px solid ${p.criticalToday ? "rgba(226, 96, 96, 0.45)" : "var(--m-line)"}`,
         borderRadius: 10,
+        // La franja de identidad va por dentro para no desplazar el contenido
+        // ni romper el radio, que es lo que pasaria subiendo el borde a 3px.
+        boxShadow: `inset 3px 0 0 ${accent}`,
         padding: 14,
+        paddingLeft: 17,
         opacity: pending ? 0.5 : p.scheduledToday ? 1 : 0.65,
       }}
     >

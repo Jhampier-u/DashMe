@@ -20,12 +20,6 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
   DONE: "Completadas",
 };
 
-export const STATUS_TONE: Record<TaskStatus, string> = {
-  TODO: "var(--color-sky)",
-  IN_PROGRESS: "var(--color-peach)",
-  DONE: "var(--color-mint)",
-};
-
 export type TaskRow = {
   id: string;
   title: string;

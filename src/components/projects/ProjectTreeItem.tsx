@@ -9,7 +9,7 @@ import {
   renameProjectItem,
 } from "@/app/actions";
 import { emitStatusChange } from "@/lib/events";
-import { useConfirm } from "@/components/PixelConfirm";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 
 const STATUS_CYCLE: Record<ProjectItemStatus, ProjectItemStatus> = {

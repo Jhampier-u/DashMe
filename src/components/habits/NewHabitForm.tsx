@@ -4,16 +4,10 @@ import { useState, useTransition } from "react";
 import { createHabit } from "@/app/actions";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { DEFAULT_HABIT_COLOR, HABIT_COLORS, habitColorVar } from "@/lib/color";
 import { PLANT_SPECIES, type PlantSpecies } from "@/lib/garden";
 
 const ICONS = ["⭐", "📖", "🏃", "🧘", "💧", "🎨", "🎮", "🌱", "🎵", "💪", "🍎", "✍️"];
-const COLORS = [
-  { key: "mint", label: "Menta" },
-  { key: "peach", label: "Melocotón" },
-  { key: "pink", label: "Rosa" },
-  { key: "lavender", label: "Lavanda" },
-  { key: "sky", label: "Cielo" },
-];
 // Índice por getUTCDay(): 0=domingo. Se muestran empezando en lunes.
 const WEEKDAYS = [
   { index: 1, label: "L" },
@@ -47,7 +41,7 @@ const LABEL = {
 export function NewHabitForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState("⭐");
-  const [color, setColor] = useState("mint");
+  const [color, setColor] = useState<string>(DEFAULT_HABIT_COLOR);
   const [species, setSpecies] = useState<PlantSpecies>("flower");
   const [days, setDays] = useState<Set<number>>(new Set([0, 1, 2, 3, 4, 5, 6]));
   const [intention, setIntention] = useState("");
@@ -129,17 +123,18 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
       <div>
         <span style={LABEL}>Color</span>
         <div style={{ display: "flex", gap: 6 }}>
-          {COLORS.map((choice) => (
+          {HABIT_COLORS.map((choice) => (
             <button
               key={choice.key}
               type="button"
               onClick={() => setColor(choice.key)}
               aria-pressed={color === choice.key}
               aria-label={choice.label}
+              title={choice.label}
               style={{
                 ...CHIP,
                 flex: 1,
-                background: `var(--color-${choice.key})`,
+                background: habitColorVar(choice.key),
                 border: `2px solid ${color === choice.key ? "var(--m-ink)" : "transparent"}`,
               }}
             />

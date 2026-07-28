@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { deleteProject } from "@/app/actions";
-import { useConfirm } from "@/components/PixelConfirm";
+import { useConfirm } from "@/components/ConfirmDialog";
 import type { ProjectSummary } from "@/lib/projects";
 
 /** Cuánto tiempo parado empieza a ser señal de aviso. */
