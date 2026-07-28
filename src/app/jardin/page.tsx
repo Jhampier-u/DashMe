@@ -32,8 +32,22 @@ export default async function GardenPage() {
     isPlantWilted(h.streak, h.doneToday, h.hasEverBeenDone),
   ).length;
 
+  /*
+    `.m-root` es el escudo del lenguaje oscuro: impone fondo y tinta propios en
+    vez de heredarlos del documento. Tareas, proyectos y la portada ya lo
+    llevaban; jardín se había quedado sin él y heredaba del `body`.
+
+    Hoy no cambia nada —los valores son los mismos que hereda—, pero en cuanto
+    el documento pase a papel, esta pantalla fija su texto en `--m-ink`, que es
+    casi blanco. Sin el escudo se volvería ilegible.
+
+    Se retira cuando a jardín le toque su propio repintado.
+  */
   return (
-    <main style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <main
+      className="m-root"
+      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+    >
       <PageHeader
         title="Tu jardín"
         subtitle="Cada hábito es una planta. Riégalas para que crezcan."
