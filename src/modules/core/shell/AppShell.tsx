@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             textDecoration: "none",
           }}
         >
-          Untap
+          Dashboard
         </Link>
 
         <nav className="flex flex-col gap-0.5 flex-1" aria-label="Secciones">
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             textDecoration: "none",
           }}
         >
-          Untap
+          Dashboard
         </Link>
         <SoundToggle />
       </header>
