@@ -9,6 +9,7 @@ import { getTopArtists, getTopTracks, getTopAlbums } from "@/lib/stats/tops";
 import { getByHour, getByWeekday, getByMonth, getByDate } from "@/lib/stats/time";
 import { getStreaks } from "@/lib/stats/streaks";
 import { getSkipStats, getMostSkippedArtists } from "@/lib/stats/skips";
+import { getGenreBreakdown, PROFUNDIDAD } from "@/lib/stats/genres";
 import TopBar from "@/components/TopBar";
 import RangePicker from "@/components/stats/RangePicker";
 import StatTiles from "@/components/stats/StatTiles";
@@ -19,6 +20,7 @@ import MonthlyChart from "@/components/stats/MonthlyChart";
 import CalendarHeatmap from "@/components/stats/CalendarHeatmap";
 import SkipPanel from "@/components/stats/SkipPanel";
 import ShareCards from "@/components/stats/ShareCards";
+import GenrePanel from "@/components/stats/GenrePanel";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +68,7 @@ export default async function Portada({
     rachas,
     skips,
     masSaltados,
+    generos,
   ] = await Promise.all([
     getMe(),
     getTotals(db, range),
@@ -79,6 +82,7 @@ export default async function Portada({
     getStreaks(db, hoy),
     getSkipStats(db, range),
     getMostSkippedArtists(db, range),
+    getGenreBreakdown(db, range),
   ]);
 
   const minutos = Math.round(totals.msTotal / 60000);
@@ -198,6 +202,17 @@ export default async function Portada({
             <div className="max-w-2xl">
               <WeekdayBars buckets={semana} />
             </div>
+          </section>
+
+          {/* ---------------- Géneros ---------------- */}
+          <section className="px-8 py-12 hairline-b fade-in">
+            <GenrePanel
+              generos={generos.generos}
+              conGeneros={generos.conGeneros}
+              sinGeneros={generos.sinGeneros}
+              profundidad={PROFUNDIDAD}
+              rangeParams={params}
+            />
           </section>
 
           {/* ---------------- Compartir ---------------- */}

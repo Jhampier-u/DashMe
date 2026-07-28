@@ -135,4 +135,10 @@ export const SCHEMA_SQL = `
       entity       TEXT NOT NULL,
       payload_json TEXT NOT NULL
     );
-  `;
+  
+  CREATE TABLE IF NOT EXISTS artist_genres (
+    artist_key TEXT PRIMARY KEY,
+    genres     TEXT NOT NULL DEFAULT '[]',
+    fetched_at INTEGER NOT NULL
+  );
+`;

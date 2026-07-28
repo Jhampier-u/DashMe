@@ -190,3 +190,19 @@ export const topSnapshots = sqliteTable("top_snapshots", {
 });
 
 export type TopSnapshotRow = typeof topSnapshots.$inferSelect;
+
+/**
+ * Géneros por artista, indexados por la clave normalizada del nombre.
+ *
+ * No usa el ID de Spotify: Last.fm resuelve por nombre, así que el puente a
+ * IDs que el diseño original preveía resultó innecesario. La tabla `artists`
+ * sigue existiendo para el lado de la biblioteca, que sí trabaja con IDs.
+ */
+export const artistGenres = sqliteTable("artist_genres", {
+  artistKey: text("artist_key").primaryKey(),
+  /** JSON con un array de cadenas. */
+  genres: text("genres").notNull().default("[]"),
+  fetchedAt: integer("fetched_at").notNull(),
+});
+
+export type ArtistGenresRow = typeof artistGenres.$inferSelect;
