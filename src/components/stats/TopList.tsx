@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type Entrada = {
   key: string;
   name: string;
@@ -21,10 +23,13 @@ export default function TopList({
   titulo,
   entradas,
   vacio,
+  hrefBase,
 }: {
   titulo: string;
   entradas: Entrada[];
   vacio: string;
+  /** Si se pasa, cada fila enlaza a `${hrefBase}/${key}`. */
+  hrefBase?: string;
 }) {
   const max = Math.max(1, ...entradas.map((e) => e.plays));
 
@@ -57,7 +62,16 @@ export default function TopList({
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="truncate">
-                  {e.name}
+                  {hrefBase ? (
+                    <Link
+                      href={`${hrefBase}/${encodeURIComponent(e.key)}`}
+                      className="hover:text-acid transition-colors"
+                    >
+                      {e.name}
+                    </Link>
+                  ) : (
+                    e.name
+                  )}
                   {e.artistName && (
                     <span className="text-mute"> · {e.artistName}</span>
                   )}

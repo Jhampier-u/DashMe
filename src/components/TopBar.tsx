@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { signOut } from "@/auth";
 import type { SpotifyUser } from "@/lib/spotify";
@@ -9,6 +10,7 @@ export default function TopBar({
   me: SpotifyUser;
   active?:
     | "portada"
+    | "historial"
     | "biblioteca"
     | "library"
     | "tags"
@@ -29,6 +31,9 @@ export default function TopBar({
         <nav className="hidden sm:flex items-center gap-5">
           <NavLink href="/" active={active === "portada"}>
             Portada
+          </NavLink>
+          <NavLink href="/historial" active={active === "historial"}>
+            Historial
           </NavLink>
           <NavLink href="/biblioteca" active={active === "biblioteca"}>
             Biblioteca
