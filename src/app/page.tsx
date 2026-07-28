@@ -18,6 +18,7 @@ import WeekdayBars from "@/components/stats/WeekdayBars";
 import MonthlyChart from "@/components/stats/MonthlyChart";
 import CalendarHeatmap from "@/components/stats/CalendarHeatmap";
 import SkipPanel from "@/components/stats/SkipPanel";
+import ShareCards from "@/components/stats/ShareCards";
 
 export const dynamic = "force-dynamic";
 
@@ -197,6 +198,11 @@ export default async function Portada({
             <div className="max-w-2xl">
               <WeekdayBars buckets={semana} />
             </div>
+          </section>
+
+          {/* ---------------- Compartir ---------------- */}
+          <section className="px-8 py-12 hairline-b fade-in">
+            <ShareCards range={range} />
           </section>
 
           {/* ---------------- Abandono ---------------- */}
