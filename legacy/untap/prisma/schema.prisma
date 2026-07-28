@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Habit {
+  id           String     @id @default(cuid())
+  name         String
+  icon         String     @default("star")
+  color        String     @default("aqua")
+  plantSpecies String     @default("flower") // flower | tree | mushroom | cactus | herb
+  minimalGoal  String?
+  isAnchor     Boolean    @default(false)
+  schedule     String     @default("1111111") // 7 chars Sun-Sat, 1=active 0=skip
+  intention    String?    // "Cuando X entonces Y"
+  createdAt    DateTime   @default(now())
+  logs         HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      DateTime
+  partial   Boolean  @default(false)
+  shielded  Boolean  @default(false)
+  // XP concedido al crear este registro (base + ancla + hito). Al borrarlo se
+  // devuelve exactamente esto, así marcar/desmarcar siempre suma cero.
+  xpAwarded Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([date])
+}
+
+model Player {
+  id              String   @id @default("default")
+  xp              Int      @default(0)
+  shields         Int      @default(2)
+  shieldsUpdated  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DailyQuest {
+  id          String    @id @default(cuid())
+  date        DateTime  // start of day UTC
+  kind        String    // QUEST_3_HABITS | QUEST_EARLY | QUEST_TASK | QUEST_PERFECT | QUEST_TREE
+  target      Int       @default(1)
+  progress    Int       @default(0)
+  xpReward    Int       @default(50)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([date, kind])
+  @@index([date])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("TODO") // TODO | IN_PROGRESS | DONE
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  icon        String        @default("📁")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  items       ProjectItem[]
+}
+
+model ProjectItem {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      ProjectItem?  @relation("ItemTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    ProjectItem[] @relation("ItemTree")
+  title       String
+  status      String        @default("TODO") // TODO | IN_PROGRESS | DONE
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  completedAt DateTime?
+
+  @@index([projectId])
+  @@index([parentId])
+}

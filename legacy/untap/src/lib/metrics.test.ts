@@ -1,0 +1,334 @@
+import { describe, it, expect } from "vitest";
+import { dayKeyFromISO } from "./day";
+import {
+  averageRate,
+  bestWeekday,
+  buildHabitSpecs,
+  complianceSeries,
+  periodDelta,
+  rollingMean,
+  weekdayRates,
+  worstWeekday,
+  type DayCompliance,
+  type HabitSpec,
+  type LogEntry,
+} from "./metrics";
+
+const key = (iso: string) => dayKeyFromISO(iso)!;
+const DAILY = "1111111";
+const MWF = "0101010"; // lun, mié, vie
+
+function habit(id: string, schedule = DAILY, since = "2026-07-01"): HabitSpec {
+  return { id, schedule, since: key(since) };
+}
+
+function log(
+  habitId: string,
+  iso: string,
+  extra: Partial<LogEntry> = {},
+): LogEntry {
+  return { habitId, day: key(iso), partial: false, shielded: false, ...extra };
+}
+
+describe("complianceSeries", () => {
+  it("cuenta cumplidos sobre programados", () => {
+    const days = complianceSeries(
+      [habit("a"), habit("b")],
+      [log("a", "2026-07-20")],
+      key("2026-07-20"),
+      key("2026-07-20"),
+    );
+    expect(days).toHaveLength(1);
+    expect(days[0]).toMatchObject({
+      date: "2026-07-20",
+      scheduled: 2,
+      done: 1,
+      rate: 0.5,
+    });
+  });
+
+  it("no cuenta el hábito en días anteriores a su existencia", () => {
+    const days = complianceSeries(
+      [habit("a", DAILY, "2026-07-20")],
+      [],
+      key("2026-07-19"),
+      key("2026-07-20"),
+    );
+    expect(days[0].scheduled).toBe(0);
+    expect(days[0].rate).toBeNull();
+    expect(days[1].scheduled).toBe(1);
+  });
+
+  it("excluye del promedio los días sin nada programado", () => {
+    // Sábado 25: el hábito L-M-V no toca.
+    const days = complianceSeries(
+      [habit("a", MWF)],
+      [],
+      key("2026-07-25"),
+      key("2026-07-25"),
+    );
+    expect(days[0].scheduled).toBe(0);
+    expect(days[0].rate).toBeNull();
+  });
+
+  it("cuenta el modo mínimo como medio cumplimiento", () => {
+    const days = complianceSeries(
+      [habit("a"), habit("b")],
+      [log("a", "2026-07-20", { partial: true })],
+      key("2026-07-20"),
+      key("2026-07-20"),
+    );
+    expect(days[0].done).toBe(0.5);
+    expect(days[0].rate).toBe(0.25);
+  });
+
+  it("no da por cumplido un día cubierto por escudo, pero lo reporta", () => {
+    const days = complianceSeries(
+      [habit("a")],
+      [log("a", "2026-07-20", { shielded: true })],
+      key("2026-07-20"),
+      key("2026-07-20"),
+    );
+    expect(days[0].done).toBe(0);
+    expect(days[0].rate).toBe(0);
+    expect(days[0].shielded).toBe(1);
+  });
+
+  it("ignora registros de días en los que el hábito no tocaba", () => {
+    const days = complianceSeries(
+      [habit("a", MWF)],
+      [log("a", "2026-07-25")], // sábado
+      key("2026-07-25"),
+      key("2026-07-25"),
+    );
+    expect(days[0].scheduled).toBe(0);
+    expect(days[0].done).toBe(0);
+  });
+
+  it("devuelve un elemento por día del rango, en orden", () => {
+    const days = complianceSeries([habit("a")], [], key("2026-07-20"), key("2026-07-23"));
+    expect(days.map((d) => d.date)).toEqual([
+      "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23",
+    ]);
+  });
+});
+
+describe("rollingMean", () => {
+  it("promedia la ventana que termina en cada punto", () => {
+    expect(rollingMean([1, 2, 3, 4], 2)).toEqual([1, 1.5, 2.5, 3.5]);
+  });
+
+  it("usa los datos disponibles mientras la ventana no está llena", () => {
+    expect(rollingMean([2, 4], 7)).toEqual([2, 3]);
+  });
+
+  it("ignora los huecos sin romper la media", () => {
+    expect(rollingMean([1, null, 3], 3)).toEqual([1, 1, 2]);
+  });
+
+  it("devuelve null cuando la ventana entera es hueco", () => {
+    expect(rollingMean([null, null], 2)).toEqual([null, null]);
+  });
+});
+
+describe("averageRate", () => {
+  it("promedia solo los días con algo programado", () => {
+    expect(
+      averageRate([
+        { date: "a", scheduled: 2, done: 1, shielded: 0, rate: 0.5 },
+        { date: "b", scheduled: 0, done: 0, shielded: 0, rate: null },
+        { date: "c", scheduled: 1, done: 1, shielded: 0, rate: 1 },
+      ]),
+    ).toBe(0.75);
+  });
+
+  it("devuelve null si no hay ningún día con datos", () => {
+    expect(
+      averageRate([{ date: "a", scheduled: 0, done: 0, shielded: 0, rate: null }]),
+    ).toBeNull();
+  });
+});
+
+function day(date: string, rate: number | null): DayCompliance {
+  return {
+    date,
+    scheduled: rate === null ? 0 : 1,
+    done: rate ?? 0,
+    shielded: 0,
+    rate,
+  };
+}
+
+describe("periodDelta", () => {
+  it("compara el último periodo con el anterior", () => {
+    const days = [
+      ...Array.from({ length: 2 }, (_, i) => day(`2026-07-0${i + 1}`, 0.5)),
+      ...Array.from({ length: 2 }, (_, i) => day(`2026-07-0${i + 3}`, 0.8)),
+    ];
+    expect(periodDelta(days, 2)).toEqual({
+      current: 0.8,
+      currentDays: 2,
+      previous: 0.5,
+      previousDays: 2,
+      deltaPoints: 30,
+    });
+  });
+
+  it("omite la comparación si no hay periodo anterior", () => {
+    const days = [day("2026-07-01", 0.6), day("2026-07-02", 0.6)];
+    expect(periodDelta(days, 2)).toEqual({
+      current: 0.6,
+      currentDays: 2,
+      previous: null,
+      previousDays: 0,
+      deltaPoints: null,
+    });
+  });
+
+  it("devuelve null si el periodo actual no tiene datos", () => {
+    expect(periodDelta([day("2026-07-01", null)], 2)).toBeNull();
+  });
+
+  it("no compara si el periodo anterior apenas tiene días medidos", () => {
+    // 28 días actuales completos y solo 2 medidos en los 28 anteriores:
+    // la forma real de un usuario que empezó hace un mes.
+    const previo = Array.from({ length: 28 }, (_, i) =>
+      day(`p${i}`, i >= 26 ? 0.5 : null),
+    );
+    const actual = Array.from({ length: 28 }, (_, i) => day(`a${i}`, 0.8));
+    const result = periodDelta([...previo, ...actual], 28)!;
+    expect(result.current).toBeCloseTo(0.8, 6);
+    expect(result.currentDays).toBe(28);
+    expect(result.previousDays).toBe(2);
+    expect(result.previous).toBeNull();
+    expect(result.deltaPoints).toBeNull();
+  });
+
+  it("compara cuando el periodo anterior tiene datos suficientes", () => {
+    const previo = Array.from({ length: 28 }, (_, i) =>
+      day(`p${i}`, i >= 14 ? 0.5 : null),
+    );
+    const actual = Array.from({ length: 28 }, (_, i) => day(`a${i}`, 0.8));
+    const result = periodDelta([...previo, ...actual], 28)!;
+    expect(result.previous).toBeCloseTo(0.5, 6);
+    expect(result.previousDays).toBe(14);
+    expect(result.deltaPoints).toBe(30);
+  });
+});
+
+describe("buildHabitSpecs", () => {
+  const created = key("2026-07-10");
+
+  it("sin registros, arranca en la fecha de creación", () => {
+    const specs = buildHabitSpecs([{ id: "a", schedule: "1111111", createdKey: created }], []);
+    expect(specs[0].since.getTime()).toBe(created.getTime());
+  });
+
+  it("con registros posteriores, sigue arrancando en la creación", () => {
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [{ habitId: "a", day: key("2026-07-15"), partial: false, shielded: false }],
+    );
+    expect(specs[0].since.getTime()).toBe(created.getTime());
+  });
+
+  it("con relleno hacia atrás, arranca en el registro más antiguo", () => {
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [
+        { habitId: "a", day: key("2026-07-15"), partial: false, shielded: false },
+        { habitId: "a", day: key("2026-07-02"), partial: false, shielded: false },
+      ],
+    );
+    expect(specs[0].since.getTime()).toBe(key("2026-07-02").getTime());
+  });
+
+  it("ignora los registros de otros hábitos", () => {
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [{ habitId: "b", day: key("2026-07-02"), partial: false, shielded: false }],
+    );
+    expect(specs[0].since.getTime()).toBe(created.getTime());
+  });
+
+  it("normaliza el calendario", () => {
+    const specs = buildHabitSpecs([{ id: "a", schedule: "", createdKey: created }], []);
+    expect(specs[0].schedule).toBe("1111111");
+  });
+});
+
+describe("bestWeekday", () => {
+  it("elige el día de la semana con mejor tasa media", () => {
+    // 2026-07-20 lunes, 2026-07-21 martes, 2026-07-27 lunes
+    const days = [
+      day("2026-07-20", 0.4),
+      day("2026-07-21", 0.9),
+      day("2026-07-27", 0.6),
+    ];
+    expect(bestWeekday(days)).toEqual({ weekday: 2, rate: 0.9 });
+  });
+
+  it("promedia las repeticiones del mismo día de la semana", () => {
+    const days = [day("2026-07-20", 0.4), day("2026-07-27", 1)];
+    expect(bestWeekday(days)).toEqual({ weekday: 1, rate: 0.7 });
+  });
+
+  it("devuelve null sin datos", () => {
+    expect(bestWeekday([day("2026-07-20", null)])).toBeNull();
+  });
+});
+
+describe("weekdayRates", () => {
+  it("devuelve siete posiciones, de domingo a sábado", () => {
+    // 2026-07-26 es domingo y 2026-07-27 lunes.
+    const rates = weekdayRates([day("2026-07-26", 0.4), day("2026-07-27", 0.8)]);
+    expect(rates).toHaveLength(7);
+    expect(rates[0]).toBeCloseTo(0.4, 6);
+    expect(rates[1]).toBeCloseTo(0.8, 6);
+  });
+
+  it("promedia las repeticiones del mismo día de la semana", () => {
+    // Ambos lunes.
+    const rates = weekdayRates([day("2026-07-20", 0.4), day("2026-07-27", 1)]);
+    expect(rates[1]).toBeCloseTo(0.7, 6);
+  });
+
+  it("un día de la semana sin datos vale null, no cero", () => {
+    const rates = weekdayRates([day("2026-07-27", 1)]);
+    expect(rates[1]).toBeCloseTo(1, 6);
+    expect(rates[2]).toBeNull();
+  });
+
+  it("los días sin nada programado no cuentan", () => {
+    const rates = weekdayRates([day("2026-07-27", null)]);
+    expect(rates[1]).toBeNull();
+  });
+});
+
+describe("worstWeekday", () => {
+  it("elige el día de la semana con peor tasa", () => {
+    // 2026-07-20 lunes, 21 martes, 22 miércoles
+    const days = [
+      day("2026-07-20", 0.9),
+      day("2026-07-21", 0.2),
+      day("2026-07-22", 0.6),
+    ];
+    expect(worstWeekday(days)).toEqual({ weekday: 2, rate: 0.2 });
+  });
+
+  it("devuelve null sin datos", () => {
+    expect(worstWeekday([day("2026-07-20", null)])).toBeNull();
+  });
+
+  it("mejor y peor salen de la misma serie y no se contradicen", () => {
+    const days = [
+      day("2026-07-20", 0.9),
+      day("2026-07-21", 0.2),
+      day("2026-07-22", 0.6),
+    ];
+    const best = bestWeekday(days)!;
+    const worst = worstWeekday(days)!;
+    expect(best.rate).toBeGreaterThanOrEqual(worst.rate);
+    expect(best.weekday).not.toBe(worst.weekday);
+  });
+});
