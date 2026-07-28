@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { dayKeyFromISO } from "./day";
 import {
+  daysSince,
   lifetimeDays,
   median,
   oldestOpenDays,
@@ -143,5 +144,17 @@ describe("periodChange", () => {
 
   it("una bajada da porcentaje negativo", () => {
     expect(periodChange(semanas(5, 5, 2, 3)).changePercent).toBe(-50);
+  });
+});
+
+describe("daysSince", () => {
+  const hoy = key("2026-07-27");
+
+  it("cuenta días de calendario desde el instante dado", () => {
+    expect(daysSince(new Date("2026-07-20T23:00:00-05:00"), hoy)).toBe(7);
+  });
+
+  it("hoy mismo son cero días", () => {
+    expect(daysSince(new Date("2026-07-27T08:00:00-05:00"), hoy)).toBe(0);
   });
 });
