@@ -10,6 +10,8 @@ REM definicion de la tarea programada ni en ningun log.
 
 setlocal
 
+set "PUERTO=3000"
+
 for /f "usebackq tokens=1,* delims==" %%a in (`findstr /b "CRON_SECRET=" "%~dp0..\.env.local"`) do set "SECRET=%%b"
 
 if "%SECRET%"=="" (
@@ -17,6 +19,15 @@ if "%SECRET%"=="" (
   exit /b 1
 )
 
-curl.exe -s -S -X POST -H "x-cron-secret: %SECRET%" http://127.0.0.1:3000/api/cron/capture
+REM -f hace que curl salga con codigo distinto de cero ante un 4xx o 5xx. Sin
+REM el, una respuesta de error contaba como ejecucion correcta: la captura
+REM estuvo horas fallando con "No hay credenciales guardadas" y el registro de
+REM la tarea programada marcaba exito en todas.
+curl.exe -f -s -S -X POST -H "x-cron-secret: %SECRET%" http://127.0.0.1:%PUERTO%/api/cron/capture
+set "CODIGO=%errorlevel%"
 
-endlocal
+REM `endlocal` a secas devuelve el codigo a cero, asi que el fallo de curl se
+REM perdia justo en la ultima linea y el Programador de tareas seguia viendo
+REM exito. Con `&` en la misma linea, %CODIGO% se expande antes de que
+REM `endlocal` corra, y el codigo real sobrevive.
+endlocal & exit /b %CODIGO%
