@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
 /*
+  Los tokens del sistema pixel-kawaii. Entran aquí y no sustituyen a nada: los
+  `--m-*` de abajo siguen vivos porque tareas, proyectos, jardín y la portada
+  aún los usan. Convivirán hasta que a cada sección le llegue su turno.
+*/
+@import "../modules/core/ui/tokens.css";
+
+/*
   Tokens del lenguaje moderno. Es el único sistema visual del proyecto:
   el sistema pixel que convivía con este se retiro por completo.
 */
@@ -75,8 +82,14 @@ body {
   color: var(--m-ink);
 }
 
+/*
+  Quicksand es ya la familia por defecto del documento. `--m-font` no se borra:
+  `.m-root` lo sigue aplicando, así que las secciones que aún no se han
+  repintado conservan su system-ui y solo cambia lo que queda fuera de ellas
+  (hoy, el armazón de navegación).
+*/
 body {
-  font-family: var(--m-font);
+  font-family: var(--font-cuerpo);
   font-size: 15px;
   line-height: 1.5;
 }
