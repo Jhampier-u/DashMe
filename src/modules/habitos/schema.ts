@@ -1,0 +1,154 @@
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
+
+/*
+  Traducción de los 7 modelos que este dominio tenía en Prisma.
+
+  Dos desviaciones respecto al estilo de `legacy/voidtify/src/db/schema.ts`,
+  ambas sin efecto en el almacenamiento físico:
+    · `mode: "timestamp_ms"` — el código de este módulo trabaja con objetos Date
+      en todas partes. En disco sigue siendo un INTEGER epoch en milisegundos.
+    · `mode: "boolean"`      — el código espera true/false. En disco, 0/1.
+*/
+
+export const habits = sqliteTable("habits", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  icon: text("icon").notNull().default("star"),
+  color: text("color").notNull().default("aqua"),
+  /** flower | tree | mushroom | cactus | herb */
+  plantSpecies: text("plant_species").notNull().default("flower"),
+  minimalGoal: text("minimal_goal"),
+  isAnchor: integer("is_anchor", { mode: "boolean" }).notNull().default(false),
+  /** 7 caracteres dom→sáb, 1 = activo, 0 = se salta. */
+  schedule: text("schedule").notNull().default("1111111"),
+  /** "Cuando X entonces Y" */
+  intention: text("intention"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type HabitRow = typeof habits.$inferSelect;
+
+export const habitLogs = sqliteTable(
+  "habit_logs",
+  {
+    id: text("id").primaryKey(),
+    habitId: text("habit_id")
+      .notNull()
+      .references(() => habits.id, { onDelete: "cascade" }),
+    date: integer("date", { mode: "timestamp_ms" }).notNull(),
+    partial: integer("partial", { mode: "boolean" }).notNull().default(false),
+    shielded: integer("shielded", { mode: "boolean" }).notNull().default(false),
+    /**
+     * XP concedido al crear este registro (base + ancla + hito). Al borrarlo se
+     * devuelve exactamente esto, así marcar/desmarcar siempre suma cero.
+     */
+    xpAwarded: integer("xp_awarded").notNull().default(0),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => ({
+    // Impide registrar dos veces el mismo hábito el mismo día. De esto depende
+    // el cálculo de rachas: si se pierde, la lógica se corrompe en silencio.
+    unqHabitDate: uniqueIndex("habit_logs_habit_date_unq").on(t.habitId, t.date),
+    byDate: index("habit_logs_date_idx").on(t.date),
+  }),
+);
+
+export type HabitLogRow = typeof habitLogs.$inferSelect;
+
+/** Tabla de una sola fila con id fijo "default". Se revisita con la auth. */
+export const player = sqliteTable("player", {
+  id: text("id").primaryKey(),
+  xp: integer("xp").notNull().default(0),
+  shields: integer("shields").notNull().default(2),
+  shieldsUpdated: integer("shields_updated", {
+    mode: "timestamp_ms",
+  }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type PlayerRow = typeof player.$inferSelect;
+
+export const dailyQuests = sqliteTable(
+  "daily_quests",
+  {
+    id: text("id").primaryKey(),
+    /** Inicio del día en UTC. */
+    date: integer("date", { mode: "timestamp_ms" }).notNull(),
+    /** QUEST_3_HABITS | QUEST_EARLY | QUEST_TASK | QUEST_PERFECT | QUEST_TREE */
+    kind: text("kind").notNull(),
+    target: integer("target").notNull().default(1),
+    progress: integer("progress").notNull().default(0),
+    xpReward: integer("xp_reward").notNull().default(50),
+    completed: integer("completed", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+  },
+  (t) => ({
+    unqDateKind: uniqueIndex("daily_quests_date_kind_unq").on(t.date, t.kind),
+    byDate: index("daily_quests_date_idx").on(t.date),
+  }),
+);
+
+export type DailyQuestRow = typeof dailyQuests.$inferSelect;
+
+export const tasks = sqliteTable("tasks", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  /** TODO | IN_PROGRESS | DONE */
+  status: text("status").notNull().default("TODO"),
+  order: integer("order").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+});
+
+export type TaskRow = typeof tasks.$inferSelect;
+
+export const projects = sqliteTable("projects", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon").notNull().default("📁"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type ProjectRow = typeof projects.$inferSelect;
+
+export const projectItems = sqliteTable(
+  "project_items",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    /**
+     * Autorreferencial: el árbol de subtareas. La clave foránea se declara en
+     * SCHEMA_SQL y no aquí, porque una referencia a la propia tabla dentro del
+     * objeto de columnas provoca una inicialización circular.
+     */
+    parentId: text("parent_id"),
+    title: text("title").notNull(),
+    /** TODO | IN_PROGRESS | DONE */
+    status: text("status").notNull().default("TODO"),
+    order: integer("order").notNull().default(0),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+    completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+  },
+  (t) => ({
+    byProject: index("project_items_project_idx").on(t.projectId),
+    byParent: index("project_items_parent_idx").on(t.parentId),
+  }),
+);
+
+export type ProjectItemRow = typeof projectItems.$inferSelect;
