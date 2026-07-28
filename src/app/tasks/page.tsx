@@ -1,49 +1,47 @@
-import { TasksBoard } from "@/components/TasksBoard";
-import { SectionHeader } from "@/components/SectionHeader";
-import { PageShell } from "@/components/PageShell";
-import { PixelCard } from "@/components/PixelCard";
-import { getTasksGrouped } from "@/lib/tasks";
+import { getTasksGrouped, getTaskMetrics } from "@/lib/tasks";
+import { Card } from "@/components/ui/Card";
+import { TasksBoard } from "@/components/tasks/TasksBoard";
+import { TasksHeader } from "@/components/tasks/TasksHeader";
+import { FlowPanel } from "@/components/tasks/FlowPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
-  const grouped = await getTasksGrouped();
-  const todo = grouped.TODO.length;
-  const inProgress = grouped.IN_PROGRESS.length;
-  const done = grouped.DONE.length;
-  const total = todo + inProgress + done;
+  const [grouped, metrics] = await Promise.all([
+    getTasksGrouped(),
+    getTaskMetrics(),
+  ]);
+
+  const total =
+    grouped.TODO.length + grouped.IN_PROGRESS.length + grouped.DONE.length;
 
   return (
-    <PageShell accent="var(--color-sky)">
-      <SectionHeader
-        title="Tareas"
-        subtitle="Mueve tarjetas hacia la derecha y gana XP"
-        emoji="📝"
-        accent="var(--color-sky)"
-      />
+    <main className="m-root" style={{ minHeight: "100%", padding: "20px 16px 48px" }}>
+      <div
+        style={{
+          maxWidth: 1040,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <TasksHeader total={total} />
 
-      <section className="grid grid-cols-4 gap-3">
-        <PixelCard tone="surface" className="text-center hover-lift">
-          <div className="font-display text-xl">{total}</div>
-          <div className="text-base mt-1 opacity-80">total</div>
-        </PixelCard>
-        <PixelCard tone="sky" className="text-center hover-lift">
-          <div className="font-display text-xl">{todo}</div>
-          <div className="text-base mt-1 opacity-80">por iniciar</div>
-        </PixelCard>
-        <PixelCard tone="peach" className="text-center hover-lift">
-          <div className="font-display text-xl">{inProgress}</div>
-          <div className="text-base mt-1 opacity-80">en proceso</div>
-        </PixelCard>
-        <PixelCard tone="mint" className="text-center hover-lift">
-          <div className="font-display text-xl">{done}</div>
-          <div className="text-base mt-1 opacity-80">hechas</div>
-        </PixelCard>
-      </section>
-
-      <section>
-        <TasksBoard grouped={grouped} />
-      </section>
-    </PageShell>
+        {total === 0 ? (
+          <Card style={{ textAlign: "center", padding: 40 }}>
+            <p style={{ fontSize: 15, marginBottom: 6 }}>Aún no tienes tareas.</p>
+            <p style={{ fontSize: 13, color: "var(--m-ink-2)" }}>
+              Crea la primera y esta pantalla empezará a medir tu ritmo.
+            </p>
+          </Card>
+        ) : (
+          <>
+            <TasksBoard grouped={grouped} />
+            <FlowPanel metrics={metrics} />
+          </>
+        )}
+      </div>
+    </main>
   );
 }
