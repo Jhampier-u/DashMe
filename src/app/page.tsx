@@ -171,16 +171,19 @@ export default async function Portada({
               titulo="Artistas"
               entradas={artistas}
               vacio="Nada en este rango."
+              hrefBase="/escucha/artista"
             />
             <TopList
               titulo="Canciones"
               entradas={canciones}
               vacio="Nada en este rango."
+              hrefBase="/escucha/cancion"
             />
             <TopList
               titulo="Álbumes"
               entradas={albumes}
               vacio="Nada en este rango."
+              hrefBase="/escucha/album"
             />
           </section>
 
