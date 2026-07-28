@@ -24,7 +24,7 @@
 
 **Dos desviaciones deliberadas respecto a Voidtify**, ambas justificadas y ambas sin efecto en el almacenamiento físico:
 
-1. **`{ mode: "timestamp_ms" }` para fechas.** Voidtify usa `integer(...)` crudo y maneja números. El código de Untap trabaja con objetos `Date` en todas partes (`normalizeDayKey(l.date)`, `l.date.getTime()`). Con `mode: "timestamp_ms"` Drizzle convierte solo y los 19 archivos puros de `lib/` siguen funcionando sin tocarlos. En disco es el mismo INTEGER epoch en milisegundos.
+1. **`{ mode: "timestamp_ms" }` para fechas.** Voidtify usa `integer(...)` crudo y maneja números. El código de Untap trabaja con objetos `Date` en todas partes (`normalizeDayKey(l.date)`, `l.date.getTime()`). Con `mode: "timestamp_ms"` Drizzle convierte solo y los 18 archivos puros de `lib/` siguen funcionando sin tocarlos. En disco es el mismo INTEGER epoch en milisegundos.
 2. **`{ mode: "boolean" }` para booleanos.** Mismo razonamiento: el código existente espera `true`/`false`. En disco es el mismo INTEGER 0/1.
 
 **No se usa la API relacional de Drizzle** (`db.query.x.findMany({ with: ... })`). Voidtify no la usa y requiere declarar `relations()`. En su lugar, dos `select` y agrupación en JavaScript. Ver Tarea 12 para el patrón exacto y para una trampa importante con `_count`.
@@ -51,7 +51,7 @@
 | `src/modules/core/ui/*` | `Button`, `Card`, `Field`, `Modal`, `PageHeader`, `Stat` |
 | `src/modules/core/shell/*` | `AppShell`, `NavIcons` |
 | `src/modules/habitos/schema.ts` | Las 7 tablas del dominio |
-| `src/modules/habitos/lib/*` | 19 archivos puros + 6 con acceso a datos + 7 de test |
+| `src/modules/habitos/lib/*` | 11 archivos puros + 7 de test + 6 con acceso a datos |
 | `src/modules/habitos/components/*` | Los 33 componentes de dominio |
 | `src/modules/habitos/actions.ts` | Los 18 server actions |
 | `src/modules/habitos/index.ts` | Interfaz pública del módulo |
@@ -871,7 +871,7 @@ git commit -m "test(core): base en memoria para tests"
 Estos 19 archivos no tocan la base. Se mueven sin tocar una línea. Incluye los 7 de test, cuyas expectativas **no deben cambiar** en todo el plan.
 
 **Files:**
-- Move: 19 archivos de `legacy/untap/src/lib/` a `src/modules/habitos/lib/`
+- Move: 18 archivos de `legacy/untap/src/lib/` a `src/modules/habitos/lib/`
 
 - [ ] **Paso 1: Mover**
 
@@ -885,7 +885,7 @@ done
 ls src/modules/habitos/lib | wc -l
 ```
 
-Esperado: `19`.
+Esperado: `18`.
 
 - [ ] **Paso 2: Ejecutar los tests**
 
