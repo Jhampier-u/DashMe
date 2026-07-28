@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -172,7 +173,15 @@ export default async function Portada({
           </section>
 
           {/* ---------------- Rankings ---------------- */}
-          <section className="px-8 py-12 hairline-b grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <section className="px-8 pt-12 pb-4 flex justify-end">
+            <Link
+              href="/escucha/contraste"
+              className="label-mono text-mute hover:text-acid transition-colors"
+            >
+              ¿Y qué cree Spotify? →
+            </Link>
+          </section>
+          <section className="px-8 pb-12 hairline-b grid grid-cols-1 lg:grid-cols-3 gap-10">
             <TopList
               titulo="Artistas"
               entradas={artistas}
