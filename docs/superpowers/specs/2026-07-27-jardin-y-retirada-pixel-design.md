@@ -292,8 +292,12 @@ export function Stat(p: {
   size?: StatSize;   // por defecto "md"
 }): ReactElement;
 
-/** Rejilla que se reparte sola. minmax(150px, 1fr), gap 10. */
-export function StatGrid(p: { children: ReactNode; min?: number }): ReactElement;
+/** Rejilla que se reparte sola. Por defecto minmax(150px, 1fr) y gap 10. */
+export function StatGrid(p: {
+  children: ReactNode;
+  min?: number;
+  gap?: number;
+}): ReactElement;
 ```
 
 `Stat` con `size: "md"` envuelve su contenido en `.m-card` con `padding: "13px
@@ -303,6 +307,18 @@ trío de líneas, como hoy `HabitDetail`, que ya vive dentro de una tarjeta.
 **Condición de la migración: el resultado renderizado debe ser idéntico.** No es
 una ocasión para retocar tamaños ni espaciados. Las tres pantallas afectadas
 —Inicio, el detalle de hábito y Tareas— entran en la verificación de navegador.
+
+### Y `formatDays`, la regla que ha fallado cuatro veces
+
+Al abrir esos tres archivos aparecieron **dos «1 días» más**, en
+`components/tasks/FlowPanel.tsx:94` y `:99`: `medianLifetime` y `oldestOpen`
+valen 1 con cierta frecuencia y salen en plural. Ya se corrigió el mismo fallo
+dos veces a mano, en `MetricTiles` y en `HabitDetail`.
+
+Cuatro apariciones del mismo error dejan claro que es una regla, no un descuido.
+Se añade `formatDays(n)` a `src/lib/day.ts` —que ya contiene `formatDayLabel`—
+con su prueba, y las cuatro llamadas pasan por ella. Vive en `src/lib/` porque
+los `.tsx` no los ve Vitest, y esta regla merece quedar fijada por una prueba.
 
 ## Sección 3 — `Project.color` se retira
 
