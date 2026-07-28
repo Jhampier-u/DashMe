@@ -107,6 +107,20 @@ Los archivos se colocan en `data/import/`. Evita el límite de body de las Serve
 
 Con ~300 000 filas e índices adecuados, SQLite resuelve estas agregaciones en milisegundos. No se construyen rollups ni vistas materializadas hasta que exista un problema medido.
 
+### D10 — `dedup_key` fusiona escuchas del mismo track en el mismo segundo
+
+*(Limitación conocida, medida sobre el dump real. Decisión del usuario: no corregir.)*
+
+`dedup_key` es `ts + ":" + (track_uri ?? track_key)`. Al importar los 277.580 registros de música del dump se insertaron **271.604**: 5.976 colapsaron por clave repetida.
+
+De esos, solo **690 son duplicados auténticos** — mismo track, mismo segundo y **misma** `ms_played`. Los otros **5.286 son escuchas distintas** que comparten segundo y pista, con duraciones diferentes: alguien saltando canciones más rápido que la precisión de un segundo con la que Spotify marca los registros. Ejemplo real: *Feel It Still* tres veces el mismo segundo, con 1,9 s, 2,0 s y 7,2 s.
+
+**Coste:** 5.286 reproducciones (1,9 % del total) y unas 76 horas (1,1 % del tiempo).
+
+**Arreglo, si alguna vez se quiere:** incluir `ms_played` en la clave (`ts:uri:ms`). Distingue las tres versiones del ejemplo, sigue fusionando los 690 duplicados reales, y conserva la idempotencia.
+
+**Por qué no se aplicó:** exige borrar las filas `import` y reimportar. Las claves nuevas no coinciden con las viejas, así que cambiar el formato **sin** reimportar dejaría una mina: la siguiente importación del mismo dump insertaría las 271.604 filas otra vez, duplicando el historial. Código y datos se dejan coherentes.
+
 ### D9 — Los rangos se expresan y filtran en días locales, no en epochs
 
 *(Decisión tomada durante la implementación, tras detectarse el fallo en revisión de código. Sustituye el diseño original de la Task 4.)*
