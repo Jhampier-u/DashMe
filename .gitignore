@@ -22,3 +22,6 @@ data/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Bocetos de las sesiones de brainstorming
+.superpowers/
