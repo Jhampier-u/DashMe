@@ -1,4 +1,6 @@
-import { prisma } from "./prisma";
+import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import { tasks } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
 import {
   lifetimeDays,
@@ -30,10 +32,13 @@ export type TaskRow = {
   completedAt: Date | null;
 };
 
-export async function getTasksGrouped(): Promise<Record<TaskStatus, TaskRow[]>> {
-  const all = await prisma.task.findMany({
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-  });
+export async function getTasksGrouped(
+  db: Db,
+): Promise<Record<TaskStatus, TaskRow[]>> {
+  const all = await db
+    .select()
+    .from(tasks)
+    .orderBy(asc(tasks.order), asc(tasks.createdAt));
   const grouped: Record<TaskStatus, TaskRow[]> = {
     TODO: [],
     IN_PROGRESS: [],
@@ -62,17 +67,17 @@ export type TaskMetrics = {
   oldestOpen: number | null;
 };
 
-export async function getTaskMetrics(): Promise<TaskMetrics> {
+export async function getTaskMetrics(db: Db): Promise<TaskMetrics> {
   const today = dayKey();
   const [done, open] = await Promise.all([
-    prisma.task.findMany({
-      where: { status: "DONE", completedAt: { not: null } },
-      select: { createdAt: true, completedAt: true },
-    }),
-    prisma.task.findMany({
-      where: { status: { not: "DONE" } },
-      select: { createdAt: true },
-    }),
+    db
+      .select({ createdAt: tasks.createdAt, completedAt: tasks.completedAt })
+      .from(tasks)
+      .where(and(eq(tasks.status, "DONE"), isNotNull(tasks.completedAt))),
+    db
+      .select({ createdAt: tasks.createdAt })
+      .from(tasks)
+      .where(ne(tasks.status, "DONE")),
   ]);
 
   const completions = done
