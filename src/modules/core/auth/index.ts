@@ -1,91 +1,10 @@
 import NextAuth from "next-auth";
 import Spotify from "next-auth/providers/spotify";
 
-// Auth.js v5 + Next.js sometimes computes the callback origin as `localhost`
-// during the token exchange even when the request came in via 127.0.0.1.
-// Spotify rejects new apps with localhost redirect URIs, so we patch the
-// outgoing token request body to use 127.0.0.1 — matching what was sent in
-// the authorize step and what's registered in the Spotify dashboard.
-const FETCH_PATCHED = Symbol.for("ledger.spotifyTokenFetchPatched");
-type PatchedGlobal = typeof globalThis & { [FETCH_PATCHED]?: true };
-
-/**
- * Reescribe `localhost` por `127.0.0.1` en el cuerpo del intercambio de token.
- *
- * Spotify exige que el `redirect_uri` del canje sea idéntico al usado al
- * autorizar. Como Auth.js construye el suyo con `localhost` (ver PUBLIC_ORIGIN
- * más abajo) y nosotros autorizamos con la IP de loopback, sin esto el canje
- * falla con `invalid_grant: Invalid redirect URI`.
- *
- * El cuerpo llega como `URLSearchParams`, no como cadena — la versión anterior
- * de este parche solo contemplaba cadenas y por eso nunca llegaba a actuar.
- */
-function rewriteLoopback(body: BodyInit | null | undefined): {
-  body: BodyInit | null | undefined;
-  changed: boolean;
-} {
-  if (typeof body === "string" && body.includes("localhost")) {
-    return { body: body.replaceAll("localhost", "127.0.0.1"), changed: true };
-  }
-  if (body instanceof URLSearchParams) {
-    const texto = body.toString();
-    if (texto.includes("localhost")) {
-      return {
-        body: new URLSearchParams(texto.replaceAll("localhost", "127.0.0.1")),
-        changed: true,
-      };
-    }
-  }
-  return { body, changed: false };
-}
-
-// Guard de idempotencia: sin él, cada recarga de HMR re-evalúa el módulo y
-// envuelve el fetch YA parcheado → wrappers anidados que se acumulan.
-if (!(globalThis as PatchedGlobal)[FETCH_PATCHED]) {
-  const origFetch = globalThis.fetch;
-  globalThis.fetch = async function (
-    input: RequestInfo | URL,
-    init?: RequestInit,
-  ) {
-    const url =
-      typeof input === "string"
-        ? input
-        : input instanceof URL
-          ? input.href
-          : input.url;
-
-    if (url?.includes("accounts.spotify.com/api/token")) {
-      // El cuerpo puede venir en `init` o dentro de un `Request`.
-      if (init?.body != null) {
-        const { body, changed } = rewriteLoopback(init.body);
-        if (changed) init = { ...init, body };
-      } else if (input instanceof Request) {
-        const texto = await input.clone().text();
-        if (texto.includes("localhost")) {
-          const headers = new Headers(input.headers);
-          return origFetch(
-            new Request(input, {
-              body: texto.replaceAll("localhost", "127.0.0.1"),
-              headers,
-            }),
-          );
-        }
-      }
-    }
-
-    return origFetch(input, init);
-  };
-  (globalThis as PatchedGlobal)[FETCH_PATCHED] = true;
-}
-
-// Auth.js v5 beta sobre este fork de Next no consigue derivar el origen de la
-// petición: `parseUrl` cae a su valor por defecto `http://localhost:3000/api/auth`
-// y manda ese `redirect_uri` a Spotify. Ni AUTH_URL, ni NEXTAUTH_URL, ni la
-// cabecera Host lo corrigen (comprobado los tres). Y Spotify rechaza `localhost`
-// en apps nuevas: solo admite la IP de loopback.
-//
-// Se fija explícitamente. `AUTH_URL` puede venir con o sin la ruta base, así que
-// se normaliza a solo el origen.
+// El origen por el que se sirve la aplicación, y el que ve Spotify. Tiene que
+// ser la IP de loopback: Spotify rechaza `localhost` como redirect URI en apps
+// nuevas. `AUTH_URL` puede venir con o sin la ruta base, así que se normaliza a
+// solo el origen.
 const PUBLIC_ORIGIN = (process.env.AUTH_URL ?? "http://127.0.0.1:3000")
   .replace(/\/api\/auth\/?$/, "")
   .replace(/\/$/, "");
@@ -115,8 +34,6 @@ const PUBLIC_ORIGIN = (process.env.AUTH_URL ?? "http://127.0.0.1:3000")
 */
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
-
-const SPOTIFY_REDIRECT_URI = `${PUBLIC_ORIGIN}/api/auth/callback/spotify`;
 
 const SPOTIFY_SCOPES = [
   "user-read-private",
@@ -167,9 +84,10 @@ const nextAuth = NextAuth({
       checks: ["state"],
       authorization: {
         url: "https://accounts.spotify.com/authorize",
-        // `redirect_uri` explícito: sin él Auth.js envía su default con
-        // `localhost`, que Spotify rechaza. Ver PUBLIC_ORIGIN arriba.
-        params: { scope: SPOTIFY_SCOPES, redirect_uri: SPOTIFY_REDIRECT_URI },
+        // Sin `redirect_uri` explícito: Auth.js lo deriva del origen de la
+        // petición, que los manejadores de abajo ya fijan en PUBLIC_ORIGIN.
+        // Ponerlo a mano solo servía cuando ese origen salía mal.
+        params: { scope: SPOTIFY_SCOPES },
       },
       token: "https://accounts.spotify.com/api/token",
       userinfo: "https://api.spotify.com/v1/me",
