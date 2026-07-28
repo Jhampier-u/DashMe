@@ -364,6 +364,26 @@ export default defineConfig({
 });
 ```
 
+- [ ] **Paso 4b: Excluir `legacy/` de TypeScript y ESLint**
+
+Sin esto, `tsc` y `eslint` recorren el código sin migrar de `legacy/` y escupen
+decenas de errores por imports que ya no existen. El criterio de aceptación 4
+("`tsc` y `lint` limpios") sería imposible de cumplir mientras `legacy/` exista.
+
+En `tsconfig.json`:
+
+```json
+"exclude": ["node_modules", "legacy"]
+```
+
+En `eslint.config.mjs`, dentro de `globalIgnores([...])`:
+
+```js
+// Zona de aterrizaje de los repos absorbidos: código todavía sin migrar,
+// se vacía conforme avanzan los sub-proyectos. Desaparece con ella.
+"legacy/**",
+```
+
 - [ ] **Paso 5: Instalar y verificar**
 
 ```bash
