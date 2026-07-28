@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import type { MonthDay } from "@/modules/habitos/lib/habits";
-import { fetchHabitMonth, toggleHabitOnDay } from "@/app/actions";
+import { fetchHabitMonth, toggleHabitOnDay } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 
 const MONTHS = [

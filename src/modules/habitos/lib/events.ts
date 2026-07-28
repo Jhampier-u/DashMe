@@ -11,7 +11,7 @@ import type {
   PlayerSnapshot,
   StatusChangeResult,
   ToggleResult,
-} from "@/app/actions";
+} from "@/modules/habitos/actions";
 import type { QuestCompletion } from "./quests";
 
 export type XpDetail = {

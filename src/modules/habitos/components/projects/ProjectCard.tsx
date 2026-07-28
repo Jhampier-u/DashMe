@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import { deleteProject } from "@/app/actions";
+import { deleteProject } from "@/modules/habitos/actions";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import type { ProjectSummary } from "@/modules/habitos/lib/projects";
 

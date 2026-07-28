@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createProjectItem } from "@/app/actions";
+import { createProjectItem } from "@/modules/habitos/actions";
 import type { ProjectItemNode } from "@/modules/habitos/lib/projects";
 import { Button } from "@/modules/core/ui/Button";
 import { ProjectTreeItem } from "./ProjectTreeItem";

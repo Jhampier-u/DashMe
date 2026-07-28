@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import type { TaskRow, TaskStatus } from "@/modules/habitos/lib/tasks";
-import { updateTaskStatus, deleteTask } from "@/app/actions";
+import { updateTaskStatus, deleteTask } from "@/modules/habitos/actions";
 import { emitStatusChange } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 

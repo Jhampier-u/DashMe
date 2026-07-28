@@ -7,7 +7,7 @@ import {
   updateProjectItemStatus,
   deleteProjectItem,
   renameProjectItem,
-} from "@/app/actions";
+} from "@/modules/habitos/actions";
 import { emitStatusChange } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { Button } from "@/modules/core/ui/Button";

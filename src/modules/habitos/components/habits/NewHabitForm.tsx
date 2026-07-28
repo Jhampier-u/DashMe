@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createHabit } from "@/app/actions";
+import { createHabit } from "@/modules/habitos/actions";
 import { Button } from "@/modules/core/ui/Button";
 import { Field } from "@/modules/core/ui/Field";
 import { DEFAULT_HABIT_COLOR, HABIT_COLORS, habitColorVar } from "@/modules/habitos/lib/color";

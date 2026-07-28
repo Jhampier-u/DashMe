@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { toggleToday } from "@/app/actions";
+import { toggleToday } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { ProgressRing } from "@/modules/habitos/components/charts/ProgressRing";
 import type { PendingHabit } from "@/modules/habitos/lib/home";

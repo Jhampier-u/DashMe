@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchHabitStats } from "@/app/actions";
+import { fetchHabitStats } from "@/modules/habitos/actions";
 import { on } from "@/modules/habitos/lib/events";
 import { formatDays } from "@/modules/habitos/lib/day";
 import { Stat, StatGrid } from "@/modules/core/ui/Stat";

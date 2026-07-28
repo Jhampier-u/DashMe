@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toggleToday, deleteHabit, setHabitAnchor } from "@/app/actions";
+import { toggleToday, deleteHabit, setHabitAnchor } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";

@@ -6,7 +6,7 @@ import { useLocalHour } from "@/modules/habitos/lib/useLocalHour";
 import { isPlantWilted, plantEmoji, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";
 import { formatDays } from "@/modules/habitos/lib/day";
-import { toggleToday } from "@/app/actions";
+import { toggleToday } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useSparkleBurst, SparkleLayer } from "./Sparkle";
 

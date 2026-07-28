@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createProject } from "@/app/actions";
+import { createProject } from "@/modules/habitos/actions";
 import { Button } from "@/modules/core/ui/Button";
 import { Field, TextArea } from "@/modules/core/ui/Field";
 
