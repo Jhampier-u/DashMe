@@ -1,51 +1,55 @@
-import { SectionHeader } from "@/components/SectionHeader";
-import { PageShell } from "@/components/PageShell";
-import { PixelWindow } from "@/components/PixelWindow";
-import { ProjectCard } from "@/components/ProjectCard";
-import { NewProjectForm } from "@/components/NewProjectForm";
-import { listProjects } from "@/lib/projects";
+import { listProjects, getProjectMetrics } from "@/lib/projects";
+import { Card } from "@/components/ui/Card";
+import { ProjectsHeader } from "@/components/projects/ProjectsHeader";
+import { ProjectCard } from "@/components/projects/ProjectCard";
+import { AdvancePanel } from "@/components/projects/AdvancePanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const projects = await listProjects();
+  const [projects, metrics] = await Promise.all([
+    listProjects(),
+    getProjectMetrics(),
+  ]);
 
   return (
-    <PageShell accent="var(--color-lavender)">
-      <SectionHeader
-        title="Proyectos"
-        subtitle="Cada gran misión empieza con una pequeña tarea"
-        emoji="📁"
-        accent="var(--color-lavender)"
-      />
+    <main className="m-root" style={{ minHeight: "100%", padding: "20px 16px 48px" }}>
+      <div
+        style={{
+          maxWidth: 1040,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <ProjectsHeader total={projects.length} />
 
-      {projects.length === 0 ? (
-        <PixelWindow title="Sin proyectos">
-          <div className="text-center py-8">
-            <div className="text-5xl mb-3 untap-bobble inline-block">🚀</div>
-            <p className="text-[var(--color-ink-soft)] text-lg mb-1">
-              Aún no tienes proyectos.
+        {projects.length === 0 ? (
+          <Card style={{ textAlign: "center", padding: 40 }}>
+            <p style={{ fontSize: 15, marginBottom: 6 }}>Aún no tienes proyectos.</p>
+            <p style={{ fontSize: 13, color: "var(--m-ink-2)" }}>
+              Crea el primero para descomponerlo en subtareas anidadas.
             </p>
-            <p className="text-[var(--color-ink-dim)] text-base mb-4">
-              Crea uno para descomponerlo en tareas y subtareas anidadas.
-            </p>
-            <div className="flex justify-center">
-              <NewProjectForm />
+          </Card>
+        ) : (
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gap: 12,
+                alignItems: "start",
+              }}
+            >
+              {projects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
             </div>
-          </div>
-        </PixelWindow>
-      ) : (
-        <>
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} />
-            ))}
-          </section>
-          <div className="flex justify-center">
-            <NewProjectForm />
-          </div>
-        </>
-      )}
-    </PageShell>
+            <AdvancePanel metrics={metrics} />
+          </>
+        )}
+      </div>
+    </main>
   );
 }
