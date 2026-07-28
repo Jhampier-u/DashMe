@@ -1,4 +1,6 @@
-import { prisma } from "./prisma";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
+import type { Db } from "@/modules/core/db";
+import { projects, projectItems } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
 import {
   daysSince,
@@ -61,36 +63,60 @@ export function movementOf(
   return { days: daysSince(last, today), from: "completion" };
 }
 
-export async function listProjects(): Promise<ProjectSummary[]> {
+export async function listProjects(db: Db): Promise<ProjectSummary[]> {
   const today = dayKey();
-  const projects = await prisma.project.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { items: { select: { status: true, completedAt: true } } },
-  });
 
-  return projects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    description: p.description,
-    icon: p.icon,
-    createdAt: p.createdAt,
-    totalItems: p.items.length,
-    doneItems: p.items.filter((i) => i.status === "DONE").length,
-    lastMovement: movementOf(
-      p.items.map((i) => i.completedAt),
-      p.createdAt,
-      today,
-    ),
-  }));
+  // Sin API relacional: una consulta por tabla y agrupación en memoria. Traer
+  // todas las subtareas de golpe evita el N+1 de consultar por proyecto.
+  const [filas, items] = await Promise.all([
+    db.select().from(projects).orderBy(asc(projects.createdAt)),
+    db
+      .select({
+        projectId: projectItems.projectId,
+        status: projectItems.status,
+        completedAt: projectItems.completedAt,
+      })
+      .from(projectItems),
+  ]);
+
+  const itemsPorProyecto = new Map<string, typeof items>();
+  for (const it of items) {
+    const lista = itemsPorProyecto.get(it.projectId);
+    if (lista) lista.push(it);
+    else itemsPorProyecto.set(it.projectId, [it]);
+  }
+
+  return filas.map((p) => {
+    const propios = itemsPorProyecto.get(p.id) ?? [];
+    return {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      icon: p.icon,
+      createdAt: p.createdAt,
+      totalItems: propios.length,
+      doneItems: propios.filter((i) => i.status === "DONE").length,
+      lastMovement: movementOf(
+        propios.map((i) => i.completedAt),
+        p.createdAt,
+        today,
+      ),
+    };
+  });
 }
 
-export async function getProjectWithTree(id: string) {
-  const project = await prisma.project.findUnique({ where: { id } });
+export async function getProjectWithTree(db: Db, id: string) {
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, id))
+    .limit(1);
   if (!project) return null;
-  const items = await prisma.projectItem.findMany({
-    where: { projectId: id },
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-  });
+  const items = await db
+    .select()
+    .from(projectItems)
+    .where(eq(projectItems.projectId, id))
+    .orderBy(asc(projectItems.order), asc(projectItems.createdAt));
 
   // build tree
   const map = new Map<string, ProjectItemNode>();
@@ -153,12 +179,17 @@ export type ProjectMetrics = {
 };
 
 /** Ritmo de avance: subtareas completadas por semana, en todos los proyectos. */
-export async function getProjectMetrics(): Promise<ProjectMetrics> {
+export async function getProjectMetrics(db: Db): Promise<ProjectMetrics> {
   const today = dayKey();
-  const items = await prisma.projectItem.findMany({
-    where: { status: "DONE", completedAt: { not: null } },
-    select: { completedAt: true },
-  });
+  const items = await db
+    .select({ completedAt: projectItems.completedAt })
+    .from(projectItems)
+    .where(
+      and(
+        eq(projectItems.status, "DONE"),
+        isNotNull(projectItems.completedAt),
+      ),
+    );
 
   const completions = items
     .map((i) => i.completedAt)
