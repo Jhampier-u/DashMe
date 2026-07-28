@@ -6,6 +6,8 @@ import { on } from "@/lib/events";
 import type { HabitDetailStats } from "@/lib/stats";
 import { MonthCalendar } from "./MonthCalendar";
 
+const days = (n: number) => (n === 1 ? "1 día" : `${n} días`);
+
 function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
     <div>
@@ -51,8 +53,8 @@ export function HabitDetail({
             gap: 12,
           }}
         >
-          <Stat label="Racha" value={`${stats.currentStreak} días`} hint="actual" />
-          <Stat label="Mejor" value={`${stats.bestStreak} días`} hint="histórica" />
+          <Stat label="Racha" value={days(stats.currentStreak)} hint="actual" />
+          <Stat label="Mejor" value={days(stats.bestStreak)} hint="histórica" />
           <Stat
             label="30 días"
             value={`${Math.round(stats.completionRate30 * 100)}%`}
