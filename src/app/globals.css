@@ -1,82 +1,14 @@
 @import "tailwindcss";
 
 /*
-  Los tokens del sistema pixel-kawaii. Entran aquí y no sustituyen a nada: los
-  `--m-*` de abajo siguen vivos porque tareas, proyectos, jardín y la portada
-  aún los usan. Convivirán hasta que a cada sección le llegue su turno.
+  Los tokens del sistema pixel-kawaii. Es el único sistema visual del proyecto
+  fuera de música, que mantiene el suyo hasta que le llegue su turno.
 */
 @import "../modules/core/ui/tokens.css";
 
 /*
-  Tokens del lenguaje moderno. Es el único sistema visual del proyecto:
-  el sistema pixel que convivía con este se retiro por completo.
-*/
-:root {
-  --m-page: #0f0f13;
-  --m-surface: #17171d;
-  --m-elevated: #1e1e26;
-  --m-line: rgba(255, 255, 255, 0.09);
-
-  --m-ink: #f2f2f5;
-  --m-ink-2: #a8a8b4;
-  /*
-    --m-ink-3, --m-crit y --m-series-strong están fijados por contraste AA
-    (medidos sobre --m-surface): no los "afines" a ojo sin recalcular.
-  */
-  --m-ink-3: #8a8a95;
-
-  --m-series: #3987e5;
-  --m-series-strong: #2a6fc4;
-  --m-track: rgba(255, 255, 255, 0.09);
-
-  --m-good: #0ca30c;
-  --m-warn: #fab219;
-  --m-crit: #e26060;
-  /* Fondo destructivo con texto blanco: 5,27:1. --m-crit es para texto, no
-     llega a contraste como fondo. */
-  --m-crit-strong: #c33a3a;
-
-  /* Los --h-* de identidad de hábito se fueron a tokens.css: ahora los define
-     el sistema pixel. Siguen llamándose igual y siguen valiendo para todo el
-     proyecto. */
-
-  --m-radius: 10px;
-  --m-font: system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-.m-root {
-  font-family: var(--m-font);
-  color: var(--m-ink);
-  background: var(--m-page);
-}
-
-.m-card {
-  background: var(--m-surface);
-  border: 1px solid var(--m-line);
-  border-radius: var(--m-radius);
-  padding: 18px;
-}
-
-.m-label {
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--m-ink-3);
-}
-
-.m-num {
-  font-variant-numeric: tabular-nums;
-}
-
-/*
-  El documento ya es de papel. Las secciones que aún no se han repintado no se
-  rompen: cada una monta su contenido dentro de un `.m-root` —o de
-  `.musica-root`, en el caso de música— que impone su propio fondo oscuro y su
-  propia tinta clara. Es el mismo mecanismo que las protegió mientras se
-  repintaba hábitos, usado ahora al revés.
-
-  Cada vez que una sección se repinte, pierde su escudo y se queda con este
-  fondo. Cuando no quede ninguno, `--m-page` y `--m-ink` se podrán borrar.
+  El fondo del documento. Música se protege de él con `.musica-root`, que impone
+  su propio fondo oscuro; es la última sección que queda por repintar.
 */
 html,
 body {
@@ -84,12 +16,7 @@ body {
   color: var(--color-tinta);
 }
 
-/*
-  Quicksand es ya la familia por defecto del documento. `--m-font` no se borra:
-  `.m-root` lo sigue aplicando, así que las secciones que aún no se han
-  repintado conservan su system-ui y solo cambia lo que queda fuera de ellas
-  (hoy, el armazón de navegación).
-*/
+/* Quicksand es la familia por defecto del documento. */
 body {
   font-family: var(--font-cuerpo);
   font-size: 15px;
