@@ -5,6 +5,17 @@ import { createTask } from "@/modules/habitos/actions";
 import { Button } from "@/modules/core/ui/Button";
 import { Field, TextArea } from "@/modules/core/ui/Field";
 
+/** La superficie de `Card`, a mano: esto es un `<form>` y `Card` es un `<div>`. */
+const SUPERFICIE = {
+  background: "var(--color-paper)",
+  border: "3px solid var(--color-line)",
+  borderRadius: "var(--radius-card)",
+  boxShadow: "var(--shadow-hard)",
+  padding: 18,
+  color: "var(--color-tinta)",
+  fontFamily: "var(--font-cuerpo)",
+} as const;
+
 /**
  * Solo el formulario. Quién decide si está abierto es TasksHeader, porque el
  * botón vive en la cabecera y el formulario debajo, a todo el ancho: metido en
@@ -30,8 +41,7 @@ export function NewTaskForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      className="m-card"
-      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+      style={{ ...SUPERFICIE, display: "flex", flexDirection: "column", gap: 16 }}
     >
       <Field
         label="Título"
