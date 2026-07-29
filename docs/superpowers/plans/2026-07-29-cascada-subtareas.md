@@ -396,7 +396,7 @@ git commit -m "feat(tareas): planCascada decide la cascada sin tocar la base"
 - Modify: `src/modules/habitos/lib/mutations.ts`
 - Modify: `src/modules/habitos/lib/mutations.test.ts`
 
-- [ ] **Paso 1: Escribir los tests**
+- [x] **Paso 1: Escribir los tests**
 
 Añade a `src/modules/habitos/lib/mutations.test.ts`, conservando lo que ya hay.
 Comprueba primero que `updateTaskStatus` esté en la lista de imports del
@@ -495,7 +495,7 @@ describe("updateTaskStatus con cascada", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/mutations.test.ts
@@ -503,7 +503,7 @@ npx vitest run src/modules/habitos/lib/mutations.test.ts
 
 Esperado: **FAIL** en los de cascada; los que ya había siguen pasando.
 
-- [ ] **Paso 3: Reescribir `updateTaskStatus`**
+- [x] **Paso 3: Reescribir `updateTaskStatus`**
 
 Sustituye la función entera en `src/modules/habitos/lib/mutations.ts`:
 
@@ -606,7 +606,7 @@ Y el import, junto a los demás de `./`:
 import { planCascada } from "./cascada";
 ```
 
-- [ ] **Paso 4: `createSubtask`**
+- [x] **Paso 4: `createSubtask`**
 
 `createProjectTask` solo sabe crear dentro de un proyecto. Añade al lado:
 
@@ -659,13 +659,13 @@ export async function crearSubtarea(parentId: string, title: string) {
 }
 ```
 
-- [ ] **Paso 5: Verificar**
+- [x] **Paso 5: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
 ```
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add -A src
