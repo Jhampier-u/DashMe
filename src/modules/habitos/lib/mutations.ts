@@ -214,7 +214,7 @@ async function trySpendShield(
 
 export type ToggleResult = {
   ok: boolean;
-  reason: "ok" | "not-found" | "not-scheduled" | "out-of-range";
+  reason: "ok" | "not-found" | "not-scheduled" | "out-of-range" | "no-target";
   done: boolean;
   partial: boolean;
   xpDelta: number;
@@ -390,6 +390,103 @@ async function currentStreakOf(
   return computeStreak(schedule, keys, today);
 }
 
+/**
+ * El día ya estaba registrado y solo se movió el número: ni XP, ni escudo, ni
+ * hito.
+ *
+ * Pasar por `toggleHabitDay` aquí sería peor que inútil. Desmarcar y volver a
+ * marcar puede GASTAR UN ESCUDO o disparar un aviso de hito que el usuario no ha
+ * vuelto a ganar, y todo para dejar el XP donde ya estaba.
+ */
+async function soloContador(db: Db, partial: boolean): Promise<ToggleResult> {
+  return {
+    ok: true,
+    reason: "ok",
+    done: true,
+    partial,
+    xpDelta: 0,
+    leveledUp: false,
+    player: await playerSnapshot(db),
+    shieldUsed: false,
+    anchorTriggered: false,
+    milestone: null,
+    questsCompleted: [],
+  };
+}
+
+/**
+ * Apunta la cantidad de hoy en un hábito de cantidad.
+ *
+ * Reusa `toggleHabitDay` en lo que puede —el XP, el ancla, los hitos y los
+ * escudos ya están resueltos ahí— y solo añade la columna `count` y el `partial`
+ * derivado. Escribir una segunda ruta de XP en paralelo sería la forma más
+ * rápida de que las dos dejaran de cuadrar.
+ *
+ * Cantidad 0 es desmarcar.
+ */
+export async function setHabitCount(
+  db: Db,
+  habitId: string,
+  count: number,
+): Promise<ToggleResult> {
+  const [habit] = await db
+    .select()
+    .from(habitsTable)
+    .where(eq(habitsTable.id, habitId))
+    .limit(1);
+  if (!habit) return emptyToggle(db, "not-found");
+  // Sin objetivo no se apunta cantidad: ese hábito va por su botón de siempre.
+  if (habit.targetCount === null) return emptyToggle(db, "no-target");
+
+  const n = Math.max(0, Math.floor(count));
+  const hoy = dayKey();
+  const [existente] = await db
+    .select()
+    .from(habitLogs)
+    .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, hoy)))
+    .limit(1);
+
+  if (n === 0) {
+    if (!existente) return emptyToggle(db, "ok");
+    // Desmarcar es exactamente lo que hace `toggleHabitDay` sobre un día ya
+    // registrado: devuelve el XP que concedió y borra la fila.
+    return toggleHabitDay(db, habitId, hoy, false);
+  }
+
+  const partialAhora = n < habit.targetCount;
+
+  // Mismo tramo: solo el número. El XP ya está bien y volver a pasar por
+  // `toggleHabitDay` lo movería sin motivo.
+  if (existente && !!existente.partial === partialAhora) {
+    await db
+      .update(habitLogs)
+      .set({ count: n })
+      .where(eq(habitLogs.id, existente.id));
+    return soloContador(db, partialAhora);
+  }
+
+  // Cambia de tramo: se pasa por la ruta de siempre, que ajusta el XP.
+  if (existente) await toggleHabitDay(db, habitId, hoy, false);
+  const r = await toggleHabitDay(db, habitId, hoy, partialAhora);
+  await db
+    .update(habitLogs)
+    .set({ count: n })
+    .where(and(eq(habitLogs.habitId, habitId), eq(habitLogs.date, hoy)));
+  return r;
+}
+
+export async function updateHabitTarget(
+  db: Db,
+  habitId: string,
+  targetCount: number | null,
+) {
+  if (!habitId) return;
+  await db
+    .update(habitsTable)
+    .set({ targetCount })
+    .where(eq(habitsTable.id, habitId));
+}
+
 export async function toggleToday(
   db: Db,
   habitId: string,
@@ -415,6 +512,14 @@ export async function createHabit(db: Db, formData: FormData) {
   if (!name) return;
 
   const icon = text(formData.get("icon"), LIMITS.habitIcon) ?? "⭐";
+  /*
+    Vacío significa «este hábito no se cuenta», que es lo que son casi todos. Se
+    fuerza a un entero de al menos 1: un objetivo de 0 sería un hábito imposible
+    de dejar sin completar, y uno decimal no se puede ir sumando de uno en uno.
+  */
+  const objetivoBruto = String(formData.get("targetCount") ?? "").trim();
+  const targetCount =
+    objetivoBruto === "" ? null : Math.max(1, Math.floor(Number(objetivoBruto) || 1));
   const color = oneOf<HabitColor>(
     formData.get("color"),
     HABIT_COLOR_KEYS,
@@ -448,6 +553,7 @@ export async function createHabit(db: Db, formData: FormData) {
     schedule,
     intention,
     isAnchor,
+    targetCount,
     createdAt: new Date(),
   });
 

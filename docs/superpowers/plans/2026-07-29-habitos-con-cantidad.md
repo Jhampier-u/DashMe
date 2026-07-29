@@ -552,7 +552,7 @@ git commit -m "refactor(habitos): los cinco calculos de racha pasan por la misma
 - Modify: `src/modules/habitos/lib/mutations.test.ts`
 - Modify: `src/modules/habitos/actions.ts`
 
-- [ ] **Paso 1: Los tests**
+- [x] **Paso 1: Los tests**
 
 Añade a `mutations.test.ts`:
 
@@ -625,13 +625,13 @@ describe("hábitos con cantidad", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/mutations.test.ts
 ```
 
-- [ ] **Paso 3: `setHabitCount`**
+- [x] **Paso 3: `setHabitCount`**
 
 ```ts
 /**
@@ -756,7 +756,7 @@ export async function updateHabitTarget(
 }
 ```
 
-- [ ] **Paso 4: Los server actions**
+- [x] **Paso 4: Los server actions**
 
 ```ts
 export async function apuntarCantidad(habitId: string, count: number) {
@@ -774,13 +774,13 @@ export async function cambiarObjetivoHabito(
 }
 ```
 
-- [ ] **Paso 5: Verificar**
+- [x] **Paso 5: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
 ```
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add -A src
