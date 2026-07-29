@@ -2344,6 +2344,28 @@ git commit -m "feat(tareas): punto de prioridad, subrayado de categoria y filtro
 
 ---
 
+### Tarea 5b: La integridad que el motor no vigila
+
+Añadida durante la ejecución. El spec ya avisaba de que en la base puesta al
+día las tres foráneas nuevas no las vigila SQLite —no admite `ALTER TABLE ADD
+COLUMN` con referencia— y de que ahí «la integridad la sostiene el código». Al
+llegar a la verificación, el código no la sostenía: solo confiaba en el
+esquema, que en esa base no existe.
+
+El caso grave era borrar una tarea con subtareas. `getTasksGrouped` se salta
+toda tarea con padre, así que un hijo con el `parent_id` colgando no salía en
+el tablero NI debajo de nadie: **desaparecía de la vista sin que nadie lo
+hubiera borrado**.
+
+- [x] `deleteTaskById` baja por el árbol y borra los descendientes
+- [x] `deleteProject` pone `projectId` a null antes de borrar
+- [x] `deleteCategoria` pone `categoryId` a null antes de borrar
+- [x] `integridad.test.ts`, que corre contra una base con la forma de la real
+      —esquema auténtico y `tasks` rehecha sin foráneas— porque contra
+      `createTestDb()` estos tests pasarían sin que el código hiciera nada
+
+---
+
 ### Tarea 6: Verificación final
 
 - [ ] **Paso 1: Los cuatro comandos**

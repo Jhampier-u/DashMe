@@ -112,11 +112,19 @@ export async function setCategoriaColor(db: Db, id: string, color: string) {
 }
 
 /**
- * Borra la categoría. Sus tareas SOBREVIVEN y se quedan sin categoría: lo
- * garantiza el `ON DELETE SET NULL` del esquema. Borrar una etiqueta no puede
- * llevarse trabajo por delante.
+ * Borra la categoría. Sus tareas SOBREVIVEN y se quedan sin categoría: borrar
+ * una etiqueta no puede llevarse trabajo por delante.
+ *
+ * El `categoryId = null` va explícito y no se confía al `ON DELETE SET NULL`
+ * del esquema. En una base creada de cero la foránea existe y bastaría; en la
+ * del usuario NO, porque sus columnas se añadieron con `ALTER TABLE` y SQLite
+ * no admite añadir una columna con referencia. Ahí el motor no vigila nada.
  */
 export async function deleteCategoria(db: Db, id: string) {
   if (!id) return;
+  await db
+    .update(tasks)
+    .set({ categoryId: null })
+    .where(eq(tasks.categoryId, id));
   await db.delete(taskCategories).where(eq(taskCategories.id, id));
 }

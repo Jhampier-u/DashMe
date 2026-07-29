@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, isNull, lt, sql } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import {
   habits as habitsTable,
@@ -606,10 +606,41 @@ export async function updateTaskStatus(
   };
 }
 
-/** Borra por id. Sus subtareas caen con ella por la foránea en cascada. */
+/**
+ * Borra una tarea y TODO lo que cuelga de ella.
+ *
+ * El descenso se hace aquí y no se deja en manos del `ON DELETE CASCADE` del
+ * esquema. En una base creada de cero la foránea existe y bastaría, pero en la
+ * del usuario NO: sus columnas se añadieron con `ALTER TABLE`, y SQLite no
+ * admite añadir una columna con referencia. Ahí el motor no vigila nada.
+ *
+ * Y no es un detalle cosmético. `getTasksGrouped` se salta toda tarea que tenga
+ * padre, porque las subtareas no son tarjetas del tablero. Un hijo que se
+ * quedara con un `parent_id` apuntando a un padre borrado no saldría en el
+ * tablero NI debajo de nadie: desaparecería de la vista sin que nadie lo
+ * hubiera borrado.
+ */
 export async function deleteTaskById(db: Db, id: string) {
   if (!id) return;
-  await db.delete(tasks).where(eq(tasks.id, id));
+
+  // Se baja por niveles en memoria en vez de con un CTE recursivo: son cuatro
+  // líneas, no depende del dialecto y se puede leer de un vistazo.
+  const todas = await db
+    .select({ id: tasks.id, parentId: tasks.parentId })
+    .from(tasks);
+  const aBorrar = new Set([id]);
+  let creció = true;
+  while (creció) {
+    creció = false;
+    for (const t of todas) {
+      if (t.parentId && aBorrar.has(t.parentId) && !aBorrar.has(t.id)) {
+        aBorrar.add(t.id);
+        creció = true;
+      }
+    }
+  }
+
+  await db.delete(tasks).where(inArray(tasks.id, [...aBorrar]));
   const quests = await syncDailyQuests(db);
   await grantXp(db, quests.xpDelta);
 }
@@ -634,9 +665,26 @@ export async function createProject(db: Db, formData: FormData) {
   });
 }
 
+/**
+ * Borra el proyecto y suelta sus tareas, que SOBREVIVEN.
+ *
+ * Antes de unificar, borrar un proyecto se llevaba por delante sus elementos.
+ * Ya no: una tarea es una cosa de primera clase y borrar el contenedor no debe
+ * borrar el trabajo.
+ *
+ * El `projectId = null` se hace explícito y no se confía al `ON DELETE SET
+ * NULL` del esquema, por la misma razón que en `deleteTaskById`: en la base del
+ * usuario esa foránea no existe. Sin esto, sus tareas se quedarían apuntando a
+ * un proyecto fantasma —fuera de `/proyectos` y diciendo pertenecer a algo que
+ * ya no está—.
+ */
 export async function deleteProject(db: Db, formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+  await db
+    .update(tasks)
+    .set({ projectId: null, updatedAt: new Date() })
+    .where(eq(tasks.projectId, id));
   await db.delete(projects).where(eq(projects.id, id));
   const quests = await syncDailyQuests(db);
   await grantXp(db, quests.xpDelta);
