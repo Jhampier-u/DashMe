@@ -545,7 +545,7 @@ export default function PlaylistTracksTable({
               onClick={() => setShowOnlyDups((v) => !v)}
               className={`label-mono px-3 py-1.5 ring-1 transition-all ${
                 showOnlyDups
-                  ? "bg-cream text-ink ring-cream"
+                  ? "bg-cream text-paper ring-cream"
                   : "ring-rule text-cream hover:ring-cream"
               }`}
             >
@@ -559,7 +559,7 @@ export default function PlaylistTracksTable({
                 title={
                   !fullyLoaded ? "Carga todas las canciones primero" : undefined
                 }
-                className="label-mono px-3 py-1.5 bg-acid text-ink hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="label-mono px-3 py-1.5 bg-acid text-tinta hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Limpiar →
               </button>
@@ -669,7 +669,7 @@ export default function PlaylistTracksTable({
               type="button"
               onClick={() => loadMore(true)}
               disabled={loadingMore || loadingAll}
-              className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span className="label-mono">
                 {loadingAll ? "Cargando todo…" : `Cargar todas (${remaining})`}
@@ -833,7 +833,7 @@ function GenreFilter({
               type="button"
               onClick={onAnalyze}
               disabled={analyzing || artistCount === 0}
-              className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group inline-flex items-center gap-2 bg-acid text-tinta px-3 py-1.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span className="label-mono">
                 {analyzing ? "Analizando…" : "Analizar géneros"}
@@ -901,7 +901,7 @@ function GenreFilter({
                   onClick={() => onToggle(genre)}
                   className={`label-mono inline-flex items-center gap-1.5 px-2.5 py-1 ring-1 transition-all normal-case tracking-normal ${
                     active
-                      ? "bg-acid text-ink ring-acid"
+                      ? "bg-acid text-tinta ring-acid"
                       : "ring-rule text-cream hover:ring-cream-dim"
                   }`}
                 >
@@ -961,7 +961,7 @@ function ActionButton({
       disabled={disabled}
       className={`label-mono px-3 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
         highlight
-          ? "bg-acid text-ink hover:bg-cream"
+          ? "bg-acid text-tinta hover:bg-tinta hover:text-paper"
           : "ring-1 ring-rule text-cream hover:ring-cream"
       }`}
     >
@@ -1053,7 +1053,7 @@ function TrackRow({
         }`}
       >
         {selected && (
-          <span className="text-ink text-[10px] leading-none font-bold">✓</span>
+          <span className="text-tinta text-[10px] leading-none font-bold">✓</span>
         )}
       </button>
       <span className="label-mono num-tabular text-mute group-hover:text-acid transition-colors">

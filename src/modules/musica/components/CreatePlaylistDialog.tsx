@@ -35,7 +35,7 @@ export default function CreatePlaylistButton({
         onClick={() => setOpen(true)}
         className={
           variant === "primary"
-            ? "group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors"
+            ? "group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors"
             : "group inline-flex items-center gap-2 ring-1 ring-rule px-4 py-2 hover:ring-cream transition-colors"
         }
       >
@@ -143,7 +143,7 @@ function Dialog({
             <button
               type="button"
               onClick={onClose}
-              className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors"
+              className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors"
             >
               <span className="label-mono">Seguir aquí</span>
               <span className="font-mono text-sm group-hover:translate-x-1 transition-transform">
@@ -265,7 +265,7 @@ function Dialog({
           <button
             type="submit"
             disabled={pending || !name.trim()}
-            className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="label-mono">
               {pending

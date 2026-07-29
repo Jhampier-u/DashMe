@@ -232,7 +232,7 @@ export default function StatsScanner({ total }: { total: number }) {
               <button
                 onClick={startScan}
                 disabled={total === 0}
-                className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="label-mono">
                   {tracks.length > 0
@@ -316,7 +316,7 @@ export default function StatsScanner({ total }: { total: number }) {
             {!genreMap && !analyzingGenres && (
               <button
                 onClick={analyzeGenres}
-                className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors"
+                className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors"
               >
                 <span className="label-mono">Analizar géneros</span>
                 <span className="font-mono text-sm group-hover:rotate-180 transition-transform duration-500">

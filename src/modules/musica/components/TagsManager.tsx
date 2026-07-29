@@ -91,7 +91,7 @@ export default function TagsManager({ initial }: { initial: Tag[] }) {
         {!creating ? (
           <button
             onClick={() => setCreating(true)}
-            className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors"
+            className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors"
           >
             <span className="label-mono">Nuevo tag</span>
             <span className="font-mono text-sm group-hover:rotate-90 transition-transform duration-300">

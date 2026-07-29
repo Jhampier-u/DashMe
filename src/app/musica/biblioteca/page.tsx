@@ -92,7 +92,7 @@ function LoginScreen() {
           >
             <button
               type="submit"
-              className="group inline-flex items-center gap-4 bg-acid text-ink px-7 py-4 hover:bg-cream transition-colors duration-300"
+              className="group inline-flex items-center gap-4 bg-acid text-tinta px-7 py-4 hover:bg-tinta hover:text-paper transition-colors duration-300"
             >
               <span className="label-mono">Entrar con Spotify</span>
               <span className="font-mono text-sm transition-transform duration-300 group-hover:translate-x-1">
@@ -319,7 +319,7 @@ function Featured({ playlist }: { playlist: SpotifyPlaylist }) {
           <div className="mt-8 flex gap-3 flex-wrap">
             <Link
               href={`/musica/playlist/${playlist.id}`}
-              className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-3 hover:bg-cream transition-colors"
+              className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-3 hover:bg-tinta hover:text-paper transition-colors"
             >
               <span className="label-mono">Abrir índice</span>
               <span className="font-mono text-sm group-hover:translate-x-1 transition-transform">
@@ -383,7 +383,7 @@ function FilterChips({
             href={href}
             className={`label-mono inline-flex items-center gap-2 px-3 py-1.5 ring-1 transition-all ${
               active
-                ? "bg-acid text-ink ring-acid"
+                ? "bg-acid text-tinta ring-acid"
                 : "ring-rule text-mute hover:ring-cream hover:text-cream"
             }`}
           >

@@ -172,7 +172,7 @@ function Dialog({
                       }`}
                     >
                       {isSel && (
-                        <span className="text-ink text-[10px] leading-none font-bold">
+                        <span className="text-tinta text-[10px] leading-none font-bold">
                           ✓
                         </span>
                       )}
@@ -261,7 +261,7 @@ function Dialog({
           <button
             type="submit"
             disabled={pending || selected.size < 2 || !name.trim()}
-            className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="label-mono">
               {pending

@@ -179,7 +179,7 @@ export default function TagPicker({
                 type="button"
                 onClick={handleCreate}
                 disabled={pending}
-                className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40"
+                className="group inline-flex items-center gap-2 bg-acid text-tinta px-3 py-1.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40"
               >
                 <span className="label-mono">Crear &quot;{search.trim()}&quot;</span>
                 <span className="font-mono text-sm">+</span>
@@ -228,7 +228,7 @@ export default function TagPicker({
                     }}
                   >
                     {state === "all" && (
-                      <span className="text-ink text-[10px] leading-none font-bold">
+                      <span className="text-tinta text-[10px] leading-none font-bold">
                         ✓
                       </span>
                     )}

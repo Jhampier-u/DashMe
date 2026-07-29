@@ -76,7 +76,7 @@ export default function SmartPlaylistsManager({
             setCreating(true);
             setEditing(null);
           }}
-          className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors"
+          className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors"
         >
           <span className="label-mono">Nueva regla</span>
           <span className="font-mono text-sm group-hover:rotate-90 transition-transform duration-300">
@@ -151,7 +151,7 @@ export default function SmartPlaylistsManager({
                 <button
                   onClick={() => handleMaterialize(sp)}
                   disabled={pending}
-                  className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40"
+                  className="group inline-flex items-center gap-2 bg-acid text-tinta px-3 py-1.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40"
                   title="Sincronizar con Spotify ahora"
                 >
                   <span className="label-mono">
@@ -465,7 +465,7 @@ function Editor({
           type="button"
           onClick={submit}
           disabled={pending || !name.trim()}
-          className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40"
+          className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40"
         >
           <span className="label-mono">
             {pending ? "Guardando…" : initial ? "Guardar cambios" : "Crear regla"}

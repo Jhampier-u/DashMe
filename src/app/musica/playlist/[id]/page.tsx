@@ -267,7 +267,7 @@ function DetailHeader({
               href={playlist.external_urls.spotify}
               target="_blank"
               rel="noreferrer"
-              className="group inline-flex items-center gap-3 mt-10 ring-1 ring-rule px-5 py-3 hover:bg-acid hover:text-ink hover:ring-acid transition-all"
+              className="group inline-flex items-center gap-3 mt-10 ring-1 ring-rule px-5 py-3 hover:bg-acid hover:text-tinta hover:ring-acid transition-all"
             >
               <span className="label-mono">Abrir en Spotify</span>
               <span className="font-mono text-sm transition-transform duration-300 group-hover:translate-x-1">
