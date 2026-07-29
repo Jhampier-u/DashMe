@@ -239,3 +239,78 @@ export async function getTaskMetrics(db: Db): Promise<TaskMetrics> {
     oldestOpen: oldestOpenDays(open.map((t) => t.createdAt), today),
   };
 }
+
+export type TaskDetalle = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  categoryId: string | null;
+  priority: Prioridad | null;
+  projectId: string | null;
+  createdAt: Date;
+  completedAt: Date | null;
+  /** Sus descendientes, anidados. */
+  arbol: TaskTreeNode<NodoArbol>[];
+};
+
+/** La tarea del detalle, con su rama del árbol. `null` si no existe. */
+export async function getTask(db: Db, id: string): Promise<TaskDetalle | null> {
+  const all = await db
+    .select()
+    .from(tasks)
+    .orderBy(asc(tasks.order), asc(tasks.createdAt));
+  const propia = all.find((t) => t.id === id);
+  if (!propia) return null;
+
+  /*
+    UN solo camino y no dos. Se recogen los descendientes de esta tarea y se
+    reanidan tratando a sus hijos directos como raíces.
+
+    La alternativa —montar el árbol global y buscar el trozo— falla justo cuando
+    la tarea es ella misma una subtarea: entonces no es raíz del árbol global y
+    no está en el mapa. Dos caminos, y el segundo es el que se olvida de probar.
+  */
+  const hijosDirectos = new Set(
+    all.filter((t) => t.parentId === id).map((t) => t.id),
+  );
+  const dentro = new Set(hijosDirectos);
+  const cola = [...hijosDirectos];
+  while (cola.length > 0) {
+    const actual = cola.pop()!;
+    for (const t of all) {
+      if (t.parentId === actual && !dentro.has(t.id)) {
+        dentro.add(t.id);
+        cola.push(t.id);
+      }
+    }
+  }
+
+  const arbol = buildTaskTree(
+    all
+      .filter((t) => dentro.has(t.id))
+      .map((t) => ({
+        id: t.id,
+        // Los hijos directos pasan a raíces de ESTA rama.
+        parentId: hijosDirectos.has(t.id) ? null : t.parentId,
+        title: t.title,
+        status: (t.status as TaskStatus) ?? "TODO",
+        order: t.order,
+        createdAt: t.createdAt,
+        completedAt: t.completedAt,
+      })),
+  );
+
+  return {
+    id: propia.id,
+    title: propia.title,
+    description: propia.description,
+    status: (propia.status as TaskStatus) ?? "TODO",
+    categoryId: propia.categoryId,
+    priority: resolvePrioridad(propia.priority),
+    projectId: propia.projectId,
+    createdAt: propia.createdAt,
+    completedAt: propia.completedAt,
+    arbol,
+  };
+}

@@ -7,6 +7,7 @@ import {
   FLOW_WEEKS,
   buildTaskTree,
   parseTaskFilter,
+  getTask,
 } from "./tasks";
 
 const T0 = new Date("2026-07-01T12:00:00Z");
@@ -286,5 +287,54 @@ describe("getTasksGrouped trae el árbol de cada raíz", () => {
     await db.insert(tasks).values({ ...base, id: "sola" });
     const g = await getTasksGrouped(db);
     expect(g.TODO[0].arbol).toEqual([]);
+  });
+});
+
+describe("getTask", () => {
+  const base = { title: "x", status: "TODO", order: 1, createdAt: T0, updatedAt: T0 };
+
+  it("devuelve null si no existe", async () => {
+    expect(await getTask(createTestDb(), "fantasma")).toBeNull();
+  });
+
+  it("trae la rama de una raíz", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([
+      { ...base, id: "p" },
+      { ...base, id: "h", parentId: "p" },
+      { ...base, id: "n", parentId: "h" },
+    ]);
+    const t = await getTask(db, "p");
+    expect(t!.arbol[0].id).toBe("h");
+    expect(t!.arbol[0].children[0].id).toBe("n");
+  });
+
+  /*
+    El caso que rompía un diseño de dos caminos: una SUBTAREA no es raíz del
+    árbol global, así que buscarla en el mapa de raíces no la encontraba y su
+    detalle habría salido sin subtareas.
+  */
+  it("trae la rama de una subtarea, que no es raíz del árbol global", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([
+      { ...base, id: "p" },
+      { ...base, id: "h", parentId: "p" },
+      { ...base, id: "n", parentId: "h" },
+    ]);
+    const t = await getTask(db, "h");
+    expect(t!.arbol).toHaveLength(1);
+    expect(t!.arbol[0].id).toBe("n");
+  });
+
+  it("una hoja trae el árbol vacío", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values({ ...base, id: "sola" });
+    expect((await getTask(db, "sola"))!.arbol).toEqual([]);
+  });
+
+  it("trae la prioridad resuelta y no el texto crudo", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values({ ...base, id: "t", priority: "CRITICAL" });
+    expect((await getTask(db, "t"))!.priority).toBeNull();
   });
 });

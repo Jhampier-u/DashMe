@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import type { TaskRow, TaskStatus } from "@/modules/habitos/lib/tasks";
 import { updateTaskStatus, deleteTask } from "@/modules/habitos/actions";
 import { emitStatusChange } from "@/modules/habitos/lib/events";
@@ -90,10 +91,14 @@ export function TaskCard({
           {/* Lo hecho se tacha en vez de apagarse de color: sobre papel, bajar
               el tono se come el contraste, y el tachado se ve sin distinguir
               tonos. */}
-          <div
+          {/* El título es el enlace al detalle: es donde se edita todo y donde
+              viven los adjuntos. */}
+          <Link
+            href={`/tareas/${task.id}`}
             style={{
               fontSize: 13.5,
               fontWeight: 700,
+              color: "var(--color-tinta)",
               textDecoration: done ? "line-through" : "none",
               // El subrayado de categoría es un BORDE y no `text-decoration`,
               // que ya la usa el tachado. Las dos cosas no caben en la misma
@@ -107,7 +112,7 @@ export function TaskCard({
             }}
           >
             {task.title}
-          </div>
+          </Link>
           {categoria ? (
             <div style={{ fontSize: 11, marginTop: 3 }}>{categoria.name}</div>
           ) : null}

@@ -163,6 +163,30 @@ export async function borrarCategoria(id: string) {
   refresh();
 }
 
+export async function cambiarDescripcionTarea(
+  taskId: string,
+  description: string,
+) {
+  await m.updateTaskDescription(db, taskId, description);
+  refresh();
+}
+
+export async function cambiarCategoriaTarea(
+  taskId: string,
+  categoryId: string | null,
+) {
+  await m.updateTaskCategory(db, taskId, categoryId);
+  refresh();
+}
+
+export async function cambiarPrioridadTarea(
+  taskId: string,
+  priority: string | null,
+) {
+  await m.updateTaskPriority(db, taskId, priority);
+  refresh();
+}
+
 // ---------- ADJUNTOS ----------
 
 export async function anadirEnlace(taskId: string, name: string, url: string) {

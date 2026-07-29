@@ -38,6 +38,7 @@ export {
 export { getTasksGrouped, getTaskMetrics, STATUS_LABEL } from "./lib/tasks";
 export { listCategorias, type Categoria } from "./lib/categorias";
 export { listAttachments, type Adjunto } from "./lib/adjuntos";
+export { getTask, type TaskDetalle } from "./lib/tasks";
 export {
   PRIORIDADES,
   PRIORIDAD_DEFS,

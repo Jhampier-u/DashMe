@@ -1117,7 +1117,7 @@ git commit -m "feat(tareas): la ruta de descarga solo acepta ids"
 - Modify: `src/modules/habitos/components/tasks/TaskCard.tsx`
 - Modify: `src/modules/habitos/lib/mutations.ts`
 
-- [ ] **Paso 1: La lectura**
+- [x] **Paso 1: La lectura**
 
 En `src/modules/habitos/lib/tasks.ts`:
 
@@ -1251,7 +1251,7 @@ Expórtala en `index.ts`:
 export { getTask, type TaskDetalle } from "./lib/tasks";
 ```
 
-- [ ] **Paso 2: Editar el título y la descripción**
+- [x] **Paso 2: Editar el título y la descripción**
 
 En `mutations.ts`, junto a `renameTask`:
 
@@ -1301,7 +1301,7 @@ export async function updateTaskPriority(
 
 Y sus tres envoltorios en `actions.ts`, con `refresh()`.
 
-- [ ] **Paso 3: La lista de adjuntos**
+- [x] **Paso 3: La lista de adjuntos**
 
 `src/modules/habitos/components/tasks/AttachmentList.tsx`:
 
@@ -1464,7 +1464,7 @@ export function AttachmentList({
 }
 ```
 
-- [ ] **Paso 4: La página**
+- [x] **Paso 4: La página**
 
 `src/app/tareas/[id]/page.tsx`: monta `PageHeader` con el título, el selector de
 estado, el de categoría y el de prioridad, la descripción, `TaskTree` con
@@ -1514,7 +1514,7 @@ export default async function TaskPage({
 }
 ```
 
-- [ ] **Paso 4b: `TaskDetail`**
+- [x] **Paso 4b: `TaskDetail`**
 
 `src/modules/habitos/components/tasks/TaskDetail.tsx`:
 
@@ -1763,18 +1763,18 @@ export function TaskDetail({
 > `Card` acepta `children` y un `style` opcional. Si su firma no encaja, mírala
 > en `src/modules/core/ui/Card.tsx` antes de inventar otra superficie.
 
-- [ ] **Paso 5: La tarjeta enlaza al detalle**
+- [x] **Paso 5: La tarjeta enlaza al detalle**
 
 En `TaskCard.tsx`, el título pasa a ser un `Link` a `/tareas/${task.id}`,
 conservando el subrayado de categoría y el tachado.
 
-- [ ] **Paso 6: Verificar**
+- [x] **Paso 6: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 7: Commit**
+- [x] **Paso 7: Commit**
 
 ```bash
 git add -A src

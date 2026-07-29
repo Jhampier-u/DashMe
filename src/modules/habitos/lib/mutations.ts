@@ -822,6 +822,45 @@ export async function createSubtask(db: Db, parentId: string, title: string) {
   });
 }
 
+export async function updateTaskDescription(
+  db: Db,
+  taskId: string,
+  description: string,
+) {
+  if (!taskId) return;
+  await db
+    .update(tasks)
+    .set({
+      description: text(description, LIMITS.taskDescription),
+      updatedAt: new Date(),
+    })
+    .where(eq(tasks.id, taskId));
+}
+
+export async function updateTaskCategory(
+  db: Db,
+  taskId: string,
+  categoryId: string | null,
+) {
+  if (!taskId) return;
+  await db
+    .update(tasks)
+    .set({ categoryId, updatedAt: new Date() })
+    .where(eq(tasks.id, taskId));
+}
+
+export async function updateTaskPriority(
+  db: Db,
+  taskId: string,
+  priority: string | null,
+) {
+  if (!taskId) return;
+  await db
+    .update(tasks)
+    .set({ priority: resolvePrioridad(priority), updatedAt: new Date() })
+    .where(eq(tasks.id, taskId));
+}
+
 export async function renameTask(db: Db, taskId: string, newTitle: string) {
   const t = newTitle.trim().slice(0, LIMITS.taskTitle);
   if (!taskId || !t) return;
