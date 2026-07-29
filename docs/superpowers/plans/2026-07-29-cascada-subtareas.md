@@ -55,7 +55,7 @@ es un bucle infinito en el proceso del servidor, no un test en rojo.
 - Create: `src/modules/habitos/lib/cascada.ts`
 - Create: `src/modules/habitos/lib/cascada.test.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/cascada.test.ts`:
 
@@ -245,7 +245,7 @@ describe("el plan dice de dónde viene cada cambio", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
@@ -254,7 +254,7 @@ npx vitest run src/modules/habitos/lib/cascada.test.ts
 
 Esperado: **FAIL**, `Cannot find module './cascada'`.
 
-- [ ] **Paso 3: Escribir la función**
+- [x] **Paso 3: Escribir la función**
 
 `src/modules/habitos/lib/cascada.ts`:
 
@@ -373,7 +373,7 @@ function estadoPorHijos(hijos: TaskStatus[]): TaskStatus {
 }
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/cascada.test.ts && npx tsc --noEmit
@@ -381,7 +381,7 @@ npx vitest run src/modules/habitos/lib/cascada.test.ts && npx tsc --noEmit
 
 Esperado: **PASS**, 20 afirmaciones.
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add src/modules/habitos/lib/cascada.ts src/modules/habitos/lib/cascada.test.ts
