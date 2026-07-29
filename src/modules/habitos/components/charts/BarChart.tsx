@@ -42,7 +42,7 @@ export function BarChart({
           alignItems: "flex-end",
           gap: 3,
           height,
-          borderBottom: "1px solid var(--m-line)",
+          borderBottom: "3px solid var(--color-line)",
         }}
         onMouseLeave={() => setHover(null)}
       >
@@ -63,9 +63,13 @@ export function BarChart({
                 width: "100%",
                 height: max === 0 ? 0 : `${(value / max) * 100}%`,
                 minHeight: value > 0 ? 2 : 0,
-                background:
-                  hover === i ? "var(--m-series)" : "rgba(57, 135, 229, 0.55)",
-                borderRadius: "3px 3px 0 0",
+                // Relleno en pastel, contorno en tinta: la barra es superficie
+                // y el borde es lo que la hace del sistema. Bajo el ratón se
+                // invierte a tinta maciza, que no deja duda de cuál señalas.
+                background: hover === i ? "var(--color-tinta)" : "var(--color-sky)",
+                border: value > 0 ? "2px solid var(--color-line)" : "none",
+                borderBottom: "none",
+                borderRadius: "6px 6px 0 0",
               }}
             />
           </div>
@@ -76,9 +80,10 @@ export function BarChart({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 10,
-          color: "var(--m-ink-3)",
-          marginTop: 6,
+          fontFamily: "var(--font-cuerpo)",
+          fontSize: 11,
+          color: "var(--color-tinta)",
+          marginTop: 8,
         }}
       >
         <span>{startLabel}</span>
