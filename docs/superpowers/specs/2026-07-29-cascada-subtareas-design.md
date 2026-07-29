@@ -48,11 +48,11 @@ mueve si no has movido tú algo primero.
 |---|---|
 | Marcas hecha una tarea con hijos | bajan **todos** sus descendientes a hecha |
 | Cambias una subtarea | se recalculan sus ancestros, uno a uno hacia arriba |
+| Desmarcas a mano una tarea con hijos | no baja nada; los hijos se quedan como estaban |
 
 Las dos primeras **no son excluyentes**: marcar hecha una subtarea que a su vez
 tiene hijos baja hasta sus descendientes Y sube a recalcular sus ancestros. Un
 solo clic puede mover el árbol en las dos direcciones.
-| Desmarcas a mano una tarea con hijos | no baja nada; los hijos se quedan como estaban |
 
 El recálculo de un ancestro mira **solo a sus hijos directos**:
 
