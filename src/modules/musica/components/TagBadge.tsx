@@ -1,17 +1,16 @@
-import type { Tag } from "@/modules/musica/lib/tags";
+import { varColor } from "@/modules/core/ui/paleta";
+import { resolveTagColor, type Tag } from "@/modules/musica/lib/tags";
 
-const COLOR_VARS: Record<string, string> = {
-  acid: "var(--color-tag-acid)",
-  amber: "var(--color-tag-amber)",
-  coral: "var(--color-tag-coral)",
-  sky: "var(--color-tag-sky)",
-  violet: "var(--color-tag-violet)",
-  rose: "var(--color-tag-rose)",
-  mint: "var(--color-tag-mint)",
-};
-
+/**
+ * Aquí había un mapa propio de siete entradas apuntando a los `--color-tag-*`
+ * de música. Ahora resuelve la clave guardada contra la paleta compartida, que
+ * es la misma que usan los hábitos.
+ *
+ * Sigue aceptando `string` y no `TagColor` a propósito: lo que llega viene de
+ * la base de datos, y puede ser una clave vieja que ya no existe.
+ */
 export function tagColorVar(color: string): string {
-  return COLOR_VARS[color] ?? COLOR_VARS.acid;
+  return varColor(resolveTagColor(color));
 }
 
 export default function TagBadge({
