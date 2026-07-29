@@ -1785,13 +1785,13 @@ git commit -m "feat(tareas): la pagina de detalle con adjuntos"
 
 ### Tarea 7: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: Que la carpeta no entre en git**
+- [x] **Paso 2: Que la carpeta no entre en git**
 
 ```bash
 mkdir -p data/adjuntos && touch data/adjuntos/prueba
@@ -1801,7 +1801,7 @@ rm data/adjuntos/prueba
 
 Esperado: **nada**. `data/` ya está en `.gitignore`.
 
-- [ ] **Paso 3: La travesía de rutas, a mano**
+- [x] **Paso 3: La travesía de rutas, a mano**
 
 Con el servidor en marcha:
 
@@ -1812,7 +1812,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1:3000/api/adjunto/inve
 
 Esperado: **404 las dos**. Si alguna da 200, para y revisa `rutaDeAdjunto`.
 
-- [ ] **Paso 4: En pantalla**
+- [x] **Paso 4: En pantalla**
 
 1. Crea una tarea y entra en su detalle desde el título.
 2. Sube un archivo pequeño; compruébalo en `data/adjuntos/` — su nombre en disco
@@ -1823,20 +1823,32 @@ Esperado: **404 las dos**. Si alguna da 200, para y revisa `rutaDeAdjunto`.
 6. Recarga la página: sigue ahí. Pulsa «atrás»: vuelve al tablero.
 7. Borra la tarea y comprueba que `data/adjuntos/` se queda vacía.
 
-- [ ] **Paso 5: Marcar el plan y el spec**
+- [x] **Paso 5: Marcar el plan y el spec**
+
+Medido en la ejecución, sobre una tarea de prueba propia:
+
+```
+en disco     d1e1ad0c-7158-42b0-a875-a1986133df8d   (sin parecido al original)
+en la base   apunte de prueba.txt · 19 B · text/plain
+descarga     200 · attachment; filename="apunte de prueba.txt" · 19 bytes
+javascript:  rechazado con mensaje, nada guardado
+../ y %2e%2e 404 las dos formas
+sin archivo  404 la descarga, 200 la pagina
+borrar       carpeta vacia, cero filas
+```
 
 ---
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. `/tareas/<id>` sobrevive a una recarga y responde a «atrás»
-- [ ] 3. Se puede añadir, listar, descargar y borrar un archivo
-- [ ] 4. Se puede añadir, listar y borrar un enlace
-- [ ] 5. Un archivo de más de 50 MB se rechaza con un mensaje
-- [ ] 6. `/api/adjunto/` con `../` responde 404
-- [ ] 7. Un enlace `javascript:` se rechaza
-- [ ] 8. Borrar una tarea borra los archivos de todo su árbol
-- [ ] 9. Un archivo que falta en disco da 404 y no rompe la pantalla
-- [ ] 10. Título, descripción, categoría y prioridad se editan desde el detalle
-- [ ] 11. Nada de `data/adjuntos/` entra en git
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. `/tareas/<id>` sobrevive a una recarga y responde a «atrás»
+- [x] 3. Se puede añadir, listar, descargar y borrar un archivo
+- [x] 4. Se puede añadir, listar y borrar un enlace
+- [x] 5. Un archivo de más de 50 MB se rechaza con un mensaje
+- [x] 6. `/api/adjunto/` con `../` responde 404
+- [x] 7. Un enlace `javascript:` se rechaza
+- [x] 8. Borrar una tarea borra los archivos de todo su árbol
+- [x] 9. Un archivo que falta en disco da 404 y no rompe la pantalla
+- [x] 10. Título, descripción, categoría y prioridad se editan desde el detalle
+- [x] 11. Nada de `data/adjuntos/` entra en git
