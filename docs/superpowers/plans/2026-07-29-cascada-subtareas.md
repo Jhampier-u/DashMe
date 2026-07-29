@@ -793,7 +793,7 @@ git commit -m "refactor(tareas): el arbol baja a components/tasks y lo comparten
 - Modify: `src/modules/habitos/lib/tasks.test.ts`
 - Modify: `src/modules/habitos/components/tasks/TaskCard.tsx`
 
-- [ ] **Paso 1: El test**
+- [x] **Paso 1: El test**
 
 Añade a `src/modules/habitos/lib/tasks.test.ts`:
 
@@ -829,13 +829,13 @@ describe("getTasksGrouped trae el árbol de cada raíz", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/tasks.test.ts
 ```
 
-- [ ] **Paso 3: Añadir el árbol a `TaskRow`**
+- [x] **Paso 3: Añadir el árbol a `TaskRow`**
 
 En `src/modules/habitos/lib/tasks.ts`, amplía el tipo:
 
@@ -868,7 +868,7 @@ Y dentro de `getTasksGrouped`, antes del bucle que agrupa:
 
 Y en el objeto que se empuja, `arbol: arbolPorRaiz.get(t.id) ?? []`.
 
-- [ ] **Paso 4: La tarjeta**
+- [x] **Paso 4: La tarjeta**
 
 En `TaskCard.tsx`, sustituye la línea del resumen de hijos por un botón que
 despliega:
@@ -901,13 +901,13 @@ Con `const [abierto, setAbierto] = useState(false);` arriba y los imports de
 > El resumen sigue siendo el rótulo del botón: plegada, la tarjeta dice lo
 > mismo que decía antes.
 
-- [ ] **Paso 5: Verificar**
+- [x] **Paso 5: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add -A src

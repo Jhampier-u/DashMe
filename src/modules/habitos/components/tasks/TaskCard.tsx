@@ -1,12 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { TaskRow, TaskStatus } from "@/modules/habitos/lib/tasks";
 import { updateTaskStatus, deleteTask } from "@/modules/habitos/actions";
 import { emitStatusChange } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { varColor, type ColorCategorico } from "@/modules/core/ui/paleta";
 import { PriorityDot } from "./PriorityDot";
+import { TaskTree } from "./TaskTree";
 
 const NEXT: Record<TaskStatus, TaskStatus | null> = {
   TODO: "IN_PROGRESS",
@@ -45,6 +46,7 @@ export function TaskCard({
   categoria?: { name: string; color: ColorCategorico };
 }) {
   const [pending, startTransition] = useTransition();
+  const [abierto, setAbierto] = useState(false);
   const { confirm, dialog } = useConfirm();
 
   function move(target: TaskStatus | null) {
@@ -114,11 +116,28 @@ export function TaskCard({
       {task.description ? (
         <div style={{ fontSize: 12, marginTop: 6 }}>{task.description}</div>
       ) : null}
+      {/*
+        El resumen que había aquí pasa a ser el rótulo del botón: plegada, la
+        tarjeta dice exactamente lo mismo que decía antes.
+      */}
       {task.hijos.total > 0 ? (
-        <div style={{ fontSize: 11.5, marginTop: 6 }}>
-          {task.hijos.total} subtarea{task.hijos.total === 1 ? "" : "s"} ·{" "}
-          {task.hijos.hechos} hecha{task.hijos.hechos === 1 ? "" : "s"}
-        </div>
+        <>
+          <button
+            type="button"
+            onClick={() => setAbierto(!abierto)}
+            aria-expanded={abierto}
+            className="mt-1.5 text-[11.5px] text-tinta font-cuerpo underline cursor-pointer bg-transparent border-0 p-0 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line"
+          >
+            {abierto ? "▾" : "▸"} {task.hijos.total} subtarea
+            {task.hijos.total === 1 ? "" : "s"} · {task.hijos.hechos} hecha
+            {task.hijos.hechos === 1 ? "" : "s"}
+          </button>
+          {abierto ? (
+            <div style={{ marginTop: 8 }}>
+              <TaskTree roots={task.arbol} />
+            </div>
+          ) : null}
+        </>
       ) : null}
 
       <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
