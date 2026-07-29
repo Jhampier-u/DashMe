@@ -68,7 +68,7 @@ otro, el fallo aparece solo con archivos grandes.
 - Create: `src/modules/habitos/lib/adjuntos-ruta.ts`
 - Create: `src/modules/habitos/lib/adjuntos-ruta.test.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/adjuntos-ruta.test.ts`:
 
@@ -230,7 +230,7 @@ describe("validarEnlace", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
@@ -239,7 +239,7 @@ npx vitest run src/modules/habitos/lib/adjuntos-ruta.test.ts
 
 Esperado: **FAIL**, `Cannot find module './adjuntos-ruta'`.
 
-- [ ] **Paso 3: Escribirlo**
+- [x] **Paso 3: Escribirlo**
 
 `src/modules/habitos/lib/adjuntos-ruta.ts`:
 
@@ -346,15 +346,21 @@ export function validarEnlace(url: string): Veredicto {
 }
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/adjuntos-ruta.test.ts && npx tsc --noEmit
 ```
 
-Esperado: **PASS**, 16 afirmaciones.
+Esperado: **PASS**, 17 afirmaciones.
 
-- [ ] **Paso 5: El tope en la configuración**
+**Aviso de la ejecución:** al tocar `next.config.ts` el servidor de desarrollo
+se reinicia y regenera `.next/dev/types`. Si corres `tsc --noEmit` justo en ese
+momento, verás decenas de errores en archivos generados —rutas que pasan a ser
+`never`, `AppRouteHandlerRoutes` que no existe— que no son tuyos. Vuelve a
+correrlo cuando el servidor haya acabado.
+
+- [x] **Paso 5: El tope en la configuración**
 
 En `next.config.ts`, dentro de `nextConfig`:
 
@@ -372,7 +378,7 @@ En `next.config.ts`, dentro de `nextConfig`:
   },
 ```
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add src/modules/habitos/lib/adjuntos-ruta.ts src/modules/habitos/lib/adjuntos-ruta.test.ts next.config.ts
