@@ -7,6 +7,17 @@ import { Field, TextArea } from "@/modules/core/ui/Field";
 
 const ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
 
+/** La superficie de `Card`, a mano: esto es un `<form>` y `Card` es un `<div>`. */
+const SUPERFICIE = {
+  background: "var(--color-paper)",
+  border: "3px solid var(--color-line)",
+  borderRadius: "var(--radius-card)",
+  boxShadow: "var(--shadow-hard)",
+  padding: 18,
+  color: "var(--color-tinta)",
+  fontFamily: "var(--font-cuerpo)",
+} as const;
+
 export function NewProjectForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -29,8 +40,7 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      className="m-card"
-      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+      style={{ ...SUPERFICIE, display: "flex", flexDirection: "column", gap: 16 }}
     >
       <Field
         label="Nombre"
@@ -49,7 +59,7 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
       />
 
       <div>
-        <span style={{ display: "block", fontSize: 12, color: "var(--m-ink-2)", marginBottom: 6 }}>
+        <span style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
           Icono
         </span>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -60,15 +70,19 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
               onClick={() => setIcon(choice)}
               aria-pressed={icon === choice}
               aria-label={`Icono ${choice}`}
-              style={{
-                width: 34,
-                height: 34,
-                fontSize: 16,
-                borderRadius: 7,
-                cursor: "pointer",
-                background: icon === choice ? "rgba(57, 135, 229, 0.16)" : "var(--m-elevated)",
-                border: `1px solid ${icon === choice ? "var(--m-series)" : "var(--m-line)"}`,
-              }}
+              // Lo elegido se marca con la variante `aria-pressed:`, que lee el
+              // atributo que ya estaba puesto: el estado visual y el accesible
+              // no pueden separarse. Es lo mismo que hace NewHabitForm.
+              className={
+                "w-[36px] h-[36px] inline-flex items-center justify-center " +
+                "rounded-control border-3 border-line bg-paper text-tinta text-base " +
+                "cursor-pointer shadow-hard font-cuerpo " +
+                "transition-[transform,box-shadow] duration-75 ease-out " +
+                "active:translate-x-0.5 active:translate-y-0.5 " +
+                "active:shadow-[2px_2px_0_var(--color-line)] " +
+                "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+                "aria-pressed:bg-sky"
+              }
             >
               {choice}
             </button>
