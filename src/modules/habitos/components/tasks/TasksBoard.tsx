@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { TaskRow, TaskStatus } from "@/modules/habitos/lib/tasks";
 import { TASK_STATUSES, STATUS_LABEL } from "@/modules/habitos/lib/tasks";
+import type { Categoria } from "@/modules/habitos/lib/categorias";
 import { TaskCard } from "./TaskCard";
 
 /*
@@ -37,9 +38,14 @@ const ROTULO: CSSProperties = {
   color: "var(--color-tinta)",
 };
 
-type Props = { grouped: Record<TaskStatus, TaskRow[]> };
+type Props = {
+  grouped: Record<TaskStatus, TaskRow[]>;
+  categorias: Categoria[];
+};
 
-export function TasksBoard({ grouped }: Props) {
+export function TasksBoard({ grouped, categorias }: Props) {
+  const porId = new Map(categorias.map((c) => [c.id, c]));
+
   return (
     <div
       style={{
@@ -83,7 +89,15 @@ export function TasksBoard({ grouped }: Props) {
                 Nada aquí
               </div>
             ) : (
-              grouped[status].map((task) => <TaskCard key={task.id} task={task} />)
+              grouped[status].map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  categoria={
+                    task.categoryId ? porId.get(task.categoryId) : undefined
+                  }
+                />
+              ))
             )}
           </div>
         </div>

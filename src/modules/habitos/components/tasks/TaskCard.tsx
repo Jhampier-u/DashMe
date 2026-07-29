@@ -5,6 +5,8 @@ import type { TaskRow, TaskStatus } from "@/modules/habitos/lib/tasks";
 import { updateTaskStatus, deleteTask } from "@/modules/habitos/actions";
 import { emitStatusChange } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
+import { varColor, type ColorCategorico } from "@/modules/core/ui/paleta";
+import { PriorityDot } from "./PriorityDot";
 
 const NEXT: Record<TaskStatus, TaskStatus | null> = {
   TODO: "IN_PROGRESS",
@@ -35,7 +37,13 @@ const MOVE_BUTTON =
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
   "disabled:opacity-40 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0";
 
-export function TaskCard({ task }: { task: TaskRow }) {
+export function TaskCard({
+  task,
+  categoria,
+}: {
+  task: TaskRow;
+  categoria?: { name: string; color: ColorCategorico };
+}) {
   const [pending, startTransition] = useTransition();
   const { confirm, dialog } = useConfirm();
 
@@ -74,19 +82,43 @@ export function TaskCard({ task }: { task: TaskRow }) {
         opacity: pending ? 0.5 : 1,
       }}
     >
-      {/* Lo hecho se tacha en vez de apagarse de color: sobre papel, bajar el
-          tono se come el contraste, y el tachado se ve sin distinguir tonos. */}
-      <div
-        style={{
-          fontSize: 13.5,
-          fontWeight: 700,
-          textDecoration: done ? "line-through" : "none",
-        }}
-      >
-        {task.title}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+        {task.priority ? <PriorityDot prioridad={task.priority} /> : null}
+        <div style={{ minWidth: 0 }}>
+          {/* Lo hecho se tacha en vez de apagarse de color: sobre papel, bajar
+              el tono se come el contraste, y el tachado se ve sin distinguir
+              tonos. */}
+          <div
+            style={{
+              fontSize: 13.5,
+              fontWeight: 700,
+              textDecoration: done ? "line-through" : "none",
+              // El subrayado de categoría es un BORDE y no `text-decoration`,
+              // que ya la usa el tachado. Las dos cosas no caben en la misma
+              // propiedad.
+              borderBottom: categoria
+                ? `3px solid ${varColor(categoria.color)}`
+                : "none",
+              paddingBottom: categoria ? 2 : 0,
+              display: "inline-block",
+              overflowWrap: "anywhere",
+            }}
+          >
+            {task.title}
+          </div>
+          {categoria ? (
+            <div style={{ fontSize: 11, marginTop: 3 }}>{categoria.name}</div>
+          ) : null}
+        </div>
       </div>
       {task.description ? (
         <div style={{ fontSize: 12, marginTop: 6 }}>{task.description}</div>
+      ) : null}
+      {task.hijos.total > 0 ? (
+        <div style={{ fontSize: 11.5, marginTop: 6 }}>
+          {task.hijos.total} subtarea{task.hijos.total === 1 ? "" : "s"} ·{" "}
+          {task.hijos.hechos} hecha{task.hijos.hechos === 1 ? "" : "s"}
+        </div>
       ) : null}
 
       <div style={{ display: "flex", gap: 6, marginTop: 12 }}>

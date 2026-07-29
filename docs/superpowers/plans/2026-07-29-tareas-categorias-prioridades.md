@@ -1680,7 +1680,7 @@ git commit -m "feat(tareas): el arbol sube a tasks.ts y el tablero filtra por UR
 - Modify: `src/modules/habitos/lib/mutations.ts`
 - Modify: `src/app/tareas/page.tsx`
 
-- [ ] **Paso 1: El punto**
+- [x] **Paso 1: El punto**
 
 `src/modules/habitos/components/tasks/PriorityDot.tsx`:
 
@@ -1722,7 +1722,7 @@ export function PriorityDot({ prioridad }: { prioridad: Prioridad }) {
 }
 ```
 
-- [ ] **Paso 2: La barra de filtros**
+- [x] **Paso 2: La barra de filtros**
 
 `src/modules/habitos/components/tasks/FilterBar.tsx`:
 
@@ -1829,7 +1829,7 @@ export function FilterBar({
 }
 ```
 
-- [ ] **Paso 2b: Gestionar las categorías**
+- [x] **Paso 2b: Gestionar las categorías**
 
 Sin esto no hay forma de crear ninguna y los filtros de categoría están siempre
 vacíos. `FilterBar` solo lee; esto es lo que escribe.
@@ -2021,7 +2021,7 @@ con `import { CategoriesPanel } from "./CategoriesPanel";`.
 > campo se queda con lo escrito y `refresh()` lo devuelve al valor real en el
 > siguiente pintado.
 
-- [ ] **Paso 3: La tarjeta**
+- [x] **Paso 3: La tarjeta**
 
 En `TaskCard.tsx`, amplía las props y sustituye el bloque del título:
 
@@ -2082,7 +2082,7 @@ Y bajo la descripción, el conteo de subtareas:
       ) : null}
 ```
 
-- [ ] **Paso 4: El tablero pasa las categorías**
+- [x] **Paso 4: El tablero pasa las categorías**
 
 En `TasksBoard.tsx`, añade la prop y el mapa:
 
@@ -2114,7 +2114,7 @@ Y en el `map` de tarjetas:
               ))
 ```
 
-- [ ] **Paso 5: El formulario elige categoría y prioridad**
+- [x] **Paso 5: El formulario elige categoría y prioridad**
 
 En `NewTaskForm.tsx`, añade dos estados y dos selectores. Las props crecen:
 
@@ -2236,7 +2236,7 @@ export function TasksHeader({
 
 Con `import type { Categoria } from "@/modules/habitos/lib/categorias";` arriba.
 
-- [ ] **Paso 6: `createTask` guarda los dos campos**
+- [x] **Paso 6: `createTask` guarda los dos campos**
 
 En `mutations.ts`, dentro de `createTask`, antes del insert:
 
@@ -2255,7 +2255,7 @@ Y en `.values({ … })`, `priority` y `categoryId`.
 
 Añade el import `import { resolvePrioridad } from "./prioridad";`.
 
-- [ ] **Paso 7: La página**
+- [x] **Paso 7: La página**
 
 `src/app/tareas/page.tsx`, sustituyendo la cabecera de la función:
 
@@ -2329,13 +2329,13 @@ Y el estado vacío distingue los dos casos:
 la exporta; si prefieres respetar la frontera del módulo, expórtala allí y
 cambia el import.
 
-- [ ] **Paso 8: Verificar**
+- [x] **Paso 8: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 9: Commit**
+- [x] **Paso 9: Commit**
 
 ```bash
 git add -A src

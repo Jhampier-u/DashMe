@@ -41,6 +41,7 @@ import {
   type LevelInfo,
 } from "./level";
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
+import { resolvePrioridad } from "./prioridad";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
 import { syncDailyQuests, type QuestCompletion } from "./quests";
 import { getHabitStats } from "./stats";
@@ -525,6 +526,16 @@ export async function createTask(db: Db, formData: FormData) {
   const title = text(formData.get("title"), LIMITS.taskTitle);
   if (!title) return;
   const description = text(formData.get("description"), LIMITS.taskDescription);
+  const priority = resolvePrioridad(
+    String(formData.get("priority") ?? "") || null,
+  );
+  /*
+    `categoryId` no se valida contra la tabla. En la base nueva la foránea lo
+    rechaza sola, y en la que se puso al día quedaría apuntando a nada, que se
+    lee como «sin categoría» al pintar. Comprobarlo aquí costaría una consulta
+    en cada creación para un caso que solo ocurre manipulando la petición.
+  */
+  const categoryId = text(formData.get("categoryId"), 60);
   // Dentro de SU grupo, no dentro de todo TODO: desde la unificación hay
   // grupos —por padre y por proyecto— y el orden solo se compara dentro de uno.
   const [last] = await db
@@ -544,6 +555,8 @@ export async function createTask(db: Db, formData: FormData) {
     id: crypto.randomUUID(),
     title,
     description,
+    priority,
+    categoryId,
     status: "TODO",
     order: (last?.order ?? 0) + 1,
     createdAt: ahora,
