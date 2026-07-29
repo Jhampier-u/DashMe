@@ -393,7 +393,7 @@ git commit -m "feat(tareas): rutas y validacion de adjuntos, la parte con riesgo
 - Modify: `src/modules/core/db/schema-sql.ts`
 - Modify: `src/modules/habitos/schema.ts`
 
-- [ ] **Paso 1: El DDL**
+- [x] **Paso 1: El DDL**
 
 En `src/modules/core/db/schema-sql.ts`, después del bloque de `tasks` y sus
 índices:
@@ -415,9 +415,14 @@ CREATE INDEX IF NOT EXISTS task_attachments_task_idx ON task_attachments(task_id
 
 > Al contrario que las columnas que se añadieron con ALTER, esta foránea SÍ la
 > vigila el motor también en la base del usuario: la tabla es nueva y nace con
-> ella declarada.
+> ella declarada. Y sus índices SÍ pueden ir aquí por lo mismo: se crean junto a
+> la tabla, no sobre una que ya existía sin las columnas.
+>
+> **Y no escribas acentos graves en los comentarios de este archivo.** Es una
+> plantilla literal de JavaScript y cualquiera de ellos la cierra a media cadena.
+> Pasó al ejecutar este mismo paso.
 
-- [ ] **Paso 2: Lo mismo en Drizzle**
+- [x] **Paso 2: Lo mismo en Drizzle**
 
 En `src/modules/habitos/schema.ts`, después de `tasks`:
 
@@ -447,7 +452,7 @@ export const taskAttachments = sqliteTable(
 export type TaskAttachmentRow = typeof taskAttachments.$inferSelect;
 ```
 
-- [ ] **Paso 3: Verificar**
+- [x] **Paso 3: Verificar**
 
 ```bash
 npx vitest run tests/schema-parity.test.ts && npx tsc --noEmit
@@ -458,7 +463,7 @@ Si falla en el recuento, revisa que no hayas escrito las dos palabras de la
 sentencia de creación dentro de un comentario del DDL: las cuenta con una
 expresión regular sobre el texto entero.
 
-- [ ] **Paso 4: Commit**
+- [x] **Paso 4: Commit**
 
 ```bash
 git add src/modules/core/db/schema-sql.ts src/modules/habitos/schema.ts
