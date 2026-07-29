@@ -111,7 +111,12 @@ body {
   */
   --color-mute: var(--color-tinta);
   --color-rule: var(--color-line);
-  --color-acid: var(--color-yellow);
+  /*
+    `acid` era el amarillo-verde de la era editorial. Pasa a ROSA, que es el
+    acento de la marca en todo el dashboard: es el color que más se repite y el
+    que le da vida a la sección.
+  */
+  --color-acid: var(--color-pink);
   --color-blood: var(--color-peach);
 
   /*

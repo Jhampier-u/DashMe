@@ -66,7 +66,7 @@ export function BarChart({
                 // Relleno en pastel, contorno en tinta: la barra es superficie
                 // y el borde es lo que la hace del sistema. Bajo el ratón se
                 // invierte a tinta maciza, que no deja duda de cuál señalas.
-                background: hover === i ? "var(--color-tinta)" : "var(--color-sky)",
+                background: hover === i ? "var(--color-tinta)" : "var(--color-pink)",
                 border: value > 0 ? "2px solid var(--color-line)" : "none",
                 borderBottom: "none",
                 borderRadius: "6px 6px 0 0",

@@ -28,25 +28,26 @@ const SIZES: Record<ButtonSize, CSSProperties> = {
   Los acentos se reparten por oficio, y ese reparto es la decisión de sistema
   que más se va a notar más adelante:
 
-    pink · lav · mint    identidad de hábito  (ACENTOS_HABITO)
-    sky · peach · yellow armazón de la interfaz
+    lav · mint · sky     identidad de hábito  (ACENTOS_HABITO)
+    pink · peach · yellow armazón de la interfaz
 
-  Por eso los botones tiran de sky y peach y no de rosa: en la pantalla de
-  hábitos, un botón rosa junto a una fila cuyo acento ES rosa haría que el color
-  dejara de significar nada.
+  Por eso los botones tiran de rosa y peach y no de cielo: en la pantalla de
+  hábitos, un botón celeste junto a una fila cuyo acento ES celeste haría que el
+  color dejara de significar nada.
 
-  `sky` para la acción principal hereda el papel del azul `--m-series` anterior;
+  `pink` para la acción principal: es el acento de la marca y el que más se
+  repite en el dashboard;
   `peach` es el extremo cálido de la paleta y es lo más parecido a una alarma
   que hay aquí. No hay rojo: la paleta pastel no lo tiene y la regla dura impide
   compensarlo con texto de color. Gritar es trabajo de `CriticalBanner`, no de
   un botón.
 
   El texto va SIEMPRE en tinta, nunca en el pastel. Contrastes de tinta sobre
-  cada fondo, medidos en `contraste.ts`: sky 6,87:1 · peach 7,64:1 ·
+  cada fondo, medidos en `contraste.ts`: rosa 5,43:1 · peach 7,64:1 ·
   paper 9,76:1. Los tres pasan AA de sobra.
 */
 const VARIANTS: Record<ButtonVariant, CSSProperties> = {
-  primary: { background: "var(--color-sky)", color: "var(--color-tinta)" },
+  primary: { background: "var(--color-pink)", color: "var(--color-tinta)" },
   secondary: { background: "var(--color-paper)", color: "var(--color-tinta)" },
   ghost: {
     background: "transparent",

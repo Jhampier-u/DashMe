@@ -139,7 +139,7 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
         // AA. Lo que distingue al activo es el relleno y el grosor, no el tono.
         color: "var(--color-tinta)",
         fontWeight: active ? 700 : 500,
-        background: active ? "var(--color-sky)" : "transparent",
+        background: active ? "var(--color-pink)" : "transparent",
         // Borde transparente en el inactivo para que al activarse no se mueva
         // nada de sitio.
         border: `3px solid ${active ? "var(--color-line)" : "transparent"}`,
@@ -164,7 +164,7 @@ function BottomLink({ item, active }: { item: NavItem; active: boolean }) {
         textDecoration: "none",
         color: "var(--color-tinta)",
         fontWeight: active ? 700 : 500,
-        background: active ? "var(--color-sky)" : "transparent",
+        background: active ? "var(--color-pink)" : "transparent",
       }}
     >
       <Icon className="w-5 h-5" />

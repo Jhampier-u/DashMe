@@ -114,7 +114,7 @@ export function LineChart({
 
         {/* El área es superficie, así que va en pastel macizo. */}
         {lineSegments.map((seg, i) => (
-          <path key={`area-${i}`} d={areaPath(seg, y(0))} fill="var(--color-sky)" />
+          <path key={`area-${i}`} d={areaPath(seg, y(0))} fill="var(--color-pink)" />
         ))}
         {/* La línea ES el dato, así que va en tinta: un trazo fino en pastel
             sobre papel no se sostiene, y oscurecerlo lo sacaría de la paleta. */}

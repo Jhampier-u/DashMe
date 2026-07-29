@@ -81,7 +81,7 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
                 "active:translate-x-0.5 active:translate-y-0.5 " +
                 "active:shadow-[2px_2px_0_var(--color-line)] " +
                 "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
-                "aria-pressed:bg-sky"
+                "aria-pressed:bg-pink"
               }
             >
               {choice}

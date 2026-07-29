@@ -88,7 +88,7 @@ export function MonthCalendar({
     Seis estados en celdas de treinta y pocos píxeles es el sitio donde el
     contraste se rompe, así que ninguno se fía solo del tono:
 
-      escudado    fondo sky      + el glifo 🛡, que ya lo distingue por forma
+      escudado    fondo rosa      + el glifo 🛡, que ya lo distingue por forma
       mínimo      fondo amarillo + número en tinta
       hecho       fondo tinta    + número en papel, invertido
       pendiente   fondo paper-2  + trazo CONTINUO
@@ -98,12 +98,12 @@ export function MonthCalendar({
     claro—, y por eso lo que los separa es el trazo y no el relleno. Bajo
     daltonismo, o en una pantalla mala, la línea sigue ahí.
 
-    Ninguna combinación baja de AA: tinta sobre sky 6,87:1, sobre amarillo
+    Ninguna combinación baja de AA: tinta sobre rosa 5,43:1, sobre amarillo
     8,49:1, sobre paper-2 9,09:1, y papel sobre tinta 9,76:1.
   */
   function colors(day: MonthDay) {
     if (day.shielded) {
-      return { bg: "var(--color-sky)", fg: "var(--color-tinta)", dashed: false };
+      return { bg: "var(--color-pink)", fg: "var(--color-tinta)", dashed: false };
     }
     if (day.partial) {
       return { bg: "var(--color-yellow)", fg: "var(--color-tinta)", dashed: false };

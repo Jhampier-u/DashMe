@@ -96,7 +96,7 @@ function SelectorDeRango({
             "px-2.5 py-1 rounded-control border-3 border-line " +
             "bg-paper text-tinta font-cuerpo text-[11.5px] cursor-pointer " +
             "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
-            "aria-pressed:bg-sky aria-pressed:font-bold"
+            "aria-pressed:bg-pink aria-pressed:font-bold"
           }
         >
           {r.label}

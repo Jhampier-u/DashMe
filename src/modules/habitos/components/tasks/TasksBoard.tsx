@@ -13,7 +13,7 @@ import { TaskCard } from "./TaskCard";
 */
 const CONTADOR: Record<TaskStatus, CSSProperties> = {
   TODO: { background: "var(--color-paper-2)", color: "var(--color-tinta)" },
-  IN_PROGRESS: { background: "var(--color-sky)", color: "var(--color-tinta)" },
+  IN_PROGRESS: { background: "var(--color-pink)", color: "var(--color-tinta)" },
   DONE: { background: "var(--color-tinta)", color: "var(--color-paper)" },
 };
 
