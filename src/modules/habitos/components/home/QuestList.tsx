@@ -1,4 +1,5 @@
 import { Card } from "@/modules/core/ui/Card";
+import { ProgressBar } from "@/modules/core/ui/ProgressBar";
 import { QUEST_DEFS, type DailyQuestRow } from "@/modules/habitos/lib/quests";
 
 /*
@@ -52,25 +53,11 @@ export function QuestList({ quests }: { quests: DailyQuestRow[] }) {
                 {q.completed ? `+${q.xpReward} XP` : `${q.progress}/${q.target}`}
               </span>
             </div>
-            {/* Misma pista con trazo que el panel de diagnóstico: una barra al
-                4% sobre papel sin carril sería un punto suelto. */}
-            <div
-              style={{
-                height: 10,
-                background: "var(--color-paper-2)",
-                border: "2px solid var(--color-line)",
-                borderRadius: 999,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  height: "100%",
-                  width: `${ratio * 100}%`,
-                  background: q.completed ? "var(--color-tinta)" : "var(--color-sky)",
-                }}
-              />
-            </div>
+            <ProgressBar
+              value={ratio}
+              height={10}
+              fill={q.completed ? "var(--color-tinta)" : "var(--color-sky)"}
+            />
           </div>
         );
       })}
