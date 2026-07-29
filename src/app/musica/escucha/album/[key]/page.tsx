@@ -52,7 +52,7 @@ export default async function FichaAlbum({
 
       <section className="px-8 py-5 hairline-b flex items-center justify-between gap-4 flex-wrap">
         <RangePicker range={range} base={`/musica/escucha/album/${key}`} />
-        <Link href="/musica" className="label-mono text-mute hover:text-acid transition-colors">
+        <Link href="/musica" className="label-mono text-mute hover:underline transition-colors">
           ← Portada
         </Link>
       </section>
@@ -96,14 +96,14 @@ export default async function FichaAlbum({
               <span className="relative flex items-baseline gap-3 min-w-0">
                 <span
                   className={`label-mono num-tabular ${
-                    i === 0 ? "text-acid" : "text-mute"
+                    i === 0 ? "text-tinta font-bold" : "text-mute"
                   }`}
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <Link
                   href={`/musica/escucha/cancion/${encodeURIComponent(t.key)}`}
-                  className="truncate hover:text-acid transition-colors"
+                  className="truncate hover:underline transition-colors"
                 >
                   {t.name}
                 </Link>

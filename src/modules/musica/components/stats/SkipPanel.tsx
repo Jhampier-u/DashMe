@@ -36,7 +36,7 @@ export default function SkipPanel({
       <div>
         <p className="label-mono text-mute mb-4">Abandono</p>
         <p
-          className="display num-tabular text-[clamp(2.6rem,7vw,5rem)] text-acid leading-none"
+          className="display num-tabular text-[clamp(2.6rem,7vw,5rem)] text-tinta leading-none"
           style={{ fontVariationSettings: '"opsz" 96, "WONK" 1' }}
         >
           {pct(stats.tasa)}

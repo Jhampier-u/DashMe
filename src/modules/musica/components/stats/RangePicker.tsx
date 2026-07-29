@@ -26,7 +26,7 @@ export default function RangePicker({
           key={id}
           href={`${base}?preset=${id}`}
           className={`label-mono transition-colors ${
-            range.preset === id ? "text-acid" : "text-mute hover:text-cream"
+            range.preset === id ? "text-tinta" : "text-mute hover:text-cream"
           }`}
         >
           {label}

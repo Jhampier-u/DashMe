@@ -50,14 +50,14 @@ export default function CaptureHealth(props: CaptureHealthProps) {
       <p className="label-mono text-mute mb-6">Captura en segundo plano</p>
 
       {desatendido && (
-        <p className="label-mono text-blood mb-6">
+        <p className="label-mono text-tinta mb-6">
           ⚠ La captura no se ejecuta desde {haceCuanto(props.lastRunAt)}. Si la
           tarea programada está activa, revisa el último error.
         </p>
       )}
 
       {props.gapSuspectedAt && (
-        <p className="label-mono text-blood mb-6">
+        <p className="label-mono text-tinta mb-6">
           ⚠ Posible hueco detectado {haceCuanto(props.gapSuspectedAt)}: llegaron
           50 escuchas nuevas de golpe, así que puede que se perdieran algunas
           entre dos ejecuciones.
@@ -86,7 +86,7 @@ export default function CaptureHealth(props: CaptureHealthProps) {
       </dl>
 
       {props.lastError && (
-        <p className="label-mono text-blood mb-6 break-all">
+        <p className="label-mono text-tinta mb-6 break-all">
           Último error: {props.lastError}
         </p>
       )}

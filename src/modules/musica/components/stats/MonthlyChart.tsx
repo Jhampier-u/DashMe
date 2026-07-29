@@ -40,7 +40,7 @@ export default function MonthlyChart({ buckets }: { buckets: Bucket[] }) {
       <div className="flex items-baseline justify-between mb-4">
         <p className="label-mono text-mute">Mes a mes</p>
         <p className="label-mono text-mute">
-          pico · <span className="text-acid">{etiqueta(pico.month)}</span> ·{" "}
+          pico · <span className="text-tinta">{etiqueta(pico.month)}</span> ·{" "}
           {pico.plays.toLocaleString("es")}
         </p>
       </div>

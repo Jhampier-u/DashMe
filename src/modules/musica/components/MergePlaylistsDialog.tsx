@@ -130,7 +130,7 @@ function Dialog({
         }}
       >
         <div className="px-7 py-6 hairline-b">
-          <p className="label-mono text-acid mb-2">
+          <p className="label-mono text-tinta mb-2">
             Operación · {selected.size} fuente{selected.size === 1 ? "" : "s"}
             {totalTracks > 0 && (
               <span className="text-cream-dim">
@@ -206,7 +206,7 @@ function Dialog({
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="label-mono text-cream block mb-1.5">
-                Nombre <span className="text-acid">*</span>
+                Nombre <span className="text-tinta">*</span>
               </label>
               <input
                 value={name}
@@ -243,7 +243,7 @@ function Dialog({
           </label>
 
           {error && (
-            <p className="label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
+            <p className="label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
               {error}
             </p>
           )}

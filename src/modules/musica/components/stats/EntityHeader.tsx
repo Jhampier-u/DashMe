@@ -30,7 +30,7 @@ export default function EntityHeader({
   return (
     <>
       <section className="px-8 pt-16 pb-12 hairline-b">
-        <p className="label-mono text-acid mb-6">
+        <p className="label-mono text-tinta mb-6">
           {puesto} en tu ranking · {contexto}
         </p>
 
@@ -46,7 +46,7 @@ export default function EntityHeader({
             {subtituloHref ? (
               <Link
                 href={subtituloHref}
-                className="hover:text-acid transition-colors"
+                className="hover:underline transition-colors"
               >
                 {subtitulo}
               </Link>

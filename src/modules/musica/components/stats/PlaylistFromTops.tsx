@@ -52,11 +52,11 @@ export default function PlaylistFromTops({
         </button>
 
         {resultado?.error && (
-          <span className="label-mono text-blood">{resultado.error}</span>
+          <span className="label-mono text-tinta">{resultado.error}</span>
         )}
 
         {resultado && !resultado.error && (
-          <span className="label-mono text-acid">
+          <span className="label-mono text-tinta">
             {resultado.canciones} canciones ·{" "}
             {resultado.url ? (
               <a

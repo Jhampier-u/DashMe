@@ -128,7 +128,7 @@ export default async function Historial({
               return (
                 <li key={r.id}>
                   {nuevoDia && (
-                    <p className="label-mono text-acid pt-6 pb-2">
+                    <p className="label-mono text-tinta pt-6 pb-2">
                       {r.localDate}
                     </p>
                   )}
@@ -157,7 +157,7 @@ export default async function Historial({
               {pagina > 1 ? (
                 <Link
                   href={enlace(base, { p: String(pagina - 1) })}
-                  className="label-mono hover:text-acid transition-colors"
+                  className="label-mono hover:underline transition-colors"
                 >
                   ← Anterior
                 </Link>
@@ -172,7 +172,7 @@ export default async function Historial({
               {pagina < paginas ? (
                 <Link
                   href={enlace(base, { p: String(pagina + 1) })}
-                  className="label-mono hover:text-acid transition-colors"
+                  className="label-mono hover:underline transition-colors"
                 >
                   Siguiente →
                 </Link>

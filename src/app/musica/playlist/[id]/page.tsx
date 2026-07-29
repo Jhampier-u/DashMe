@@ -86,7 +86,7 @@ export default async function PlaylistPage({
       <div className="px-8 pt-6">
         <Link
           href="/musica"
-          className="label-mono text-mute hover:text-acid transition-colors"
+          className="label-mono text-mute hover:underline transition-colors"
         >
           ← Volver al índice
         </Link>
@@ -152,7 +152,7 @@ function EmptyState({
   if (tracksError && (tracksError as { status?: number }).status === 403) {
     return (
       <div className="py-20 text-center max-w-2xl mx-auto">
-        <p className="label-mono text-blood mb-4">403 — Acceso restringido</p>
+        <p className="label-mono text-tinta mb-4">403 — Acceso restringido</p>
         <p className="font-serif italic text-2xl text-cream-dim mb-4 [text-wrap:balance]">
           Spotify no permite leer las canciones de esta playlist.
         </p>
@@ -218,7 +218,7 @@ function DetailHeader({
         </div>
 
         <div className="col-span-12 md:col-span-8 lg:col-span-9 fade-in">
-          <p className="label-mono text-acid mb-4">
+          <p className="label-mono text-tinta mb-4">
             Por {playlist.owner.display_name}
             {ownedByMe && <span className="text-mute"> · TUYA</span>}
             {playlist.followers?.total > 0 && (
