@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { deleteProject } from "@/modules/habitos/actions";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
+import { ProgressBar } from "@/modules/core/ui/ProgressBar";
 import type { ProjectSummary } from "@/modules/habitos/lib/projects";
 
 /** Cuánto tiempo parado empieza a ser señal de aviso. */
@@ -41,8 +42,17 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
 
   return (
     <div
-      className="m-card"
-      style={{ padding: 16, opacity: pending ? 0.5 : 1, position: "relative" }}
+      style={{
+        background: "var(--color-paper)",
+        border: "3px solid var(--color-line)",
+        borderRadius: "var(--radius-card)",
+        boxShadow: "var(--shadow-hard)",
+        padding: 16,
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
+        opacity: pending ? 0.5 : 1,
+        position: "relative",
+      }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ fontSize: 20 }} aria-hidden>
@@ -54,8 +64,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
             flex: 1,
             minWidth: 0,
             fontSize: 15,
-            fontWeight: 600,
-            color: "var(--m-ink)",
+            fontWeight: 700,
             textDecoration: "none",
           }}
         >
@@ -65,27 +74,21 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
           type="button"
           onClick={remove}
           disabled={pending}
-          style={{
-            width: 24,
-            height: 24,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 6,
-            border: "1px solid var(--m-line)",
-            background: "transparent",
-            color: "var(--m-crit)",
-            fontSize: 11,
-            cursor: "pointer",
-            fontFamily: "inherit",
-          }}
+          className={
+            "w-[26px] h-[26px] shrink-0 inline-flex items-center justify-center " +
+            "rounded-control border-3 border-line bg-peach text-tinta text-[11px] leading-none " +
+            "cursor-pointer font-cuerpo " +
+            "transition-transform duration-75 ease-out active:translate-x-px active:translate-y-px " +
+            "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+            "disabled:opacity-40"
+          }
           aria-label={`Borrar el proyecto ${project.name}`}
         >
           ✕
         </button>
       </div>
 
-      <p style={{ fontSize: 12.5, color: "var(--m-ink-2)", marginTop: 8, minHeight: 18 }}>
+      <p style={{ fontSize: 12.5, marginTop: 8, minHeight: 18 }}>
         {project.description ?? "Sin descripción"}
       </p>
 
@@ -93,34 +96,29 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 12,
-          color: "var(--m-ink-3)",
+          alignItems: "baseline",
+          fontFamily: "var(--font-vt)",
+          fontSize: 16,
+          fontVariantNumeric: "tabular-nums",
           marginTop: 12,
-          marginBottom: 6,
+          marginBottom: 8,
         }}
       >
-        <span className="m-num">
+        <span>
           {project.doneItems} de {project.totalItems}
         </span>
-        <span className="m-num">{Math.round(percent * 100)}%</span>
+        <span>{Math.round(percent * 100)}%</span>
       </div>
 
-      <div style={{ height: 5, background: "var(--m-track)", borderRadius: 3 }}>
-        <div
-          style={{
-            height: "100%",
-            width: `${Math.round(percent * 100)}%`,
-            background: "var(--m-series)",
-            borderRadius: 3,
-          }}
-        />
-      </div>
+      <ProgressBar value={percent} />
 
+      {/* El aviso iba en ámbar. Ahora lo dicen el ▲ que ya llevaba y el grosor:
+          el pastel es fondo, nunca texto. */}
       <div
         style={{
           fontSize: 11.5,
-          color: stale ? "var(--m-warn)" : "var(--m-ink-3)",
-          marginTop: 10,
+          fontWeight: stale ? 700 : 400,
+          marginTop: 12,
         }}
       >
         {stale ? "▲ " : ""}

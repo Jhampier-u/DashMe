@@ -4,9 +4,10 @@ type Props = {
   size?: number;
   stroke?: number;
   /**
-   * Los dos colores del anillo, por si quien lo usa no vive en el lenguaje
-   * oscuro. Traen por defecto los de siempre, así que la portada —el otro sitio
-   * donde se usa, y que este paso no repinta— no se entera de que existen.
+   * Los dos colores del anillo. Nacieron como escape para no arrastrar a la
+   * portada mientras se repintaba hábitos; ahora los dos consumidores están en
+   * el sistema pixel y los pasan explícitos, así que los valores por defecto
+   * solo existen para quien lo use de nuevo.
    */
   track?: string;
   fill?: string;
@@ -18,8 +19,8 @@ export function ProgressRing({
   max,
   size = 66,
   stroke = 5,
-  track = "var(--m-track)",
-  fill = "var(--m-series)",
+  track = "var(--color-paper-2)",
+  fill = "var(--color-tinta)",
 }: Props) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;

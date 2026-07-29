@@ -24,10 +24,22 @@ const STATUS_MARK: Record<ProjectItemStatus, string> = {
   DONE: "●",
 };
 
-const STATUS_COLOR: Record<ProjectItemStatus, string> = {
-  TODO: "var(--m-ink-3)",
-  IN_PROGRESS: "var(--m-warn)",
-  DONE: "var(--m-good)",
+/*
+  La forma ya dice el estado —círculo vacío, medio y lleno—, así que el color
+  era redundante. El glifo pasa a tinta y lo que marca el estado es el relleno
+  del botón, con el mismo vocabulario que las columnas de tareas y el sello de
+  la fila de hábito: tres pantallas diciendo «hecho» de la misma forma.
+*/
+const STATUS_FILL: Record<ProjectItemStatus, string> = {
+  TODO: "var(--color-paper)",
+  IN_PROGRESS: "var(--color-sky)",
+  DONE: "var(--color-tinta)",
+};
+
+const STATUS_INK: Record<ProjectItemStatus, string> = {
+  TODO: "var(--color-tinta)",
+  IN_PROGRESS: "var(--color-tinta)",
+  DONE: "var(--color-paper)",
 };
 
 const STATUS_NAME: Record<ProjectItemStatus, string> = {
@@ -36,20 +48,31 @@ const STATUS_NAME: Record<ProjectItemStatus, string> = {
   DONE: "hecha",
 };
 
-const ICON_BUTTON = {
-  width: 24,
-  height: 24,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 6,
-  border: "1px solid var(--m-line)",
-  background: "transparent",
-  color: "var(--m-ink-3)",
-  fontSize: 11,
-  cursor: "pointer",
-  fontFamily: "inherit",
-} as const;
+/*
+  Van en clases y no en un objeto de estilo porque llevan `:active`,
+  `:focus-visible` y `:disabled`, y nada de eso se puede escribir en línea.
+
+  Sin sombra dura, al contrario que en tareas: el árbol pone cuatro botones por
+  nodo y los nodos se anidan; la sombra lo convertiría en una pared. El hundido
+  se queda en 1px.
+*/
+const ICON_BUTTON =
+  "w-[26px] h-[26px] shrink-0 inline-flex items-center justify-center " +
+  "rounded-control border-3 border-line text-tinta text-[11px] leading-none " +
+  "cursor-pointer font-cuerpo " +
+  "transition-transform duration-75 ease-out active:translate-x-px active:translate-y-px " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+  "disabled:opacity-40";
+
+/*
+  El campo de edición en línea. Está escrito igual aquí y en `ProjectTree`, así
+  que se comparte desde un solo sitio.
+*/
+export const CAMPO_LINEA =
+  "flex-1 min-w-0 bg-paper-2 text-tinta font-cuerpo text-[13.5px] " +
+  "border-3 border-line rounded-control px-2.5 py-1.5 " +
+  "placeholder:text-tinta-2 " +
+  "outline-none focus:outline-3 focus:outline-offset-2 focus:outline-line";
 
 export function ProjectTreeItem({
   node,
@@ -134,7 +157,8 @@ export function ProjectTreeItem({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          style={{ ...ICON_BUTTON, visibility: hasChildren ? "visible" : "hidden" }}
+          className={`${ICON_BUTTON} bg-paper`}
+          style={{ visibility: hasChildren ? "visible" : "hidden" }}
           aria-label={open ? `Contraer ${node.title}` : `Expandir ${node.title}`}
           aria-expanded={open}
         >
@@ -145,7 +169,12 @@ export function ProjectTreeItem({
           type="button"
           onClick={cycle}
           disabled={pending}
-          style={{ ...ICON_BUTTON, color: STATUS_COLOR[node.status], fontSize: 13 }}
+          className={ICON_BUTTON}
+          style={{
+            background: STATUS_FILL[node.status],
+            color: STATUS_INK[node.status],
+            fontSize: 13,
+          }}
           aria-label={`${node.title}: ${STATUS_NAME[node.status]}. Pulsa para cambiar de estado`}
         >
           {STATUS_MARK[node.status]}
@@ -165,17 +194,7 @@ export function ProjectTreeItem({
                 setDraft(node.title);
               }
             }}
-            style={{
-              flex: 1,
-              background: "var(--m-page)",
-              border: "1px solid var(--m-series)",
-              borderRadius: 6,
-              padding: "5px 9px",
-              fontFamily: "inherit",
-              fontSize: 13.5,
-              color: "var(--m-ink)",
-              outline: "none",
-            }}
+            className={CAMPO_LINEA}
           />
         ) : (
           <button
@@ -187,17 +206,26 @@ export function ProjectTreeItem({
               background: "transparent",
               border: 0,
               padding: "5px 0",
-              fontFamily: "inherit",
+              fontFamily: "var(--font-cuerpo)",
               fontSize: 13.5,
+              fontWeight: 700,
               cursor: "pointer",
-              color: node.status === "DONE" ? "var(--m-ink-2)" : "var(--m-ink)",
+              color: "var(--color-tinta)",
               textDecoration: node.status === "DONE" ? "line-through" : "none",
             }}
             aria-label={`Renombrar ${node.title}`}
           >
             {node.title}
             {hasChildren ? (
-              <span className="m-num" style={{ color: "var(--m-ink-3)", marginLeft: 8 }}>
+              // El contador es un dato: VT323 en su suelo de 16px.
+              <span
+                style={{
+                  fontFamily: "var(--font-vt)",
+                  fontSize: 16,
+                  fontVariantNumeric: "tabular-nums",
+                  marginLeft: 8,
+                }}
+              >
                 {node.children.filter((c) => c.status === "DONE").length}/
                 {node.children.length}
               </span>
@@ -209,7 +237,7 @@ export function ProjectTreeItem({
           type="button"
           onClick={() => setAdding(true)}
           disabled={pending}
-          style={ICON_BUTTON}
+          className={`${ICON_BUTTON} bg-paper`}
           aria-label={`Añadir subtarea dentro de ${node.title}`}
         >
           +
@@ -218,7 +246,7 @@ export function ProjectTreeItem({
           type="button"
           onClick={remove}
           disabled={pending}
-          style={{ ...ICON_BUTTON, color: "var(--m-crit)" }}
+          className={`${ICON_BUTTON} bg-peach`}
           aria-label={`Borrar ${node.title}`}
         >
           ✕
@@ -247,17 +275,7 @@ export function ProjectTreeItem({
                     setChildTitle("");
                   }
                 }}
-                style={{
-                  flex: 1,
-                  background: "var(--m-page)",
-                  border: "1px solid var(--m-line)",
-                  borderRadius: 6,
-                  padding: "5px 9px",
-                  fontFamily: "inherit",
-                  fontSize: 13.5,
-                  color: "var(--m-ink)",
-                  outline: "none",
-                }}
+                className={CAMPO_LINEA}
               />
               <Button type="submit" size="sm" variant="primary" disabled={!childTitle.trim()}>
                 Añadir

@@ -1,4 +1,5 @@
 import { Card } from "@/modules/core/ui/Card";
+import { ProgressBar } from "@/modules/core/ui/ProgressBar";
 import { weekdayFullName, weekdayName } from "@/modules/habitos/lib/stats";
 import type { HabitDiagnosis } from "@/modules/habitos/lib/habits";
 
@@ -20,18 +21,7 @@ const CIFRA = {
   color: "var(--color-tinta)",
 } as const;
 
-/**
- * La pista de las barras lleva trazo propio. Sin él, una barra al 4% sobre
- * papel sería un punto perdido en el aire: el carril tiene que verse aunque
- * esté casi vacío.
- */
-const PISTA = {
-  height: 12,
-  background: "var(--color-paper-2)",
-  border: "2px solid var(--color-line)",
-  borderRadius: 999,
-  overflow: "hidden",
-} as const;
+// La pista se fue a `ProgressBar`: estaba escrita cuatro veces.
 
 export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
   const { ranking, weekdays, worst, untouched } = diagnosis;
@@ -69,22 +59,16 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                   </span>
                   <span style={CIFRA}>{pct(habit.rate)}</span>
                 </div>
-                <div style={PISTA}>
-                  {/*
-                    Peach por debajo de la mitad, sky por encima. El color es
-                    refuerzo, no información: el porcentaje va escrito justo
-                    encima, así que quien no distinga los dos tonos lo tiene
-                    igual de claro.
-                  */}
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${Math.round((habit.rate ?? 0) * 100)}%`,
-                      background:
-                        (habit.rate ?? 0) < 0.5 ? "var(--color-peach)" : "var(--color-sky)",
-                    }}
-                  />
-                </div>
+                {/*
+                  Peach por debajo de la mitad, sky por encima. El color es
+                  refuerzo, no información: el porcentaje va escrito justo
+                  encima, así que quien no distinga los dos tonos lo tiene igual
+                  de claro.
+                */}
+                <ProgressBar
+                  value={habit.rate ?? 0}
+                  fill={(habit.rate ?? 0) < 0.5 ? "var(--color-peach)" : "var(--color-sky)"}
+                />
               </div>
             ))}
             <p style={{ fontSize: 11, marginTop: 2 }}>

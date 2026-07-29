@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/modules/core/db";
 import { getProjectWithTree } from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
+import { ProgressBar } from "@/modules/core/ui/ProgressBar";
 import { ProjectTree } from "@/modules/habitos/components/projects/ProjectTree";
 
 export const dynamic = "force-dynamic";
@@ -25,19 +26,27 @@ export default async function ProjectDetailPage({
         : `último avance hace ${lastMovement.days} días`;
 
   return (
-    <main className="m-root" style={{ minHeight: "100%", padding: "20px 16px 48px" }}>
+    <main
+      style={{
+        minHeight: "100%",
+        padding: "24px 16px 56px",
+        background: "var(--color-paper)",
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
+      }}
+    >
       <div
         style={{
           maxWidth: 820,
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: 16,
+          gap: 20,
         }}
       >
         <Link
           href="/proyectos"
-          style={{ fontSize: 12.5, color: "var(--m-ink-2)", textDecoration: "none" }}
+          style={{ fontSize: 12.5, fontWeight: 700, textDecoration: "none" }}
         >
           ← Proyectos
         </Link>
@@ -47,12 +56,21 @@ export default async function ProjectDetailPage({
             <span style={{ fontSize: 22 }} aria-hidden>
               {project.icon}
             </span>
-            <h1 style={{ fontSize: 22, fontWeight: 650, letterSpacing: "-0.02em" }}>
+            {/* El nombre lo escribe el usuario, así que parte de línea en vez de
+                desbordar. 14px es el suelo de Press Start 2P. */}
+            <h1
+              style={{
+                fontFamily: "var(--font-pixel)",
+                fontSize: 14,
+                lineHeight: 1.6,
+                overflowWrap: "anywhere",
+              }}
+            >
               {project.name}
             </h1>
           </div>
           {project.description ? (
-            <p style={{ fontSize: 13.5, color: "var(--m-ink-2)", marginTop: 6 }}>
+            <p style={{ fontSize: 13.5, marginTop: 8 }}>
               {project.description}
             </p>
           ) : null}
@@ -67,21 +85,18 @@ export default async function ProjectDetailPage({
               marginBottom: 8,
             }}
           >
-            <span className="m-num" style={{ fontSize: 15, fontWeight: 600 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-vt)",
+                fontSize: 18,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {doneItems} de {totalItems} · {Math.round(percent * 100)}%
             </span>
-            <span style={{ fontSize: 11.5, color: "var(--m-ink-3)" }}>{movement}</span>
+            <span style={{ fontSize: 11.5 }}>{movement}</span>
           </div>
-          <div style={{ height: 5, background: "var(--m-track)", borderRadius: 3 }}>
-            <div
-              style={{
-                height: "100%",
-                width: `${Math.round(percent * 100)}%`,
-                background: "var(--m-series)",
-                borderRadius: 3,
-              }}
-            />
-          </div>
+          <ProgressBar value={percent} />
         </Card>
 
         <Card title="Subtareas">
