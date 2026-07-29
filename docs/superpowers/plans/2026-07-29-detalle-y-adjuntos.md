@@ -1022,7 +1022,7 @@ git commit -m "fix(tareas): borrar una tarea se lleva los archivos de su arbol"
 **Files:**
 - Create: `src/app/api/adjunto/[id]/route.ts`
 
-- [ ] **Paso 1: La ruta**
+- [x] **Paso 1: La ruta**
 
 ```ts
 import { readFile } from "node:fs/promises";
@@ -1092,13 +1092,13 @@ export async function GET(
 > `params` es una **promesa** en esta versión de Next, igual que `searchParams`.
 > Compruébalo en `node_modules/next/dist/docs/` si el tipo no cuadra.
 
-- [ ] **Paso 2: Verificar**
+- [x] **Paso 2: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npm run build
 ```
 
-- [ ] **Paso 3: Commit**
+- [x] **Paso 3: Commit**
 
 ```bash
 git add src/app/api/adjunto
