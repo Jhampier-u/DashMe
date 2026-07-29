@@ -480,7 +480,7 @@ git commit -m "feat(tareas): la tabla de adjuntos"
 - Modify: `src/modules/habitos/actions.ts`
 - Modify: `src/modules/habitos/index.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/adjuntos.test.ts`:
 
@@ -685,13 +685,13 @@ describe("storedNamesOfTasks", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/adjuntos.test.ts
 ```
 
-- [ ] **Paso 3: Escribirlo**
+- [x] **Paso 3: Escribirlo**
 
 `src/modules/habitos/lib/adjuntos.ts`:
 
@@ -856,7 +856,7 @@ export async function storedNamesOfTasks(
 }
 ```
 
-- [ ] **Paso 4: Los server actions**
+- [x] **Paso 4: Los server actions**
 
 En `src/modules/habitos/actions.ts`:
 
@@ -900,13 +900,13 @@ Y en `src/modules/habitos/index.ts`:
 export { listAttachments, type Adjunto } from "./lib/adjuntos";
 ```
 
-- [ ] **Paso 5: Verificar**
+- [x] **Paso 5: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
 ```
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add -A src
