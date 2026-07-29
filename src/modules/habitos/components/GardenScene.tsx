@@ -27,24 +27,32 @@ function phaseFor(hour: number): SkyPhase {
 /** Donde acaba el cielo y empieza la tierra. */
 const HORIZON = "62%";
 
-// Cielo y suelo van en capas separadas. Antes compartían un mismo degradado con
-// una parada dura en el horizonte, y esa parada era el bandeado pixel.
+// Cielo y suelo van en capas separadas para poder darle al horizonte su propio
+// trazo.
+//
+// Las paradas son DURAS a propósito: `a 0 34%, b 34% 67%` pinta tres franjas
+// planas en vez de interpolarlas. Ese bandeado es lo que hace que la escena sea
+// pixel art conservando sus seis fases —la noche sigue siendo noche—, y es justo
+// lo contrario de lo que buscaba la versión anterior, que lo trataba como un
+// defecto a evitar. Si te dan ganas de suavizarlo, es que no has leído esto.
+//
+// Los colores son los mismos de siempre. Lo único que cambió es cómo se reparten.
 const SKY: Record<SkyPhase, string> = {
-  dawn: "linear-gradient(180deg, #2b2440 0%, #6b4f74 45%, #c98f6d 100%)",
-  morning: "linear-gradient(180deg, #4a6f9e 0%, #7fa3c9 50%, #cfd9e2 100%)",
-  midday: "linear-gradient(180deg, #3d7ab5 0%, #6ba3d4 50%, #bcd8ea 100%)",
-  afternoon: "linear-gradient(180deg, #55749e 0%, #8f9cba 50%, #d9b48f 100%)",
-  dusk: "linear-gradient(180deg, #241d38 0%, #6d5480 45%, #c07f92 100%)",
-  night: "linear-gradient(180deg, #0c0c14 0%, #16162a 55%, #232144 100%)",
+  dawn: "linear-gradient(180deg, #2b2440 0 34%, #6b4f74 34% 67%, #c98f6d 67% 100%)",
+  morning: "linear-gradient(180deg, #4a6f9e 0 34%, #7fa3c9 34% 67%, #cfd9e2 67% 100%)",
+  midday: "linear-gradient(180deg, #3d7ab5 0 34%, #6ba3d4 34% 67%, #bcd8ea 67% 100%)",
+  afternoon: "linear-gradient(180deg, #55749e 0 34%, #8f9cba 34% 67%, #d9b48f 67% 100%)",
+  dusk: "linear-gradient(180deg, #241d38 0 34%, #6d5480 34% 67%, #c07f92 67% 100%)",
+  night: "linear-gradient(180deg, #0c0c14 0 34%, #16162a 34% 67%, #232144 67% 100%)",
 };
 
 const GROUND: Record<SkyPhase, string> = {
-  dawn: "linear-gradient(180deg, #3a4a2c 0%, #26301c 100%)",
-  morning: "linear-gradient(180deg, #46603a 0%, #2c3d24 100%)",
-  midday: "linear-gradient(180deg, #4d6b3d 0%, #314426 100%)",
-  afternoon: "linear-gradient(180deg, #445c36 0%, #2b3a22 100%)",
-  dusk: "linear-gradient(180deg, #2f3a24 0%, #1e2617 100%)",
-  night: "linear-gradient(180deg, #1b2416 0%, #121810 100%)",
+  dawn: "linear-gradient(180deg, #3a4a2c 0 50%, #26301c 50% 100%)",
+  morning: "linear-gradient(180deg, #46603a 0 50%, #2c3d24 50% 100%)",
+  midday: "linear-gradient(180deg, #4d6b3d 0 50%, #314426 50% 100%)",
+  afternoon: "linear-gradient(180deg, #445c36 0 50%, #2b3a22 50% 100%)",
+  dusk: "linear-gradient(180deg, #2f3a24 0 50%, #1e2617 50% 100%)",
+  night: "linear-gradient(180deg, #1b2416 0 50%, #121810 50% 100%)",
 };
 
 // El amanecer y el atardecer también cuentan como "oscuros" para las estrellas,
@@ -114,6 +122,9 @@ export function GardenScene({ habits }: Props) {
           top: HORIZON,
           bottom: 0,
           background: GROUND[phase],
+          // El horizonte era el único corte duro de la escena y por eso se leía
+          // como horizonte. Ahora hay tres más arriba, así que se marca.
+          borderTop: "3px solid var(--color-line)",
           transition: fade,
         }}
       />
