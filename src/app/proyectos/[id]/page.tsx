@@ -4,7 +4,7 @@ import { db } from "@/modules/core/db";
 import { getProjectWithTree } from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
 import { ProgressBar } from "@/modules/core/ui/ProgressBar";
-import { ProjectTree } from "@/modules/habitos/components/projects/ProjectTree";
+import { TaskTree } from "@/modules/habitos/components/tasks/TaskTree";
 
 export const dynamic = "force-dynamic";
 
@@ -100,7 +100,7 @@ export default async function ProjectDetailPage({
         </Card>
 
         <Card title="Subtareas">
-          <ProjectTree projectId={project.id} roots={roots} />
+          <TaskTree projectId={project.id} roots={roots} />
         </Card>
       </div>
     </main>

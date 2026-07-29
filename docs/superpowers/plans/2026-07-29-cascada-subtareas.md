@@ -683,7 +683,7 @@ git commit -m "feat(tareas): la cascada se aplica en una transaccion"
 - Delete: `src/modules/habitos/components/projects/ProjectTreeItem.tsx`
 - Modify: `src/app/proyectos/[id]/page.tsx`
 
-- [ ] **Paso 1: Mover con git, para no perder la historia**
+- [x] **Paso 1: Mover con git, para no perder la historia**
 
 ```bash
 git mv src/modules/habitos/components/projects/ProjectTree.tsx \
@@ -692,7 +692,7 @@ git mv src/modules/habitos/components/projects/ProjectTreeItem.tsx \
        src/modules/habitos/components/tasks/TaskTreeItem.tsx
 ```
 
-- [ ] **Paso 2: Renombrar y desacoplar de proyectos**
+- [x] **Paso 2: Renombrar y desacoplar de proyectos**
 
 En los dos archivos:
 
@@ -736,7 +736,7 @@ componente deja de saber qué es un proyecto.
 `deleteProjectItem` se queda con su nombre en `actions.ts`; borra por id y no
 sabe de proyectos.
 
-- [ ] **Paso 3: El tipo del nodo**
+- [x] **Paso 3: El tipo del nodo**
 
 En `src/modules/habitos/lib/tasks.ts`, junto a `TaskTreeNode`:
 
@@ -756,7 +756,7 @@ export type NodoArbol = {
 Y en `lib/projects.ts`, `ProjectItemNode` pasa a `TaskTreeNode<NodoArbol & { projectId: string }>`
 para que `/proyectos` siga compilando sin cambiar nada más.
 
-- [ ] **Paso 4: `/proyectos` importa de su sitio nuevo**
+- [x] **Paso 4: `/proyectos` importa de su sitio nuevo**
 
 En `src/app/proyectos/[id]/page.tsx`:
 
@@ -770,14 +770,14 @@ Y donde se monta, pásale el creador de raíz:
 <TaskTree roots={roots} projectId={id} />
 ```
 
-- [ ] **Paso 5: Verificar**
+- [x] **Paso 5: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 grep -rn "ProjectTree\|ProjectItemNode" src/ || echo "sin restos"
 ```
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add -A src

@@ -63,6 +63,17 @@ export function buildTaskTree<T extends TaskTreeInput>(
   return raices;
 }
 
+/** Lo que el árbol de la interfaz necesita de cada nodo. */
+export type NodoArbol = {
+  id: string;
+  parentId: string | null;
+  title: string;
+  status: TaskStatus;
+  order: number;
+  createdAt: Date;
+  completedAt: Date | null;
+};
+
 export type TaskFilter = {
   categoriaId: string | null;
   prioridad: Prioridad | null;

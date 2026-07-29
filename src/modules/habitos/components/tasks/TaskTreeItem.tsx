@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { ProjectItemNode, ProjectItemStatus } from "@/modules/habitos/lib/projects";
+import type {
+  NodoArbol,
+  TaskStatus,
+  TaskTreeNode,
+} from "@/modules/habitos/lib/tasks";
 import {
-  createProjectTask,
+  crearSubtarea,
   updateTaskStatus,
   deleteProjectItem,
   renameTask,
@@ -12,13 +16,13 @@ import { emitStatusChange } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { Button } from "@/modules/core/ui/Button";
 
-const STATUS_CYCLE: Record<ProjectItemStatus, ProjectItemStatus> = {
+const STATUS_CYCLE: Record<TaskStatus, TaskStatus> = {
   TODO: "IN_PROGRESS",
   IN_PROGRESS: "DONE",
   DONE: "TODO",
 };
 
-const STATUS_MARK: Record<ProjectItemStatus, string> = {
+const STATUS_MARK: Record<TaskStatus, string> = {
   TODO: "○",
   IN_PROGRESS: "◐",
   DONE: "●",
@@ -30,19 +34,19 @@ const STATUS_MARK: Record<ProjectItemStatus, string> = {
   del botón, con el mismo vocabulario que las columnas de tareas y el sello de
   la fila de hábito: tres pantallas diciendo «hecho» de la misma forma.
 */
-const STATUS_FILL: Record<ProjectItemStatus, string> = {
+const STATUS_FILL: Record<TaskStatus, string> = {
   TODO: "var(--color-paper)",
   IN_PROGRESS: "var(--color-pink)",
   DONE: "var(--color-tinta)",
 };
 
-const STATUS_INK: Record<ProjectItemStatus, string> = {
+const STATUS_INK: Record<TaskStatus, string> = {
   TODO: "var(--color-tinta)",
   IN_PROGRESS: "var(--color-tinta)",
   DONE: "var(--color-paper)",
 };
 
-const STATUS_NAME: Record<ProjectItemStatus, string> = {
+const STATUS_NAME: Record<TaskStatus, string> = {
   TODO: "por hacer",
   IN_PROGRESS: "en proceso",
   DONE: "hecha",
@@ -65,7 +69,7 @@ const ICON_BUTTON =
   "disabled:opacity-40";
 
 /*
-  El campo de edición en línea. Está escrito igual aquí y en `ProjectTree`, así
+  El campo de edición en línea. Está escrito igual aquí y en `TaskTree`, así
   que se comparte desde un solo sitio.
 */
 export const CAMPO_LINEA =
@@ -74,11 +78,11 @@ export const CAMPO_LINEA =
   "placeholder:text-tinta-2 " +
   "outline-none focus:outline-3 focus:outline-offset-2 focus:outline-line";
 
-export function ProjectTreeItem({
+export function TaskTreeItem({
   node,
   depth,
 }: {
-  node: ProjectItemNode;
+  node: TaskTreeNode<NodoArbol>;
   depth: number;
 }) {
   const [open, setOpen] = useState(true);
@@ -136,7 +140,10 @@ export function ProjectTreeItem({
     const t = childTitle.trim();
     if (!t) return;
     startTransition(async () => {
-      await createProjectTask(node.projectId, node.id, t);
+      // `crearSubtarea` hereda el proyecto del padre, así que este componente
+      // no tiene que saber qué es un proyecto. Es lo que le permite servir
+      // igual en `/tareas`, donde no hay ninguno.
+      await crearSubtarea(node.id, t);
       setChildTitle("");
       setAdding(false);
     });
@@ -256,7 +263,7 @@ export function ProjectTreeItem({
       {open && (hasChildren || adding) ? (
         <div>
           {node.children.map((child) => (
-            <ProjectTreeItem key={child.id} node={child} depth={depth + 1} />
+            <TaskTreeItem key={child.id} node={child} depth={depth + 1} />
           ))}
           {adding ? (
             <form
