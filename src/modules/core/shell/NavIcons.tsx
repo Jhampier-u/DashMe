@@ -9,7 +9,10 @@ const SHARED: SVGProps<SVGSVGElement> = {
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 1.6,
+  // 2,5 y no 3: el sistema traza a 3px en todo lo demás, pero a 24×24 ese
+  // grosor cierra los huecos interiores de la casa y la carpeta y las convierte
+  // en manchas. 2,5 aguanta junto a un borde macizo sin perder el dibujo.
+  strokeWidth: 2.5,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
   "aria-hidden": true,
