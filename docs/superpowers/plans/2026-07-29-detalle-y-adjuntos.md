@@ -921,7 +921,7 @@ git commit -m "feat(tareas): guardar, listar y borrar adjuntos"
 - Modify: `src/modules/habitos/lib/mutations.ts`
 - Modify: `src/modules/habitos/lib/integridad.test.ts`
 
-- [ ] **Paso 1: El test**
+- [x] **Paso 1: El test**
 
 Añade a `src/modules/habitos/lib/integridad.test.ts`:
 
@@ -960,13 +960,13 @@ Con los imports que hagan falta arriba: `fs`, `os`, `path` y `addFileBytes`.
 > `basePuestaAlDia()` crea la base con el esquema real, así que `task_attachments`
 > existe y su foránea está declarada. No hay que tocar el fósil de `tasks`.
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/integridad.test.ts
 ```
 
-- [ ] **Paso 3: Los tres pasos**
+- [x] **Paso 3: Los tres pasos**
 
 En `deleteTaskById`, entre el cálculo de `aBorrar` y el `delete`:
 
@@ -1002,13 +1002,13 @@ Con el import:
 import { borrarDeDisco, storedNamesOfTasks } from "./adjuntos";
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
 ```
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add -A src
