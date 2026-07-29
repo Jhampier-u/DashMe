@@ -91,57 +91,77 @@ body {
    ========================================================================== */
 
 @theme {
-  --color-ink: #0c0a09;
-  --color-ink-2: #15110f;
-  --color-ink-3: #1f1a17;
-  --color-cream: #f4ede4;
-  --color-cream-dim: #c4bdb2;
-  --color-mute: #6b6358;
-  --color-rule: #2a2521;
-  --color-acid: #d2ff3a;
-  --color-blood: #c1392b;
+  /*
+    Música conserva sus nombres y cambia sus valores. Los nombres describen el
+    mundo oscuro del que viene —`ink` era el fondo, `cream` el texto— y
+    renombrarlos costaría tocar 760 usos en 37 archivos para no ganar nada.
+    Lo que hay debajo ya es el sistema pixel.
+  */
+  --color-ink: var(--color-paper);
+  --color-ink-2: var(--color-paper-2);
+  /* Solo hay dos papeles, así que el tercer nivel se colapsa en el segundo. */
+  --color-ink-3: var(--color-paper-2);
+  --color-cream: var(--color-tinta);
+  --color-cream-dim: var(--color-tinta);
+  /*
+    Los tres niveles de texto se colapsan en uno. `tinta-2` mide 4,00:1 y solo
+    cubre texto grande; usarlo para los 214 `text-mute` dejaría media sección
+    bajo AA. Es el mismo trade que ya tomaron las otras cinco secciones: la
+    jerarquía la dan el tamaño y el grosor, no el tono.
+  */
+  --color-mute: var(--color-tinta);
+  --color-rule: var(--color-line);
+  --color-acid: var(--color-yellow);
+  --color-blood: var(--color-peach);
 
-  /* Tag palette — distinct, paired with editorial dark base. */
+  /*
+    Paleta categórica de etiquetas. NO se remapea a los pasteles: son siete y no
+    caben en seis sin que dos dejen de distinguirse.
+
+    Se usan como cápsulas con tinta encima, así que cada una tiene que llegar a
+    4,5:1 contra `--color-tinta`. Medido:
+
+      acid   #d2ff3a  8,97:1      sky    #6ed3ff  6,16:1
+      amber  #f4b942  5,88:1      mint   #62e8aa  6,76:1
+      coral  #ff9980  5,01:1  (era #ff7a59, 4,05 — no llegaba)
+      violet #c2a5ff  5,01:1  (era #b18cff, 4,00 — no llegaba)
+      rose   #ff93b5  5,00:1  (era #ff6c9a, 3,90 — no llegaba)
+
+    Los tres se ACLARAN, no se oscurecen: la tinta es oscura, así que el
+    contraste sube alejando el fondo hacia el blanco. Se apunta a 5:1 y no al
+    4,5 justo para que un retoque futuro no lo rompa en silencio.
+
+    Siguen siendo siete distinguibles: el peor par es coral~rose con ΔE 30,6,
+    muy por encima del umbral de 20 que se exigió a los acentos de hábito.
+  */
   --color-tag-acid: #d2ff3a;
   --color-tag-amber: #f4b942;
-  --color-tag-coral: #ff7a59;
+  --color-tag-coral: #ff9980;
   --color-tag-sky: #6ed3ff;
-  --color-tag-violet: #b18cff;
-  --color-tag-rose: #ff6c9a;
+  --color-tag-violet: #c2a5ff;
+  --color-tag-rose: #ff93b5;
   --color-tag-mint: #62e8aa;
 
-  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
+  --font-serif: var(--font-pixel);
+  /*
+    No pasa a VT323 aunque sea la fuente de datos del sistema: su consumidor
+    principal es `.label-mono`, que mide 10px, y VT323 por debajo de 16 deja de
+    leerse. Lo que necesita ser más pequeño va en Quicksand.
+  */
+  --font-mono: var(--font-cuerpo);
 }
 
-/* Antes en `body`. Acotado al contenedor de la sección para que el degradado
-   y las ligaduras de Fraunces no se apliquen fuera de música. */
+/*
+  El contenedor de la sección. Ya no monta ambiente: los dos degradados
+  radiales eran resplandores ácido y rojo para un mundo oscuro, y el grano de
+  película contradice el pixel art, que es plano por definición. La textura del
+  sistema es el papel y el trazo, no el ruido.
+
+  Se conserva la clase porque es donde se aplican las fuentes de la sección y
+  porque `musica/layout.tsx` la usa como contenedor.
+*/
 .musica-root {
-  font-feature-settings: "ss01", "ss02", "ss03";
-  background-image:
-    radial-gradient(
-      circle at 20% 0%,
-      rgba(210, 255, 58, 0.04) 0%,
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 80% 100%,
-      rgba(193, 57, 43, 0.03) 0%,
-      transparent 50%
-    );
-  background-attachment: fixed;
-}
-
-/* Subtle film grain overlay — antes en `body::before`. */
-.musica-root::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 100;
-  opacity: 0.035;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  font-feature-settings: normal;
 }
 
 @layer utilities {
@@ -151,24 +171,22 @@ body {
   .font-mono {
     font-family: var(--font-mono);
   }
+  /*
+    Sin `font-variation-settings`: ajustaban los ejes opsz, SOFT y WONK de
+    Fraunces, que es variable. Press Start 2P no tiene ejes, así que esas
+    declaraciones no harían nada y se quitan en vez de dejarlas mintiendo.
+
+    El `letter-spacing` negativo también se va: apretaba una serif variable y
+    sobre una pixelada monoespaciada solo la emborrona. Y el `line-height` sube
+    de 0,92 a 1,5, porque Press Start 2P necesita aire entre líneas.
+  */
   .display {
     font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 144,
-      "SOFT" 30,
-      "WONK" 1;
-    letter-spacing: -0.04em;
-    line-height: 0.92;
+    line-height: 1.5;
   }
   .display-italic {
     font-family: var(--font-serif);
-    font-style: italic;
-    font-variation-settings:
-      "opsz" 144,
-      "SOFT" 100,
-      "WONK" 1;
-    letter-spacing: -0.045em;
-    line-height: 0.88;
+    line-height: 1.5;
   }
   .label-mono {
     font-family: var(--font-mono);
