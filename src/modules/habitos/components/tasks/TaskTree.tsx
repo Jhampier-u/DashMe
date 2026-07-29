@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createProjectTask } from "@/modules/habitos/actions";
+import { createProjectTask, crearSubtarea } from "@/modules/habitos/actions";
 import type { NodoArbol, TaskTreeNode } from "@/modules/habitos/lib/tasks";
 import { Button } from "@/modules/core/ui/Button";
 import { TaskTreeItem, CAMPO_LINEA } from "./TaskTreeItem";
@@ -11,20 +11,30 @@ import { TaskTreeItem, CAMPO_LINEA } from "./TaskTreeItem";
  * comparten `buildTaskTree` en la capa de datos y por la misma razón: desde la
  * unificación de tablas es el mismo árbol.
  *
- * `projectId` es OPCIONAL y solo sirve para ofrecer «añadir» en la raíz, que es
- * lo que hace `/proyectos`. En `/tareas` la raíz se crea con el botón «Nueva
- * tarea» de la cabecera, así que no se pasa y el formulario no aparece.
+ * Los dos `...Id` dicen DÓNDE cuelga lo que se cree desde el formulario de la
+ * raíz, y se usa uno u otro según quién monte el árbol:
  *
- * Es un `string` y no una función a propósito: este componente es de cliente y
- * lo monta una página de servidor, que no puede pasarle una función anónima.
+ *   projectId — `/proyectos`: la raíz del árbol es la raíz del proyecto.
+ *   parentId  — `/tareas`: la raíz del árbol cuelga de la tarjeta.
+ *
+ * Sin ninguno de los dos el formulario no aparece y el árbol es de solo
+ * lectura. `parentId` hace falta porque si no, desde `/tareas` sería imposible
+ * crear la PRIMERA subtarea de una tarea: la tarjeta solo abre el árbol cuando
+ * ya hay hijos.
+ *
+ * Son `string` y no funciones a propósito: este componente es de cliente y lo
+ * monta una página de servidor, que no puede pasarle una función anónima.
  */
 export function TaskTree({
   projectId,
+  parentId,
   roots,
 }: {
   projectId?: string;
+  parentId?: string;
   roots: TaskTreeNode<NodoArbol>[];
 }) {
+  const puedeCrear = Boolean(projectId ?? parentId);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [pending, startTransition] = useTransition();
@@ -34,8 +44,9 @@ export function TaskTree({
     const t = title.trim();
     if (!t) return;
     startTransition(async () => {
-      if (!projectId) return;
-      await createProjectTask(projectId, null, t);
+      if (projectId) await createProjectTask(projectId, null, t);
+      else if (parentId) await crearSubtarea(parentId, t);
+      else return;
       setTitle("");
       setAdding(false);
     });
@@ -46,7 +57,7 @@ export function TaskTree({
       {roots.length === 0 && !adding ? (
         <p style={{ fontSize: 13, padding: "12px 0" }}>
           Sin subtareas todavía.
-          {projectId ? " Añade la primera y empieza a anidar." : ""}
+          {puedeCrear ? " Añade la primera y empieza a anidar." : ""}
         </p>
       ) : (
         roots.map((node) => (
@@ -54,7 +65,7 @@ export function TaskTree({
         ))
       )}
 
-      {!projectId ? null : adding ? (
+      {!puedeCrear ? null : adding ? (
         <form onSubmit={submit} style={{ display: "flex", gap: 8, paddingTop: 8 }}>
           <input
             autoFocus

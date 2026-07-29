@@ -916,21 +916,35 @@ git commit -m "feat(tareas): la tarjeta despliega su arbol de subtareas"
 
 ---
 
+### Tarea 4b: Sin esto no se podía crear la primera subtarea
+
+Encontrado al ir a verificar, y era una pescadilla que se muerde la cola: la
+tarjeta solo abría el árbol si `hijos.total > 0`, y el «añadir» del árbol estaba
+atado a tener `projectId`. Desde `/tareas` no había forma de crear la PRIMERA
+subtarea de nada: la única puerta al árbol era tener ya un árbol.
+
+- [x] `TaskTree` acepta también `parentId`: el formulario de la raíz cuelga de
+      la tarjeta en vez de del proyecto
+- [x] El botón de la tarjeta sale SIEMPRE, con hijos o sin ellos. Sin hijos dice
+      «Subtareas»; con ellos, el mismo resumen de antes
+
+---
+
 ### Tarea 5: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: Que no queden restos del nombre viejo**
+- [x] **Paso 2: Que no queden restos del nombre viejo**
 
 ```bash
 grep -rn "ProjectTree\|ProjectItemNode\|createProjectTask" src/ | grep -v projects/ || echo "sin restos"
 ```
 
-- [ ] **Paso 3: En pantalla, en `/tareas`**
+- [x] **Paso 3: En pantalla, en `/tareas`**
 
 1. Crea una tarea con dos subtareas.
 2. Despliega la tarjeta y marca una: el padre debe ponerse **en proceso**.
@@ -940,21 +954,26 @@ grep -rn "ProjectTree\|ProjectItemNode\|createProjectTask" src/ | grep -v projec
 
 El paso 4 es el que comprueba la resolución de la contradicción del spec.
 
-- [ ] **Paso 4: Que el XP no dependa del orden**
+- [x] **Paso 4: Que el XP no dependa del orden**
 
-Antes de empezar, apunta el XP. Cierra un árbol de tres de abajo arriba y
-apúntalo otra vez. Reabre, y ciérralo marcando el padre. La diferencia tiene que
-ser la misma las dos veces.
+Comprobado con el test de `mutations.test.ts`, que monta las dos rutas sobre dos
+bases limpias y exige el mismo XP, y NO repitiéndolo a mano en la base real:
+reabrir y volver a cerrar mueve el XP y las misiones del día del usuario.
 
-> Hazlo sobre tareas de prueba tuyas, no sobre trabajo real: reabrir y volver a
-> cerrar mueve el XP y las misiones del día.
+Lo que sí se midió en vivo, sobre un árbol de prueba propio: cerrar las dos
+subtareas subió el XP 45, tres tareas por quince. Desmarcar el padre a mano bajó
+quince, solo el suyo. Y reabrir una subtarea bajó otros quince.
 
-- [ ] **Paso 5: Que `/proyectos` siga igual**
+**Aviso:** borrar una tarea que estaba hecha NO devuelve su XP —es el
+comportamiento que ya había—, así que verificar en la base real la deja algo más
+alta que al empezar. Con un árbol de prueba de tres, quince puntos.
+
+- [x] **Paso 5: Que `/proyectos` siga igual**
 
 Despliega un proyecto, añade una subtarea, renómbrala, márcala y bórrala. Nada
 de eso debería haber cambiado.
 
-- [ ] **Paso 6: Marcar el plan y el spec**
+- [x] **Paso 6: Marcar el plan y el spec**
 
 Marca las casillas y anota cualquier desvío con su motivo.
 
@@ -962,14 +981,14 @@ Marca las casillas y anota cualquier desvío con su motivo.
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. Marcar un padre cierra todos sus descendientes, a cualquier profundidad
-- [ ] 3. Cerrar la última subtarea cierra al padre; reabrir una lo reabre
-- [ ] 4. Con hijos a medias, el padre queda en proceso
-- [ ] 5. Desmarcar un padre a mano NO toca a sus hijos
-- [ ] 6. El XP de una cascada es el mismo que hacerlo tarea a tarea
-- [ ] 7. Un ciclo en `parent_id` no cuelga
-- [ ] 8. Los cambios se escriben en una sola transacción
-- [ ] 9. `/tareas` despliega el árbol desde la tarjeta
-- [ ] 10. `/proyectos` sigue funcionando y sus tests siguen pasando
-- [ ] 11. Ninguna columna nueva y ninguna migración
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. Marcar un padre cierra todos sus descendientes, a cualquier profundidad
+- [x] 3. Cerrar la última subtarea cierra al padre; reabrir una lo reabre
+- [x] 4. Con hijos a medias, el padre queda en proceso
+- [x] 5. Desmarcar un padre a mano NO toca a sus hijos
+- [x] 6. El XP de una cascada es el mismo que hacerlo tarea a tarea
+- [x] 7. Un ciclo en `parent_id` no cuelga
+- [x] 8. Los cambios se escriben en una sola transacción
+- [x] 9. `/tareas` despliega el árbol desde la tarjeta
+- [x] 10. `/proyectos` sigue funcionando y sus tests siguen pasando
+- [x] 11. Ninguna columna nueva y ninguna migración

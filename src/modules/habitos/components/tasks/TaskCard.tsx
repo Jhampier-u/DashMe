@@ -117,28 +117,35 @@ export function TaskCard({
         <div style={{ fontSize: 12, marginTop: 6 }}>{task.description}</div>
       ) : null}
       {/*
-        El resumen que había aquí pasa a ser el rótulo del botón: plegada, la
-        tarjeta dice exactamente lo mismo que decía antes.
+        El resumen que había aquí pasa a ser el rótulo del botón: con hijos,
+        plegada, la tarjeta dice exactamente lo mismo que decía antes.
+
+        Y el botón sale SIEMPRE, también sin hijos. Si solo apareciera cuando ya
+        los hay, no habría forma de crear la primera subtarea desde aquí: la
+        única puerta al árbol sería tener ya un árbol.
       */}
-      {task.hijos.total > 0 ? (
-        <>
+      <>
           <button
             type="button"
             onClick={() => setAbierto(!abierto)}
             aria-expanded={abierto}
             className="mt-1.5 text-[11.5px] text-tinta font-cuerpo underline cursor-pointer bg-transparent border-0 p-0 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line"
           >
-            {abierto ? "▾" : "▸"} {task.hijos.total} subtarea
-            {task.hijos.total === 1 ? "" : "s"} · {task.hijos.hechos} hecha
-            {task.hijos.hechos === 1 ? "" : "s"}
+            {abierto ? "▾" : "▸"}{" "}
+            {task.hijos.total === 0
+              ? "Subtareas"
+              : `${task.hijos.total} subtarea${
+                  task.hijos.total === 1 ? "" : "s"
+                } · ${task.hijos.hechos} hecha${
+                  task.hijos.hechos === 1 ? "" : "s"
+                }`}
           </button>
           {abierto ? (
             <div style={{ marginTop: 8 }}>
-              <TaskTree roots={task.arbol} />
+              <TaskTree roots={task.arbol} parentId={task.id} />
             </div>
           ) : null}
-        </>
-      ) : null}
+      </>
 
       <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
         <button
