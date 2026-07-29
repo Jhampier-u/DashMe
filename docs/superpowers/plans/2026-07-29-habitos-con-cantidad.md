@@ -391,13 +391,20 @@ git commit -m "feat(habitos): las columnas de cantidad, con su migracion"
 
 ### Tarea 3: Los cinco sitios
 
+> **Nota de la ejecución:** eran CINCO usos pero **CUATRO conjuntos**. En
+> `habits.ts` y en `home.ts`, el mismo conjunto alimenta a `computeStreak` y a
+> `isCriticalDay`, así que se arregla una vez y sirve para los dos. Y `habits.ts`
+> y `stats.ts` ya usaban `.select()` sin proyección, así que `count` y
+> `targetCount` estaban disponibles sin tocar la consulta: solo hubo que
+> extenderlas en `home.ts` y en `mutations.ts`.
+
 **Files:**
 - Modify: `src/modules/habitos/lib/habits.ts`
 - Modify: `src/modules/habitos/lib/home.ts`
 - Modify: `src/modules/habitos/lib/stats.ts`
 - Modify: `src/modules/habitos/lib/mutations.ts`
 
-- [ ] **Paso 1: `habits.ts`**
+- [x] **Paso 1: `habits.ts`**
 
 La consulta de registros tiene que traer `count`, y el conjunto sale de la
 función:
@@ -422,7 +429,7 @@ Y el objeto que devuelve gana lo que la fila necesita:
 
 Añádelos también al tipo `HabitWithStatus`.
 
-- [ ] **Paso 2: `home.ts`**
+- [x] **Paso 2: `home.ts`**
 
 `keysByHabit` se construye a partir de `entries`. Esas entradas necesitan
 `count`, y el objetivo del hábito:
@@ -472,7 +479,7 @@ consulta y al `map`. Y en el `select` de `habitsTable` de la misma función, añ
 > `buildHabitSpecs` y `complianceSeries` también reciben `entries`. Añadir un
 > campo no les afecta, pero comprueba que sus tipos no lo prohíban.
 
-- [ ] **Paso 3: `stats.ts`**
+- [x] **Paso 3: `stats.ts`**
 
 ```ts
   const doneKeys = diasQueCuentan(
@@ -484,7 +491,7 @@ consulta y al `map`. Y en el `select` de `habitsTable` de la misma función, añ
 `targetCount` sale del hábito que esta función ya consulta; si no lo consulta,
 añádelo al `select`.
 
-- [ ] **Paso 4: `mutations.ts`**
+- [x] **Paso 4: `mutations.ts`**
 
 La función privada que recalcula la racha tras marcar selecciona **solo `date`**.
 Necesita las otras dos columnas y el objetivo del hábito, que hay que pasarle:
@@ -513,7 +520,7 @@ Necesita las otras dos columnas y el objetivo del hábito, que hay que pasarle:
 `targetCount` entra como parámetro nuevo de esa función. **Sigue la cadena hasta
 quien la llama** y pásale `habit.targetCount`, que ya está a mano ahí.
 
-- [ ] **Paso 5: Verificar que no queda ninguno suelto**
+- [x] **Paso 5: Verificar que no queda ninguno suelto**
 
 ```bash
 grep -rn "computeStreak(" src/modules/habitos/lib/*.ts | grep -v streak
@@ -529,7 +536,7 @@ npx vitest run && npx tsc --noEmit && npm run lint
 
 `streak.test.ts` no debe necesitar ni un cambio.
 
-- [ ] **Paso 6: Commit**
+- [x] **Paso 6: Commit**
 
 ```bash
 git add -A src

@@ -27,6 +27,7 @@ import {
   sanitizeSchedule,
 } from "./streak";
 import { daysSince } from "./flow";
+import { diasQueCuentan } from "./cantidad";
 import {
   averageRate,
   buildHabitSpecs,
@@ -107,8 +108,13 @@ export async function getHabitsWithTodayStatus(
   return habits.map((h) => {
     const hLogs = logsPorHabito.get(h.id) ?? [];
     const schedule = sanitizeSchedule(h.schedule);
-    const doneKeys = new Set(
-      hLogs.map((l) => normalizeDayKey(l.date).getTime()),
+    const doneKeys = diasQueCuentan(
+      hLogs.map((l) => ({
+        date: l.date,
+        partial: !!l.partial,
+        count: l.count,
+      })),
+      h.targetCount,
     );
     const todayLog = hLogs.find(
       (l) => normalizeDayKey(l.date).getTime() === today.getTime(),
@@ -132,6 +138,8 @@ export async function getHabitsWithTodayStatus(
       intention: h.intention,
       doneToday: !!todayLog,
       partialToday: !!todayLog?.partial,
+      targetCount: h.targetCount,
+      countToday: todayLog?.count ?? null,
       scheduledToday: isScheduledOn(schedule, today),
       criticalToday: isCriticalDay(schedule, doneKeys, today, hasEverBeenDone),
       streak: computeStreak(schedule, doneKeys, today),

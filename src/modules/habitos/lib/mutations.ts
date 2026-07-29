@@ -17,7 +17,6 @@ import {
   dayKey,
   dayKeyFromISO,
   daysBetween,
-  normalizeDayKey,
 } from "./day";
 import {
   DEFAULT_HABIT_COLOR,
@@ -42,6 +41,7 @@ import {
 } from "./level";
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
 import { planCascada } from "./cascada";
+import { diasQueCuentan } from "./cantidad";
 import { borrarDeDisco, storedNamesOfTasks } from "./adjuntos";
 import { resolvePrioridad } from "./prioridad";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
@@ -315,7 +315,13 @@ export async function toggleHabitDay(
 
     // Hito: se calcula sobre la racha real (respetando el calendario) y su
     // bonus queda grabado en el propio registro para poder devolverlo.
-    const streak = await currentStreakOf(db, habitId, schedule, today);
+    const streak = await currentStreakOf(
+      db,
+      habitId,
+      schedule,
+      today,
+      habit.targetCount,
+    );
     const m = milestoneFor(streak);
     if (m) {
       awarded += m.bonus;
@@ -350,14 +356,26 @@ export async function toggleHabitDay(
   };
 }
 
+/**
+ * La racha viva de un hábito.
+ *
+ * Trae `partial` y `count` además de la fecha, y recibe el objetivo: con un
+ * objetivo, un día corto NO cuenta. Traer solo la fecha —como hacía antes— no
+ * daría error con la cantidad: contaría días que no debe, y en silencio.
+ */
 async function currentStreakOf(
   db: Db,
   habitId: string,
   schedule: string,
   today: Date,
+  targetCount: number | null,
 ): Promise<number> {
   const logs = await db
-    .select({ date: habitLogs.date })
+    .select({
+      date: habitLogs.date,
+      partial: habitLogs.partial,
+      count: habitLogs.count,
+    })
     .from(habitLogs)
     .where(
       and(
@@ -365,7 +383,10 @@ async function currentStreakOf(
         gte(habitLogs.date, addDays(today, -400)),
       ),
     );
-  const keys = new Set(logs.map((l) => normalizeDayKey(l.date).getTime()));
+  const keys = diasQueCuentan(
+    logs.map((l) => ({ date: l.date, partial: !!l.partial, count: l.count })),
+    targetCount,
+  );
   return computeStreak(schedule, keys, today);
 }
 

@@ -3,6 +3,7 @@ import type { Db } from "@/modules/core/db";
 import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { addDays, dayKey, normalizeDayKey } from "./day";
 import { computeStreak, isCriticalDay, isScheduledOn } from "./streak";
+import { diasQueCuentan, type LogParaRacha } from "./cantidad";
 import {
   bestWeekday,
   buildHabitSpecs,
@@ -55,6 +56,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
         name: habitsTable.name,
         schedule: habitsTable.schedule,
         createdAt: habitsTable.createdAt,
+        targetCount: habitsTable.targetCount,
       })
       .from(habitsTable)
       .orderBy(asc(habitsTable.createdAt)),
@@ -64,6 +66,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
         date: habitLogs.date,
         partial: habitLogs.partial,
         shielded: habitLogs.shielded,
+        count: habitLogs.count,
       })
       .from(habitLogs)
       .where(gte(habitLogs.date, from)),
@@ -74,6 +77,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
     day: normalizeDayKey(l.date),
     partial: l.partial,
     shielded: l.shielded,
+    count: l.count,
   }));
 
   // Un hábito cuenta desde su creación o desde su registro más antiguo, lo que
@@ -88,14 +92,23 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
 
   // Días cumplidos por hábito, para reutilizar la regla de los 2 días ya
   // probada en lib/streak en vez de reimplementar "ayer".
-  const keysByHabit = new Map<string, Set<number>>();
+  // Pasa por `diasQueCuentan` y no se construye a mano: con un objetivo, un día
+  // corto NO cuenta para la racha, y esta era una de las cinco copias de la
+  // regla que había que unificar.
+  const objetivoPorHabito = new Map(habits.map((h) => [h.id, h.targetCount]));
+  const logsPorHabito = new Map<string, LogParaRacha[]>();
   for (const entry of entries) {
-    let set = keysByHabit.get(entry.habitId);
-    if (!set) {
-      set = new Set();
-      keysByHabit.set(entry.habitId, set);
-    }
-    set.add(entry.day.getTime());
+    const l = { date: entry.day, partial: entry.partial, count: entry.count };
+    const lista = logsPorHabito.get(entry.habitId);
+    if (lista) lista.push(l);
+    else logsPorHabito.set(entry.habitId, [l]);
+  }
+  const keysByHabit = new Map<string, Set<number>>();
+  for (const [id, propios] of logsPorHabito) {
+    keysByHabit.set(
+      id,
+      diasQueCuentan(propios, objetivoPorHabito.get(id) ?? null),
+    );
   }
 
   // Registros de hoy no cubiertos por escudo: id de hábito -> ¿fue parcial?
