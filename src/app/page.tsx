@@ -10,6 +10,8 @@ import { TodayCard } from "@/modules/habitos/components/home/TodayCard";
 import { TrendCard } from "@/modules/habitos/components/home/TrendCard";
 import { MetricTiles } from "@/modules/habitos/components/home/MetricTiles";
 import { QuestList } from "@/modules/habitos/components/home/QuestList";
+import { Card } from "@/modules/core/ui/Card";
+import { buttonStyle } from "@/modules/core/ui/Button";
 import type { ChartPoint } from "@/modules/habitos/components/charts/ComplianceChart";
 
 export const dynamic = "force-dynamic";
@@ -20,18 +22,22 @@ const DATE_FORMAT = new Intl.DateTimeFormat("es", {
   month: "long",
 });
 
+// El aire crece: con trazo de 3px y sombra dura en cada pieza, el espaciado
+// anterior se queda corto y las sombras se muerden con el bloque siguiente.
 const seccion: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: 14,
+  gap: 18,
 };
 
+// 16px es el suelo de VT323.
 const tituloSeccion: React.CSSProperties = {
-  fontSize: 13,
-  fontWeight: 600,
-  letterSpacing: "0.04em",
+  fontFamily: "var(--font-vt)",
+  fontSize: 16,
+  lineHeight: 1,
+  letterSpacing: "0.06em",
   textTransform: "uppercase",
-  color: "var(--m-ink-3)",
+  color: "var(--color-tinta)",
 };
 
 export default async function DashboardPage() {
@@ -56,9 +62,15 @@ export default async function DashboardPage() {
   const today = formatted.charAt(0).toUpperCase() + formatted.slice(1);
 
   return (
+    // Se cae `.m-root`: la portada pone ya su propio papel.
     <main
-      className="m-root"
-      style={{ minHeight: "100%", padding: "20px 16px 48px" }}
+      style={{
+        minHeight: "100%",
+        padding: "24px 16px 56px",
+        background: "var(--color-paper)",
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
+      }}
     >
       <div
         style={{
@@ -66,7 +78,7 @@ export default async function DashboardPage() {
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: 32,
+          gap: 36,
         }}
       >
         <div
@@ -76,12 +88,8 @@ export default async function DashboardPage() {
             alignItems: "baseline",
           }}
         >
-          <span
-            style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}
-          >
-            Hoy
-          </span>
-          <span style={{ fontSize: 13, color: "var(--m-ink-3)" }}>{today}</span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>Hoy</span>
+          <span style={{ fontFamily: "var(--font-vt)", fontSize: 16 }}>{today}</span>
         </div>
 
         <section style={seccion}>
@@ -93,43 +101,24 @@ export default async function DashboardPage() {
             }}
           >
             <h2 style={tituloSeccion}>Hábitos</h2>
-            <Link
-              href="/habitos"
-              style={{ fontSize: 13, color: "var(--m-ink-3)" }}
-            >
+            <Link href="/habitos" style={{ fontSize: 13, fontWeight: 700 }}>
               Ver todo
             </Link>
           </div>
 
           {metrics.habitCount === 0 ? (
-            <div className="m-card" style={{ textAlign: "center", padding: 40 }}>
-              <p style={{ fontSize: 16, marginBottom: 6 }}>
+            <Card style={{ textAlign: "center", padding: 40 }}>
+              <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
                 Aún no tienes hábitos.
               </p>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "var(--m-ink-2)",
-                  marginBottom: 20,
-                }}
-              >
+              <p style={{ fontSize: 13, marginBottom: 20 }}>
                 Crea el primero y esta pantalla empezará a medirte.
               </p>
-              <Link
-                href="/habitos"
-                style={{
-                  display: "inline-block",
-                  background: "var(--m-series-strong)",
-                  color: "#fff",
-                  borderRadius: 8,
-                  padding: "9px 16px",
-                  fontSize: 13.5,
-                  fontWeight: 550,
-                }}
-              >
+              {/* Llevaba su propio azul a mano; ahora usa el botón del sistema. */}
+              <Link href="/habitos" style={buttonStyle("primary")}>
                 Crear un hábito
               </Link>
-            </div>
+            </Card>
           ) : (
             <>
               <div
@@ -180,15 +169,12 @@ export default async function DashboardPage() {
             }}
           >
             <h2 style={tituloSeccion}>Música</h2>
-            <Link
-              href="/musica"
-              style={{ fontSize: 13, color: "var(--m-ink-3)" }}
-            >
+            <Link href="/musica" style={{ fontSize: 13, fontWeight: 700 }}>
               Ver todo
             </Link>
           </div>
 
-          <p style={{ fontSize: 14, color: "var(--m-ink-2)" }}>
+          <p style={{ fontSize: 14 }}>
             Tu biblioteca y tu historial de escucha, en su propia sección. Los
             datos cruzados con el resto del dashboard llegan más adelante.
           </p>
