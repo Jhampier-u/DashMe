@@ -142,7 +142,17 @@ body {
   --color-tag-rose: #ff93b5;
   --color-tag-mint: #62e8aa;
 
-  --font-serif: var(--font-pixel);
+  /*
+    A Quicksand y no a la pixelada, aunque `font-serif` fuera la fuente de los
+    titulares. Sirve DOS papeles en música: los titulares grandes y la prosa en
+    cursiva editorial, que son dieciséis sitios. Press Start 2P para prosa
+    contradice su propia regla —títulos de sección, máximo cuatro palabras— y a
+    14px deja de leerse.
+
+    La pixelada se queda donde de verdad titula: en `.display`, que se declara
+    aparte más abajo.
+  */
+  --font-serif: var(--font-cuerpo);
   /*
     No pasa a VT323 aunque sea la fuente de datos del sistema: su consumidor
     principal es `.label-mono`, que mide 10px, y VT323 por debajo de 16 deja de
@@ -180,12 +190,18 @@ body {
     sobre una pixelada monoespaciada solo la emborrona. Y el `line-height` sube
     de 0,92 a 1,5, porque Press Start 2P necesita aire entre líneas.
   */
-  .display {
-    font-family: var(--font-serif);
-    line-height: 1.5;
-  }
+  /*
+    Aquí sí manda la pixelada: `.display` es el titular grande de música, que es
+    justo su papel. Va explícita en vez de por `--font-serif`, porque ese token
+    lo comparte con la prosa.
+
+    Sin cursiva en `.display-italic`: Press Start 2P no tiene una, y la que
+    sintetiza el navegador inclina los píxeles y los emborrona. Lo que
+    distinguía a la variante era el énfasis, y eso lo sostiene el tamaño.
+  */
+  .display,
   .display-italic {
-    font-family: var(--font-serif);
+    font-family: var(--font-pixel);
     line-height: 1.5;
   }
   .label-mono {
