@@ -60,7 +60,7 @@ veces en este proyecto.
 - Create: `src/modules/habitos/lib/cantidad.ts`
 - Create: `src/modules/habitos/lib/cantidad.test.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/cantidad.test.ts`:
 
@@ -159,7 +159,7 @@ describe("diasQueCuentan con objetivo", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
@@ -168,7 +168,7 @@ npx vitest run src/modules/habitos/lib/cantidad.test.ts
 
 Esperado: **FAIL**, `Cannot find module './cantidad'`.
 
-- [ ] **Paso 3: Escribirlo**
+- [x] **Paso 3: Escribirlo**
 
 `src/modules/habitos/lib/cantidad.ts`:
 
@@ -234,15 +234,15 @@ export function diasQueCuentan(
 }
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/cantidad.test.ts && npx tsc --noEmit
 ```
 
-Esperado: **PASS**, 13 afirmaciones.
+Esperado: **PASS**, 11 afirmaciones.
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add src/modules/habitos/lib/cantidad.ts src/modules/habitos/lib/cantidad.test.ts
