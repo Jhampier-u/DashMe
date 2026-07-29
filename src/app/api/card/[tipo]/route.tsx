@@ -55,16 +55,16 @@ type Tipo = (typeof TIPOS)[number];
  *
  * Se cachean en memoria: leer 500 KB de disco en cada petición sería tonto.
  */
-let fuentesCache: { serif: Buffer; mono: Buffer } | null = null;
+let fuentesCache: { pixel: Buffer; cuerpo: Buffer } | null = null;
 
 async function fuentes() {
   if (fuentesCache) return fuentesCache;
   const dir = path.join(process.cwd(), "public", "fonts");
-  const [serif, mono] = await Promise.all([
-    fs.readFile(path.join(dir, "Fraunces.ttf")),
-    fs.readFile(path.join(dir, "JetBrainsMono.ttf")),
+  const [pixel, cuerpo] = await Promise.all([
+    fs.readFile(path.join(dir, "PressStart2P-Regular.ttf")),
+    fs.readFile(path.join(dir, "Quicksand-Bold.ttf")),
   ]);
-  fuentesCache = { serif, mono };
+  fuentesCache = { pixel, cuerpo };
   return fuentesCache;
 }
 
@@ -94,13 +94,13 @@ function Marco({
         backgroundColor: INK,
         color: CREAM,
         padding: 90,
-        fontFamily: "Fraunces",
+        fontFamily: "Pixel",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <span
           style={{
-            fontFamily: "JetBrains",
+            fontFamily: "Cuerpo",
             fontSize: 26,
             letterSpacing: 4,
             color: TINTA,
@@ -110,7 +110,7 @@ function Marco({
         </span>
         <span
           style={{
-            fontFamily: "JetBrains",
+            fontFamily: "Cuerpo",
             fontSize: 26,
             letterSpacing: 4,
             color: MUTE,
@@ -127,7 +127,7 @@ function Marco({
           display: "flex",
           borderTop: `2px solid ${RULE}`,
           paddingTop: 28,
-          fontFamily: "JetBrains",
+          fontFamily: "Cuerpo",
           fontSize: 24,
           letterSpacing: 3,
           color: MUTE,
@@ -164,13 +164,13 @@ export async function GET(
     timeZone,
   );
 
-  const { serif, mono } = await fuentes();
+  const { pixel, cuerpo } = await fuentes();
   const opciones = {
     width: ANCHO,
     height: ALTO,
     fonts: [
-      { name: "Fraunces", data: serif, weight: 400 as const, style: "normal" as const },
-      { name: "JetBrains", data: mono, weight: 400 as const, style: "normal" as const },
+      { name: "Pixel", data: pixel, weight: 400 as const, style: "normal" as const },
+      { name: "Cuerpo", data: cuerpo, weight: 700 as const, style: "normal" as const },
     ],
   };
 
@@ -185,10 +185,13 @@ export async function GET(
       (
         <Marco etiqueta={range.label} pie={`${range.fromDate} — ${range.toDate}`}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 300, color: TINTA, lineHeight: 1 }}>
+            {/* 200 y no 300: Pixel es monoespaciada a 1em, así que una cifra de
+                cuatro dígitos ocupa 4× el tamaño. La tarjeta mide 1080 y quedan
+                920 útiles tras los márgenes. */}
+            <span style={{ fontSize: 200, color: TINTA, lineHeight: 1.2 }}>
               {horas.toLocaleString("es")}
             </span>
-            <span style={{ fontSize: 58, color: CREAM_DIM, marginTop: 10 }}>
+            <span style={{ fontFamily: "Cuerpo", fontSize: 46, color: CREAM_DIM, marginTop: 16 }}>
               horas de música
             </span>
 
@@ -240,7 +243,7 @@ export async function GET(
                 <div style={{ display: "flex", alignItems: "baseline" }}>
                   <span
                     style={{
-                      fontFamily: "JetBrains",
+                      fontFamily: "Cuerpo",
                       fontSize: 40,
                       // Tinta siempre: el rosa como texto sobre papel da
                       // 1,42:1. Lo que marca al primero es el grosor.
@@ -253,7 +256,10 @@ export async function GET(
                   </span>
                   <span
                     style={{
-                      fontSize: i === 0 ? 82 : 62,
+                      // Quicksand y no la pixelada: son nombres, no títulos,
+                      // y en monoespaciada uno largo se saldría de la tarjeta.
+                      fontFamily: "Cuerpo",
+                      fontSize: i === 0 ? 68 : 52,
                       color: TINTA,
                       fontWeight: i === 0 ? 700 : 400,
                     }}
@@ -272,7 +278,7 @@ export async function GET(
                   />
                   <span
                     style={{
-                      fontFamily: "JetBrains",
+                      fontFamily: "Cuerpo",
                       fontSize: 28,
                       color: MUTE,
                       marginLeft: 20,
@@ -298,16 +304,16 @@ export async function GET(
     (
       <Marco etiqueta="racha" pie={`máxima ${rachas.maxima} días`}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontSize: 340, color: TINTA, lineHeight: 1 }}>
+          <span style={{ fontSize: 200, color: TINTA, lineHeight: 1.2 }}>
             {rachas.actual}
           </span>
-          <span style={{ fontSize: 58, color: CREAM_DIM, marginTop: 10 }}>
+          <span style={{ fontFamily: "Cuerpo", fontSize: 46, color: CREAM_DIM, marginTop: 16 }}>
             {rachas.actual === 1 ? "día seguido" : "días seguidos"} con música
           </span>
           {rachas.maximaDesde && (
             <span
               style={{
-                fontFamily: "JetBrains",
+                fontFamily: "Cuerpo",
                 fontSize: 32,
                 color: MUTE,
                 marginTop: 70,
