@@ -39,7 +39,9 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
             <br />
             {active.mean === null ? "Sin datos" : `Media 7d: ${Math.round(active.mean * 100)}%`}
             <br />
-            <span style={{ color: "var(--m-ink-3)" }}>
+            {/* El tooltip ya fija su tinta; el gris claro sobre papel no se
+                leería. */}
+            <span>
               {active.scheduled === 0
                 ? "No tocaba nada"
                 : `Ese día: ${active.done} de ${active.scheduled}`}
