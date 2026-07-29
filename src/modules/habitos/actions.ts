@@ -15,7 +15,6 @@
 import { refresh } from "next/cache";
 import { db } from "@/modules/core/db";
 import type { TaskStatus } from "./lib/tasks";
-import type { ProjectItemStatus } from "./lib/projects";
 import * as m from "./lib/mutations";
 
 export type {
@@ -108,30 +107,27 @@ export async function deleteProject(formData: FormData) {
   refresh();
 }
 
-export async function createProjectItem(
+export async function createProjectTask(
   projectId: string,
   parentId: string | null,
   title: string,
 ) {
-  await m.createProjectItem(db, projectId, parentId, title);
+  await m.createProjectTask(db, projectId, parentId, title);
   refresh();
 }
 
-export async function updateProjectItemStatus(
-  itemId: string,
-  newStatus: ProjectItemStatus,
-) {
-  const r = await m.updateProjectItemStatus(db, itemId, newStatus);
-  refresh();
-  return r;
-}
+/*
+  `updateProjectItemStatus` ya no existe: mover un elemento de proyecto y mover
+  una tarea son la misma operación sobre la misma tabla. El árbol usa
+  `updateTaskStatus`.
+*/
 
 export async function deleteProjectItem(itemId: string) {
-  await m.deleteProjectItem(db, itemId);
+  await m.deleteTaskById(db, itemId);
   refresh();
 }
 
-export async function renameProjectItem(itemId: string, newTitle: string) {
-  await m.renameProjectItem(db, itemId, newTitle);
+export async function renameTask(taskId: string, newTitle: string) {
+  await m.renameTask(db, taskId, newTitle);
   refresh();
 }

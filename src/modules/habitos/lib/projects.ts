@@ -1,7 +1,8 @@
 import { and, asc, eq, isNotNull } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
-import { projects, projectItems } from "@/modules/habitos/schema";
+import { projects, tasks } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
+import type { TaskStatus } from "./tasks";
 import {
   daysSince,
   periodChange,
@@ -10,20 +11,20 @@ import {
   type WeekBucket,
 } from "./flow";
 
-export type ProjectItemStatus = "TODO" | "IN_PROGRESS" | "DONE";
-
-export const PROJECT_ITEM_STATUSES: ProjectItemStatus[] = [
-  "TODO",
-  "IN_PROGRESS",
-  "DONE",
-];
+/*
+  Un elemento de proyecto ES una tarea desde la unificación. Los estados se
+  reexportan con su nombre viejo para no mantener dos listas de lo mismo; lo que
+  se pinta y lo que se guarda son ya la misma cosa.
+*/
+export type { TaskStatus as ProjectItemStatus } from "./tasks";
+export { TASK_STATUSES as PROJECT_ITEM_STATUSES } from "./tasks";
 
 export type ProjectItemNode = {
   id: string;
   projectId: string;
   parentId: string | null;
   title: string;
-  status: ProjectItemStatus;
+  status: TaskStatus;
   order: number;
   createdAt: Date;
   completedAt: Date | null;
@@ -72,15 +73,18 @@ export async function listProjects(db: Db): Promise<ProjectSummary[]> {
     db.select().from(projects).orderBy(asc(projects.createdAt)),
     db
       .select({
-        projectId: projectItems.projectId,
-        status: projectItems.status,
-        completedAt: projectItems.completedAt,
+        projectId: tasks.projectId,
+        status: tasks.status,
+        completedAt: tasks.completedAt,
       })
-      .from(projectItems),
+      .from(tasks)
+      .where(isNotNull(tasks.projectId)),
   ]);
 
   const itemsPorProyecto = new Map<string, typeof items>();
   for (const it of items) {
+    // `isNotNull` ya las filtró en SQL; esto es lo que se lo dice a TypeScript.
+    if (it.projectId === null) continue;
     const lista = itemsPorProyecto.get(it.projectId);
     if (lista) lista.push(it);
     else itemsPorProyecto.set(it.projectId, [it]);
@@ -114,19 +118,23 @@ export async function getProjectWithTree(db: Db, id: string) {
   if (!project) return null;
   const items = await db
     .select()
-    .from(projectItems)
-    .where(eq(projectItems.projectId, id))
-    .orderBy(asc(projectItems.order), asc(projectItems.createdAt));
+    .from(tasks)
+    .where(eq(tasks.projectId, id))
+    .orderBy(asc(tasks.order), asc(tasks.createdAt));
 
   // build tree
   const map = new Map<string, ProjectItemNode>();
   for (const it of items) {
     map.set(it.id, {
       id: it.id,
-      projectId: it.projectId,
+      // `?? id` no es defensa por si acaso: la consulta filtra por
+      // `projectId = id`, así que solo le dice a TypeScript lo que el SQL ya
+      // garantiza. `ProjectTreeItem` se lo pasa a `createProjectTask`, que
+      // exige un string.
+      projectId: it.projectId ?? id,
       parentId: it.parentId,
       title: it.title,
-      status: (it.status as ProjectItemStatus) ?? "TODO",
+      status: (it.status as TaskStatus) ?? "TODO",
       order: it.order,
       createdAt: it.createdAt,
       completedAt: it.completedAt,
@@ -182,12 +190,13 @@ export type ProjectMetrics = {
 export async function getProjectMetrics(db: Db): Promise<ProjectMetrics> {
   const today = dayKey();
   const items = await db
-    .select({ completedAt: projectItems.completedAt })
-    .from(projectItems)
+    .select({ completedAt: tasks.completedAt })
+    .from(tasks)
     .where(
       and(
-        eq(projectItems.status, "DONE"),
-        isNotNull(projectItems.completedAt),
+        eq(tasks.status, "DONE"),
+        isNotNull(tasks.projectId),
+        isNotNull(tasks.completedAt),
       ),
     );
 

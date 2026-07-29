@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import type { ProjectItemNode, ProjectItemStatus } from "@/modules/habitos/lib/projects";
 import {
-  createProjectItem,
-  updateProjectItemStatus,
+  createProjectTask,
+  updateTaskStatus,
   deleteProjectItem,
-  renameProjectItem,
+  renameTask,
 } from "@/modules/habitos/actions";
 import { emitStatusChange } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
@@ -102,7 +102,7 @@ export function ProjectTreeItem({
   function cycle() {
     startTransition(async () => {
       emitStatusChange(
-        await updateProjectItemStatus(node.id, STATUS_CYCLE[node.status]),
+        await updateTaskStatus(node.id, STATUS_CYCLE[node.status]),
       );
     });
   }
@@ -126,7 +126,7 @@ export function ProjectTreeItem({
       return;
     }
     startTransition(async () => {
-      await renameProjectItem(node.id, t);
+      await renameTask(node.id, t);
       setEditing(false);
     });
   }
@@ -136,7 +136,7 @@ export function ProjectTreeItem({
     const t = childTitle.trim();
     if (!t) return;
     startTransition(async () => {
-      await createProjectItem(node.projectId, node.id, t);
+      await createProjectTask(node.projectId, node.id, t);
       setChildTitle("");
       setAdding(false);
     });

@@ -5,7 +5,6 @@ import {
   habitLogs,
   player as playerTable,
   projects,
-  projectItems,
   tasks,
 } from "@/modules/habitos/schema";
 import {
@@ -42,7 +41,6 @@ import {
   type LevelInfo,
 } from "./level";
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
-import { PROJECT_ITEM_STATUSES, type ProjectItemStatus } from "./projects";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
 import { syncDailyQuests, type QuestCompletion } from "./quests";
 import { getHabitStats } from "./stats";
@@ -58,7 +56,6 @@ const LIMITS = {
   taskDescription: 500,
   projectName: 60,
   projectDescription: 300,
-  itemTitle: 200,
 } as const;
 
 // Las claves salen de lib/color.ts y no de una lista propia: tener aquí una
@@ -528,10 +525,18 @@ export async function createTask(db: Db, formData: FormData) {
   const title = text(formData.get("title"), LIMITS.taskTitle);
   if (!title) return;
   const description = text(formData.get("description"), LIMITS.taskDescription);
+  // Dentro de SU grupo, no dentro de todo TODO: desde la unificación hay
+  // grupos —por padre y por proyecto— y el orden solo se compara dentro de uno.
   const [last] = await db
     .select({ order: tasks.order })
     .from(tasks)
-    .where(eq(tasks.status, "TODO"))
+    .where(
+      and(
+        eq(tasks.status, "TODO"),
+        isNull(tasks.parentId),
+        isNull(tasks.projectId),
+      ),
+    )
     .orderBy(desc(tasks.order))
     .limit(1);
   const ahora = new Date();
@@ -588,12 +593,16 @@ export async function updateTaskStatus(
   };
 }
 
-export async function deleteTask(db: Db, formData: FormData) {
-  const id = String(formData.get("id") ?? "");
+/** Borra por id. Sus subtareas caen con ella por la foránea en cascada. */
+export async function deleteTaskById(db: Db, id: string) {
   if (!id) return;
   await db.delete(tasks).where(eq(tasks.id, id));
   const quests = await syncDailyQuests(db);
   await grantXp(db, quests.xpDelta);
+}
+
+export async function deleteTask(db: Db, formData: FormData) {
+  await deleteTaskById(db, String(formData.get("id") ?? ""));
 }
 
 // ---------- PROYECTOS ----------
@@ -620,31 +629,31 @@ export async function deleteProject(db: Db, formData: FormData) {
   await grantXp(db, quests.xpDelta);
 }
 
-export async function createProjectItem(
+export async function createProjectTask(
   db: Db,
   projectId: string,
   parentId: string | null,
   title: string,
 ) {
-  const t = title.trim().slice(0, LIMITS.itemTitle);
+  const t = title.trim().slice(0, LIMITS.taskTitle);
   if (!projectId || !t) return;
   // `parentId` puede ser null y en SQL `= NULL` nunca casa: hay que usar
   // IS NULL. isNull/eq según el caso, no un eq a secas.
   const [last] = await db
-    .select({ order: projectItems.order })
-    .from(projectItems)
+    .select({ order: tasks.order })
+    .from(tasks)
     .where(
       and(
-        eq(projectItems.projectId, projectId),
+        eq(tasks.projectId, projectId),
         parentId === null
-          ? isNull(projectItems.parentId)
-          : eq(projectItems.parentId, parentId),
+          ? isNull(tasks.parentId)
+          : eq(tasks.parentId, parentId),
       ),
     )
-    .orderBy(desc(projectItems.order))
+    .orderBy(desc(tasks.order))
     .limit(1);
   const ahora = new Date();
-  await db.insert(projectItems).values({
+  await db.insert(tasks).values({
     id: crypto.randomUUID(),
     projectId,
     parentId,
@@ -656,64 +665,17 @@ export async function createProjectItem(
   });
 }
 
-export async function updateProjectItemStatus(
-  db: Db,
-  itemId: string,
-  newStatus: ProjectItemStatus,
-): Promise<StatusChangeResult> {
-  if (!itemId || !PROJECT_ITEM_STATUSES.includes(newStatus)) {
-    return emptyStatusChange(db);
-  }
-  const [item] = await db
-    .select()
-    .from(projectItems)
-    .where(eq(projectItems.id, itemId))
-    .limit(1);
-  if (!item) return emptyStatusChange(db);
+/*
+  Aquí vivía `updateProjectItemStatus`. Era byte a byte lo mismo que
+  `updateTaskStatus` salvo el nombre de la tabla; ahora es la misma tabla, así
+  que es la misma función. Colapsarlas es el motivo de haber unificado.
+*/
 
-  const wasDone = item.status === "DONE";
-  const willBeDone = newStatus === "DONE";
-  let xpDelta = 0;
-  if (!wasDone && willBeDone) xpDelta = XP_PER_TASK;
-  if (wasDone && !willBeDone) xpDelta = -XP_PER_TASK;
-
+export async function renameTask(db: Db, taskId: string, newTitle: string) {
+  const t = newTitle.trim().slice(0, LIMITS.taskTitle);
+  if (!taskId || !t) return;
   await db
-    .update(projectItems)
-    .set({
-      status: newStatus,
-      completedAt: willBeDone ? new Date() : null,
-      updatedAt: new Date(),
-    })
-    .where(eq(projectItems.id, itemId));
-
-  const quests = await syncDailyQuests(db);
-  const { oldLevel, player } = await grantXp(db, xpDelta + quests.xpDelta);
-
-  return {
-    becameDone: !wasDone && willBeDone,
-    xpDelta: xpDelta + quests.xpDelta,
-    leveledUp: player.level > oldLevel,
-    player,
-    questsCompleted: quests.completed,
-  };
-}
-
-export async function deleteProjectItem(db: Db, itemId: string) {
-  if (!itemId) return;
-  await db.delete(projectItems).where(eq(projectItems.id, itemId));
-  const quests = await syncDailyQuests(db);
-  await grantXp(db, quests.xpDelta);
-}
-
-export async function renameProjectItem(
-  db: Db,
-  itemId: string,
-  newTitle: string,
-) {
-  const t = newTitle.trim().slice(0, LIMITS.itemTitle);
-  if (!itemId || !t) return;
-  await db
-    .update(projectItems)
+    .update(tasks)
     .set({ title: t, updatedAt: new Date() })
-    .where(eq(projectItems.id, itemId));
+    .where(eq(tasks.id, taskId));
 }

@@ -81,17 +81,34 @@ te pide unificarlos, es un error del paso.
 - Modify: `src/modules/habitos/components/projects/ProjectTree.tsx`
 - Modify: `src/modules/habitos/components/projects/ProjectTreeItem.tsx`
 
-- [ ] **Paso 1: La copia de seguridad**
+- [x] **Paso 1: La copia de seguridad**
+
+**Un `cp` NO vale.** La base va en modo WAL: hay un `juampi.db-wal` de varios MB
+con transacciones que todavía no están en el `.db`. Copiar solo el `.db` produce
+una copia que parece correcta y a la que le faltan los últimos cambios.
+
+Se usa el backup propio de SQLite, que vuelca el WAL y deja un archivo
+consistente, y se comprueba que lo es:
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
-cp data/juampi.db "data/juampi.db.antes-de-unificar.bak"
-ls -la data/
+node -e "
+const D=require('better-sqlite3');
+const d=new D('data/juampi.db',{readonly:true});
+d.backup('data/juampi.db.antes-de-unificar.bak').then(()=>{
+  d.close();
+  const b=new D('data/juampi.db.antes-de-unificar.bak',{readonly:true});
+  console.log('integridad:', b.pragma('integrity_check'));
+  console.log('tareas:', b.prepare('select count(*) c from tasks').get());
+  b.close();
+});
+"
 ```
 
-Esperado: dos archivos `.db`. **No sigas si no ves el `.bak`.**
+Esperado: `integrity_check: ok` y el número de tareas que tengas.
+**No sigas sin ver las dos líneas.**
 
-- [ ] **Paso 2: Escribir el test de la migración**
+- [x] **Paso 2: Escribir el test de la migración**
 
 `src/modules/core/db/migrar.test.ts`:
 
@@ -281,7 +298,7 @@ describe("ponerAlDia sobre una base ya al día", () => {
 });
 ```
 
-- [ ] **Paso 3: Ejecutar y verlo fallar**
+- [x] **Paso 3: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/core/db/migrar.test.ts
@@ -289,7 +306,7 @@ npx vitest run src/modules/core/db/migrar.test.ts
 
 Esperado: **FAIL**, `Failed to resolve import "./migrar"`.
 
-- [ ] **Paso 4: Escribir la migración**
+- [x] **Paso 4: Escribir la migración**
 
 `src/modules/core/db/migrar.ts`:
 
@@ -345,6 +362,16 @@ function existeTabla(sqlite: Sqlite, tabla: string): boolean {
   );
 }
 
+/**
+ * Los índices de las columnas nuevas. Van aquí y no en `SCHEMA_SQL` por orden:
+ * allí se crearían antes que las columnas a las que apuntan.
+ */
+const INDICES_NUEVOS = [
+  "CREATE INDEX IF NOT EXISTS tasks_parent_idx   ON tasks(parent_id)",
+  "CREATE INDEX IF NOT EXISTS tasks_project_idx  ON tasks(project_id)",
+  "CREATE INDEX IF NOT EXISTS tasks_category_idx ON tasks(category_id)",
+];
+
 export function ponerAlDia(sqlite: Sqlite): void {
   const tiene = columnasDe(sqlite, "tasks");
   for (const [nombre, tipo] of COLUMNAS_NUEVAS) {
@@ -352,6 +379,7 @@ export function ponerAlDia(sqlite: Sqlite): void {
       sqlite.exec(`ALTER TABLE tasks ADD COLUMN ${nombre} ${tipo}`);
     }
   }
+  for (const sql of INDICES_NUEVOS) sqlite.exec(sql);
   if (existeTabla(sqlite, "project_items")) absorberProjectItems(sqlite);
 }
 
@@ -382,7 +410,7 @@ function absorberProjectItems(sqlite: Sqlite): void {
 }
 ```
 
-- [ ] **Paso 5: El esquema SQL**
+- [x] **Paso 5: El esquema SQL**
 
 En `src/modules/core/db/schema-sql.ts`, sustituye el bloque que va desde
 `CREATE TABLE IF NOT EXISTS tasks` hasta el índice
@@ -426,14 +454,23 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at   INTEGER NOT NULL,
   completed_at INTEGER
 );
-CREATE INDEX IF NOT EXISTS tasks_parent_idx   ON tasks(parent_id);
-CREATE INDEX IF NOT EXISTS tasks_project_idx  ON tasks(project_id);
-CREATE INDEX IF NOT EXISTS tasks_category_idx ON tasks(category_id);
 ```
 
 Borrar un proyecto ya **no** borra sus tareas: `SET NULL` las deja sueltas.
 
-- [ ] **Paso 6: Conectar la migración**
+**Los tres índices de las columnas nuevas NO van aquí** — corrección hecha
+durante la ejecución, porque así reventaba. Sobre una base que ya existe, la
+sentencia de creación de la tabla no hace nada porque la tabla ya está, pero un
+índice sí se crea, y apunta a columnas que la migración todavía no ha añadido:
+`SqliteError: no such column: parent_id`, en el primer arranque del usuario.
+Los crea `ponerAlDia()`, después de los `ALTER TABLE`.
+
+**No escribas las dos palabras del DDL de creación de tabla en un comentario de
+este archivo.** `tests/schema-parity.test.ts` cuenta tablas con una expresión
+regular sobre el texto entero, comentarios incluidos, y un comentario que las
+mencione descuadra el recuento.
+
+- [x] **Paso 6: Conectar la migración**
 
 En `src/modules/core/db/index.ts`, tras `sqlite.exec(SCHEMA_SQL);`:
 
@@ -461,15 +498,20 @@ import { ponerAlDia } from "./migrar";
   ponerAlDia(sqlite);
 ```
 
-- [ ] **Paso 7: Ejecutar el test de la migración**
+- [x] **Paso 7: Ejecutar el test de la migración**
 
 ```bash
 npx vitest run src/modules/core/db/migrar.test.ts
 ```
 
-Esperado: **PASS**, 8 afirmaciones.
+Esperado: **PASS**, 11 afirmaciones.
 
-- [ ] **Paso 8: El esquema en Drizzle**
+Un bloque de esas once se añadió durante la ejecución y es el más importante:
+recorre la SECUENCIA REAL —`SCHEMA_SQL` y después `ponerAlDia`— sobre una base
+con la forma vieja. Los otros dos bloques probaban cada forma por su cuenta y
+nunca esa combinación, que es justo la que reventaba.
+
+- [x] **Paso 8: El esquema en Drizzle**
 
 En `src/modules/habitos/schema.ts`, sustituye los bloques de `tasks`,
 `projects` y `projectItems` (líneas 102–154) por:
@@ -536,7 +578,7 @@ export type TaskRow = typeof tasks.$inferSelect;
 
 `projectItems` y `ProjectItemRow` **desaparecen del archivo**.
 
-- [ ] **Paso 9: `projects.ts` lee de `tasks`**
+- [x] **Paso 9: `projects.ts` lee de `tasks`**
 
 En `src/modules/habitos/lib/projects.ts`:
 
@@ -622,7 +664,7 @@ En `getProjectMetrics`:
     );
 ```
 
-- [ ] **Paso 10: Las cuatro mutaciones de proyecto colapsan**
+- [x] **Paso 10: Las cuatro mutaciones de proyecto colapsan**
 
 En `src/modules/habitos/lib/mutations.ts`:
 
@@ -702,7 +744,7 @@ Y `createTask` calcula el orden **dentro de su grupo**, no dentro de todo
     .limit(1);
 ```
 
-- [ ] **Paso 11: Las dos misiones diarias**
+- [x] **Paso 11: Las dos misiones diarias**
 
 En `src/modules/habitos/lib/quests.ts`, quita `projectItems` del import y añade
 `isNotNull` e `isNull` a los de `drizzle-orm`. Sustituye las dos consultas de
@@ -739,7 +781,7 @@ conteo por:
       ),
 ```
 
-- [ ] **Paso 12: Los server actions y la interfaz del módulo**
+- [x] **Paso 12: Los server actions y la interfaz del módulo**
 
 En `src/modules/habitos/actions.ts`:
 
@@ -752,7 +794,7 @@ En `src/modules/habitos/actions.ts`:
 En `src/modules/habitos/index.ts`, `type ProjectItemNode` sigue exportándose
 desde `./lib/projects` (que ahora lo reexporta). No cambia nada más.
 
-- [ ] **Paso 13: El árbol de proyecto en pantalla**
+- [x] **Paso 13: El árbol de proyecto en pantalla**
 
 En `ProjectTree.tsx` y `ProjectTreeItem.tsx`, sustituye los nombres importados
 de `@/modules/habitos/actions`:
@@ -763,7 +805,7 @@ de `@/modules/habitos/actions`:
 
 `deleteProjectItem` conserva su nombre. Ninguna llamada cambia de argumentos.
 
-- [ ] **Paso 14: Los tests de proyecto**
+- [x] **Paso 14: Los tests de proyecto**
 
 En `src/modules/habitos/lib/projects.test.ts`, sustituye `projectItems` por
 `tasks` en los imports y en los `insert`. Los `insert` necesitan además
@@ -771,7 +813,7 @@ En `src/modules/habitos/lib/projects.test.ts`, sustituye `projectItems` por
 
 **No cambies ninguna afirmación.** Si una falla, es un fallo real.
 
-- [ ] **Paso 15: Verificar**
+- [x] **Paso 15: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run
@@ -780,7 +822,7 @@ npx tsc --noEmit && npm run lint && npx vitest run
 Esperado: todo verde. Si `projects.test.ts` falla en una afirmación sobre
 conteos o sobre el último avance, revisa el paso 9 antes de tocar el test.
 
-- [ ] **Paso 16: Comprobar la base real**
+- [x] **Paso 16: Comprobar la base real**
 
 ```bash
 npm run build && node -e "
@@ -796,7 +838,7 @@ Esperado: las cuatro columnas nuevas, 1 tarea, y `project_items` a 0.
 > El `build` es lo que abre la base y dispara la migración. Si aún no ha
 > corrido, arranca el servidor una vez.
 
-- [ ] **Paso 17: Commit**
+- [x] **Paso 17: Commit**
 
 ```bash
 git add -A src

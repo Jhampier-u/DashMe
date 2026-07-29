@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 import { SCHEMA_SQL } from "./schema-sql";
+import { ponerAlDia } from "./migrar";
 import type { Db } from "./index";
 
 /**
@@ -17,5 +18,9 @@ export function createTestDb(): Db {
   const sqlite = new Database(":memory:");
   sqlite.pragma("foreign_keys = ON");
   sqlite.exec(SCHEMA_SQL);
+  // Sobre un esquema recién creado no debe hacer nada. Se llama igualmente para
+  // que los tests recorran el mismo camino que producción: si algún día dejara
+  // de ser inofensiva, se enteran los tests y no el usuario.
+  ponerAlDia(sqlite);
   return drizzle(sqlite, { schema });
 }
