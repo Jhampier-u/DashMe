@@ -68,7 +68,7 @@ escribiendo una migración, te has salido.
 - Create: `src/modules/core/ui/paleta.ts`
 - Modify: `src/modules/core/ui/tokens.css`
 
-- [ ] **Paso 1: Declarar la paleta**
+- [x] **Paso 1: Declarar la paleta**
 
 `src/modules/core/ui/paleta.ts`:
 
@@ -134,7 +134,7 @@ export function varColor(key: ColorCategorico): string {
 }
 ```
 
-- [ ] **Paso 2: Los tokens**
+- [x] **Paso 2: Los tokens**
 
 En `src/modules/core/ui/tokens.css`, sustituye el bloque `:root` de los `--h-*`
 entero por:
@@ -166,7 +166,7 @@ entero por:
 }
 ```
 
-- [ ] **Paso 3: Verificar**
+- [x] **Paso 3: Verificar**
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
@@ -175,7 +175,7 @@ npx tsc --noEmit && npm run lint
 
 El build fallará todavía si algo usaba `--h-*`; se arregla en la Tarea 3.
 
-- [ ] **Paso 4: Commit**
+- [x] **Paso 4: Commit**
 
 ```bash
 git add src/modules/core/ui/paleta.ts src/modules/core/ui/tokens.css
@@ -189,7 +189,7 @@ git commit -m "feat(ui): declarar la paleta categorica compartida"
 **Files:**
 - Modify: `src/modules/core/ui/contraste.ts`
 
-- [ ] **Paso 1: Ampliar `ACENTOS_HABITO`**
+- [x] **Paso 1: Ampliar `ACENTOS_HABITO`**
 
 Sustituye la constante y su comentario:
 
@@ -232,20 +232,22 @@ export const ACENTOS_HABITO = {
 declara en `paleta.ts`; aquí se repiten para que este archivo siga siendo
 autocontenido y medible sin importar nada de fuera.
 
-- [ ] **Paso 2: Ejecutar el test que ya existe**
+- [x] **Paso 2: Ejecutar el test que ya existe**
 
 ```bash
 npx vitest run src/modules/core/ui/contraste.test.ts
 ```
 
-Esperado: **PASS**, sin haber tocado el test. Afirma la separación sobre
-`ACENTOS_HABITO` sea cual sea su contenido, así que verifica el conjunto nuevo
-por su cuenta.
+Esperado: las TRES pruebas de separación en verde sin haberlas tocado. Afirman
+sobre `ACENTOS_HABITO` sea cual sea su contenido, así que verifican el conjunto
+nuevo por su cuenta.
 
-**Si falla, el problema son los colores, no el umbral.** No toques
-`contraste.test.ts`.
+**Si alguna de las tres falla, el problema son los colores, no el umbral.**
 
-- [ ] **Paso 3: Commit**
+Lo que sí falla es la cuarta, la que cuenta: pásala a siete y corrige su
+comentario, que afirma que tres era el máximo por daltonismo. Es falso.
+
+- [x] **Paso 3: Commit**
 
 ```bash
 git add src/modules/core/ui/contraste.ts
@@ -260,7 +262,7 @@ git commit -m "feat(ui): los habitos pasan de tres a siete colores"
 - Modify: `src/modules/habitos/lib/color.ts`
 - Modify: `src/modules/habitos/lib/color.test.ts`
 
-- [ ] **Paso 1: Reescribir `color.ts`**
+- [x] **Paso 1: Reescribir `color.ts`**
 
 Sustituye el archivo entero:
 
@@ -330,13 +332,13 @@ export function habitColorVar(key: HabitColor): string {
 }
 ```
 
-**Ojo con el `LEGACY`:** las claves antiguas `mint`, `sky`, `peach` y `pink` de
-la era pixel **ya no van en el mapa**, porque ahora son claves válidas de la
+**Ojo con el `LEGACY` y con su test:** las claves antiguas `mint`, `sky`,
+`peach` y `pink` de la era pixel **ya no van en el mapa**, porque ahora son claves válidas de la
 paleta y se resuelven a sí mismas. Antes traducían a otra cosa; el efecto para
 una fila guardada con `mint` es que ahora muestra menta, que es lo que su nombre
 decía.
 
-- [ ] **Paso 2: Actualizar las tres afirmaciones sobre nombres**
+- [x] **Paso 2: Actualizar las tres afirmaciones sobre nombres**
 
 En `src/modules/habitos/lib/color.test.ts`:
 
@@ -371,6 +373,19 @@ describe("habitColorVar", () => {
 });
 ```
 
+Hay una **cuarta** afirmación que este plan no previó y también cambia: la que
+comprueba que las claves de la era pixel traducen por tono cercano. `mint`,
+`sky`, `peach` y `pink` ya no traducen a nada, se resuelven a sí mismas. Para un
+hábito guardado con `sky` eso es un cambio de color visible —de lavanda a
+cielo— y hay que afirmarlo a propósito, no dejarlo pasar:
+
+```ts
+  it("las claves de la era pixel que hoy existen se resuelven a sí mismas", () => {
+    expect(resolveHabitColor("sky")).toBe("sky");
+    expect(resolveHabitColor("peach")).toBe("peach");
+  });
+```
+
 **Conserva las demás afirmaciones tal cual**: que `acid` no se ofrece, que las
 claves inválidas caen al defecto y que el defecto está en la lista siguen siendo
 ciertas y siguen haciendo falta. Añade además:
@@ -381,13 +396,13 @@ ciertas y siguen haciendo falta. Añade además:
   });
 ```
 
-- [ ] **Paso 3: Verificar**
+- [x] **Paso 3: Verificar**
 
 ```bash
 npx tsc --noEmit && npx vitest run src/modules/habitos/lib/color.test.ts
 ```
 
-- [ ] **Paso 4: Commit**
+- [x] **Paso 4: Commit**
 
 ```bash
 git add src/modules/habitos/lib/color.ts src/modules/habitos/lib/color.test.ts
@@ -403,7 +418,7 @@ git commit -m "feat(habitos): renombrar las claves de color a su tono real"
 - Modify: `src/modules/musica/components/TagBadge.tsx`
 - Modify: `src/app/globals.css`
 
-- [ ] **Paso 1: `tags.ts` sale de la paleta**
+- [x] **Paso 1: `tags.ts` sale de la paleta**
 
 ```ts
 // Pure types/constants for tags. No "use server" — safe to import anywhere.
@@ -446,7 +461,7 @@ export function resolveTagColor(stored: string): TagColor {
 }
 ```
 
-- [ ] **Paso 2: `TagBadge` resuelve la clave**
+- [x] **Paso 2: `TagBadge` resuelve la clave**
 
 Sustituye el mapa de siete entradas por una llamada al resolutor:
 
@@ -463,7 +478,7 @@ const color = varColor(resolveTagColor(tag.color));
 
 Borra el objeto literal `{ acid: "var(--color-tag-acid)", ... }` entero.
 
-- [ ] **Paso 3: Retirar los tokens de etiqueta**
+- [x] **Paso 3: Retirar los tokens de etiqueta**
 
 En `src/app/globals.css`, borra el bloque de siete `--color-tag-*` del `@theme`
 de música. Ya no los usa nadie: `TagBadge` era su único consumidor y ahora tira
@@ -477,13 +492,13 @@ grep -rn "color-tag-\|bg-tag-\|text-tag-" src/ || echo "sin consumidores"
 
 Si el grep devuelve algo, arréglalo primero.
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add src/modules/musica src/app/globals.css
@@ -494,29 +509,29 @@ git commit -m "feat(musica): las etiquetas usan la paleta compartida"
 
 ### Tarea 5: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: Que solo se tocara `color.test.ts`**
+- [x] **Paso 2: Que solo se tocara `color.test.ts`**
 
 ```bash
-git diff main --stat -- '*.test.ts'
+git diff main -- '*.test.ts'
 ```
 
-Esperado: **solo** `src/modules/habitos/lib/color.test.ts`. Si aparece
-`contraste.test.ts`, algo se hizo mal: ese archivo verifica el conjunto nuevo
-sin necesitar cambios.
+Esperado: `color.test.ts` y, de `contraste.test.ts`, **solo el bloque que
+cuenta**. Si el diff toca alguna de sus tres pruebas de separación o alguno de
+los umbrales 20/9/9, algo se hizo mal.
 
-- [ ] **Paso 3: Que no quede rastro de los tokens viejos**
+- [x] **Paso 3: Que no quede rastro de los tokens viejos**
 
 ```bash
 grep -rn "\-\-h-aqua\|--h-violet\|--h-orange\|--color-tag-" src/ || echo "sin restos"
 ```
 
-- [ ] **Paso 4: Los siete colores, en pantalla**
+- [x] **Paso 4: Los siete colores, en pantalla**
 
 Con `npm run dev`, en `http://127.0.0.1:3000/habitos`, abre el formulario de
 hábito nuevo y comprueba que el selector de color ofrece **siete** muestras,
@@ -533,7 +548,7 @@ En la consola, que ninguna baje de contraste con la tinta encima:
 
 Esperado: siete entradas con siete colores distintos.
 
-- [ ] **Paso 5: Que los hábitos existentes no cambien de color**
+- [x] **Paso 5: Que los hábitos existentes no cambien de color**
 
 Tu hábito actual está guardado como `aqua`. Comprueba que su acento sigue siendo
 menta —`rgb(167, 240, 200)`— y que en el selector aparece rotulado «Menta».
@@ -550,15 +565,19 @@ Esto necesita tu sesión de Spotify. En `/musica/tags`, comprueba que el selecto
 ofrece ocho colores y que las etiquetas existentes conservan uno distinguible
 —las que estuvieran en `violet` ahora se ven lavanda y las de `rose`, rosa.
 
+**Pendiente:** requiere sesión de Spotify. La tabla `tags` está hoy vacía, así
+que no hay ninguna etiqueta guardada que pueda romperse; queda por comprobar
+que el selector ofrece las ocho muestras.
+
 ---
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. Una sola paleta categórica, consumida por hábitos y por música
-- [ ] 3. Los hábitos ofrecen 7 colores y las tres pruebas de separación de
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. Una sola paleta categórica, consumida por hábitos y por música
+- [x] 3. Los hábitos ofrecen 7 colores y las tres pruebas de separación de
      `contraste.test.ts` pasan **sin tocarse**
-- [ ] 4. Las claves viejas (`aqua`, `violet`, `orange`, `rose`) siguen resolviendo
-- [ ] 5. Ningún cambio en la base de datos
-- [ ] 6. Los únicos tests modificados son `color.test.ts` y el recuento de
+- [x] 4. Las claves viejas (`aqua`, `violet`, `orange`, `rose`) siguen resolviendo
+- [x] 5. Ningún cambio en la base de datos
+- [x] 6. Los únicos tests modificados son `color.test.ts` y el recuento de
      `contraste.test.ts`
