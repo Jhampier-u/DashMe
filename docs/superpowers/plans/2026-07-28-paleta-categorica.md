@@ -19,10 +19,15 @@ en rojo señalaba que un cambio de piel había tocado lógica. Aquí la lógica
 cambia a propósito —tres colores pasan a siete— y el test debe seguirla. Son
 tres afirmaciones sobre nombres en `color.test.ts`, y ninguna otra.
 
-**`contraste.test.ts` NO se toca.** Afirma umbrales sobre `ACENTOS_HABITO` sea
-cual sea su contenido, así que verifica el conjunto nuevo por sí solo. Si se
-pone en rojo, es que los colores elegidos no pasan y hay que cambiar los
-colores, nunca el umbral.
+**De `contraste.test.ts` cambia una sola afirmación.** Sus TRES pruebas de
+separación verifican el conjunto nuevo por su cuenta y no se tocan: si alguna se
+pone en rojo, es que los colores elegidos no pasan, y entonces se cambian los
+colores y **nunca el umbral**.
+
+Lo que sí cambia es una cuarta que cuenta cuántos acentos hay. Su comentario
+afirma que tres es «el máximo que pasa la separación bajo daltonismo», y eso es
+falso: el límite estaba en el inventario. Corrige el comentario además del
+número — un test que afirma algo falso es peor que ninguno.
 
 **Los ocho valores ya están medidos.** No los recalcules ni los afines:
 
@@ -551,7 +556,9 @@ ofrece ocho colores y que las etiquetas existentes conservan uno distinguible
 
 - [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
 - [ ] 2. Una sola paleta categórica, consumida por hábitos y por música
-- [ ] 3. Los hábitos ofrecen 7 colores y `contraste.test.ts` los verifica **sin tocarse**
+- [ ] 3. Los hábitos ofrecen 7 colores y las tres pruebas de separación de
+     `contraste.test.ts` pasan **sin tocarse**
 - [ ] 4. Las claves viejas (`aqua`, `violet`, `orange`, `rose`) siguen resolviendo
 - [ ] 5. Ningún cambio en la base de datos
-- [ ] 6. El único test modificado es `color.test.ts`
+- [ ] 6. Los únicos tests modificados son `color.test.ts` y el recuento de
+     `contraste.test.ts`

@@ -405,31 +405,38 @@ export const PALETA = {
 } as const;
 
 /*
-  Los tres que identifican hábitos. Son exactamente tres por la misma razón que
-  lo eran en el sistema anterior: con la lista completa de pares, ningún
-  conjunto de cuatro mantiene la separación bajo daltonismo.
+  Los siete que identifican hábitos.
 
-  EL ROSA SALIÓ DE AQUÍ. Pasó a ser el acento principal de todo el dashboard, y
-  un color no puede identificar un hábito y significar «acción primaria» a la
-  vez: en la pantalla de hábitos convivirían. Su hueco lo ocupa `sky`.
+  Eran tres, y no por un límite de la ciencia sino del inventario: solo había
+  seis pasteles entre los que elegir. Metiendo los trece disponibles —los del
+  sistema más los categóricos de música— y buscando por fuerza bruta el conjunto
+  más grande que pasa los tres umbrales, el máximo real resultó ser OCHO. Se
+  ofrecen siete: `acid` queda fuera por decisión estética, no por medición.
 
-  Se midieron las veinte ternas posibles antes de elegir. ΔE CIE76 tras simular
-  cada visión:
+  Bajar el umbral no daría más: relajando el de visión normal de 20 a 15 el
+  máximo sigue siendo ocho. No hay nada que ganar aflojando.
 
-                   normal   deutan   protan
-    lav  ~ mint     69.4     47.5     56.6
-    lav  ~ sky      29.6     10.1     17.2
-    mint ~ sky      43.7     33.4     34.1
-    ------------------------------------------
-    peor par        29.6     10.1     17.2
-    umbral exigido  20        9        9
+  ΔE CIE76 del peor par tras simular cada visión:
 
-  El par que manda es lav~sky en deuteranopía, y 10,1 es el número más justo de
-  todo el sistema: pasa, pero con poco margen. La alternativa era lav+mint+peach
-  (22,0 en deutan), descartada porque peach es el destructivo y chocaría con él.
+                    normal   deutan   protan
+    peor par         29.6     10.1     12.2
+    quiénes son    lav~sky  lav~sky  mint~peach
+    umbral exigido   20        9        9
+
+  El deutan de 10,1 no empeoró al añadir colores: lo marcaba `lav~sky`, que ya
+  estaba en la terna anterior. Sigue siendo el margen más justo del sistema, y
+  conviene saberlo: dos hábitos en lavanda y cielo se parecerán bastante para
+  quien tenga deuteranopía.
 */
 export const ACENTOS_HABITO = {
+  pink: PALETA.acentos.pink,
   lav: PALETA.acentos.lav,
   mint: PALETA.acentos.mint,
+  peach: PALETA.acentos.peach,
   sky: PALETA.acentos.sky,
+  // Estos dos no están en `PALETA.acentos`, que son los seis del sistema
+  // visual. Se repiten aquí para que este archivo siga siendo autocontenido y
+  // medible sin importar nada de fuera.
+  amber: "#f4b942",
+  coral: "#ff9980",
 } as const;

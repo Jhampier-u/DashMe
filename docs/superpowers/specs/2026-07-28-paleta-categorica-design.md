@@ -146,8 +146,15 @@ Esto **no contradice** la regla que gobernó el rediseño visual. Allí un test 
 rojo señalaba que un cambio de piel había tocado lógica. Aquí la lógica cambia a
 propósito, y el test debe seguirla.
 
-`contraste.test.ts` **no se toca**: afirma umbrales sobre `ACENTOS_HABITO` sea
-cual sea su contenido, así que verifica el conjunto nuevo por sí solo.
+De `contraste.test.ts` cambia **una sola** afirmación, y esto es una corrección
+sobre lo que decía antes este spec: sus tres pruebas de separación sí verifican
+el conjunto nuevo por su cuenta —miden, no cuentan— pero hay una cuarta que
+afirma que los acentos «son exactamente tres».
+
+Lo importante de esa cuarta no es el número sino su comentario, que dice que
+tres es «el máximo que pasa la separación bajo daltonismo». **Es falso**, y la
+medición de este mismo spec lo desmiente: el límite estaba en el inventario. El
+comentario se corrige, porque un test que afirma algo falso es peor que ninguno.
 
 ## 9. Qué no cambia
 
@@ -179,8 +186,9 @@ cambios pequeños y todos siguen midiendo por encima de 4,5:1.
 3. Los hábitos ofrecen 7 colores y `contraste.test.ts` los verifica sin tocarse
 4. Las claves viejas (`aqua`, `violet`, `orange`) siguen resolviendo
 5. Ningún cambio en la base de datos
-6. Los únicos tests modificados son las tres afirmaciones de `color.test.ts` del
-   punto 8
+6. Los únicos tests modificados son las tres afirmaciones de `color.test.ts` y
+   el recuento de `contraste.test.ts`, ambos del punto 8
+7. Las tres pruebas de separación de `contraste.test.ts` pasan **sin tocarse**
 
 ## 12. Fuera de alcance
 
