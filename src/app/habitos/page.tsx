@@ -87,6 +87,8 @@ export default async function HabitsPage() {
                   streak={habit.streak}
                   doneToday={habit.doneToday}
                   partialToday={habit.partialToday}
+                  targetCount={habit.targetCount}
+                  countToday={habit.countToday}
                   scheduledToday={habit.scheduledToday}
                   criticalToday={habit.criticalToday}
                   isAnchor={habit.isAnchor}

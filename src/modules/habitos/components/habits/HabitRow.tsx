@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toggleToday, deleteHabit, setHabitAnchor } from "@/modules/habitos/actions";
+import {
+  toggleToday,
+  deleteHabit,
+  setHabitAnchor,
+  apuntarCantidad,
+} from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";
@@ -25,6 +30,10 @@ type Props = {
   plantSpecies: PlantSpecies;
   hasEverBeenDone: boolean;
   minimalGoal: string | null;
+  /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
+  targetCount: number | null;
+  /** Lo apuntado hoy. Nulo si no se apuntó. */
+  countToday: number | null;
 };
 
 const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"];
@@ -121,6 +130,23 @@ export function HabitRow(p: Props) {
   // sería mentir con la forma.
   const marcable = p.scheduledToday && !pending;
 
+  function apuntar(n: number) {
+    if (pending) return;
+    startTransition(async () => {
+      emitToggleResult(await apuntarCantidad(p.id, Math.max(0, n)));
+    });
+  }
+
+  /*
+    El aviso no es adorno: un hábito de cantidad por debajo del objetivo PIERDE
+    la racha, y uno de modo mínimo no. Sin decirlo, la diferencia entre los dos
+    parece un fallo.
+  */
+  const rachaEnRiesgo =
+    p.targetCount !== null &&
+    (p.countToday ?? 0) > 0 &&
+    (p.countToday ?? 0) < p.targetCount;
+
   return (
     <div
       style={{
@@ -206,7 +232,44 @@ export function HabitRow(p: Props) {
           </span>
         </button>
 
-        {p.scheduledToday && p.minimalGoal && !p.doneToday ? (
+        {/*
+          Un hábito de cantidad sustituye el botón de modo mínimo por el
+          contador: son dos formas de lo mismo y tener las dos confundiría.
+        */}
+        {p.targetCount !== null ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <button
+              type="button"
+              onClick={() => apuntar((p.countToday ?? 0) - 1)}
+              disabled={pending || (p.countToday ?? 0) === 0}
+              className={`${ICON_BUTTON} bg-paper`}
+              aria-label={`Quitar uno a ${p.name}`}
+            >
+              −
+            </button>
+            <span
+              style={{
+                fontFamily: "var(--font-vt)",
+                fontSize: 16,
+                lineHeight: 1,
+                fontVariantNumeric: "tabular-nums",
+                minWidth: 44,
+                textAlign: "center",
+              }}
+            >
+              {p.countToday ?? 0} / {p.targetCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => apuntar((p.countToday ?? 0) + 1)}
+              disabled={pending}
+              className={`${ICON_BUTTON} bg-yellow`}
+              aria-label={`Sumar uno a ${p.name}`}
+            >
+              +
+            </button>
+          </div>
+        ) : p.scheduledToday && p.minimalGoal && !p.doneToday ? (
           <button
             type="button"
             onClick={() => mark(true)}
@@ -264,7 +327,12 @@ export function HabitRow(p: Props) {
         </div>
       ) : null}
 
-      {p.minimalGoal ? (
+      {rachaEnRiesgo ? (
+        <div style={{ fontSize: 11.5, marginTop: 6 }}>
+          Por debajo del objetivo: la racha no está a salvo.
+        </div>
+      ) : null}
+      {p.minimalGoal && p.targetCount === null ? (
         <div style={{ fontSize: 12, marginTop: 6 }}>Modo mínimo: {p.minimalGoal}</div>
       ) : null}
 

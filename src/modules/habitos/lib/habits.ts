@@ -52,6 +52,10 @@ export type HabitWithStatus = {
   intention: string | null;
   doneToday: boolean;
   partialToday: boolean;
+  /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
+  targetCount: number | null;
+  /** Lo apuntado hoy. Nulo si no se apuntó. */
+  countToday: number | null;
   scheduledToday: boolean;
   criticalToday: boolean;
   streak: number;

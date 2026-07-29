@@ -795,7 +795,7 @@ git commit -m "feat(habitos): apuntar la cantidad del dia"
 - Modify: `src/modules/habitos/components/habits/HabitRow.tsx`
 - Modify: `src/modules/habitos/components/habits/NewHabitForm.tsx`
 
-- [ ] **Paso 1: El contador en la fila**
+- [x] **Paso 1: El contador en la fila**
 
 Donde hoy está el botón de modo mínimo, un hábito con `targetCount` muestra en
 su lugar el contador. Las props crecen con `targetCount: number | null` y
@@ -848,7 +848,7 @@ la de siempre y solo cambia que ahora es la rama `else` del contador.
 `apuntar` llama a `apuntarCantidad(p.id, n)` dentro de una transición, y
 `BOTON_CONTADOR` copia las clases de ese mismo botón.
 
-- [ ] **Paso 2: El aviso, que es media decisión del spec**
+- [x] **Paso 2: El aviso, que es media decisión del spec**
 
 Bajo el contador, cuando hay cantidad apuntada pero no se llega al objetivo:
 
@@ -866,7 +866,7 @@ Bajo el contador, cuando hay cantidad apuntada pero no se llega al objetivo:
 > racha, y uno de modo mínimo no. Sin este aviso, la diferencia entre los dos
 > parece un fallo. Es el criterio nº 8.
 
-- [ ] **Paso 3: El campo en el formulario**
+- [x] **Paso 3: El campo en el formulario**
 
 En `NewHabitForm.tsx`, un campo numérico opcional:
 
@@ -885,13 +885,13 @@ Y en el `FormData`, `fd.set("targetCount", objetivo)`.
 > Se filtran los no-dígitos al escribir en vez de validar al enviar: así el campo
 > no acepta nunca algo que el servidor vaya a rechazar.
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add -A src

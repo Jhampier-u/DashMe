@@ -68,6 +68,7 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
   const [days, setDays] = useState<Set<number>>(new Set([0, 1, 2, 3, 4, 5, 6]));
   const [intention, setIntention] = useState("");
   const [minimalGoal, setMinimalGoal] = useState("");
+  const [objetivo, setObjetivo] = useState("");
   const [isAnchor, setIsAnchor] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -96,6 +97,7 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
     fd.set("schedule", schedule);
     fd.set("intention", intention);
     fd.set("minimalGoal", minimalGoal);
+    fd.set("targetCount", objetivo);
     if (isAnchor) fd.set("isAnchor", "on");
 
     startTransition(async () => {
@@ -206,6 +208,20 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
         onChange={setIntention}
         placeholder="Cuando me sirva el café, 5 sentadillas"
         maxLength={140}
+      />
+      {/*
+        Un hábito con objetivo se apunta con un contador y no con el botón de
+        modo mínimo. Los dos campos se ofrecen igual porque son alternativas: el
+        de texto para lo que no se cuenta, el número para lo que sí.
+      */}
+      <Field
+        label="Objetivo diario (opcional, un número)"
+        value={objetivo}
+        /* Se filtran los no-dígitos AL ESCRIBIR en vez de validar al enviar:
+           así el campo nunca acepta algo que el servidor vaya a rechazar. */
+        onChange={(v) => setObjetivo(v.replace(/[^0-9]/g, ""))}
+        placeholder="vacío = sin cantidad"
+        maxLength={4}
       />
       <Field
         label="Modo mínimo (opcional)"
