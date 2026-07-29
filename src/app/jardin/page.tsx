@@ -32,21 +32,20 @@ export default async function GardenPage() {
     isPlantWilted(h.streak, h.doneToday, h.hasEverBeenDone),
   ).length;
 
-  /*
-    `.m-root` es el escudo del lenguaje oscuro: impone fondo y tinta propios en
-    vez de heredarlos del documento. Tareas, proyectos y la portada ya lo
-    llevaban; jardín se había quedado sin él y heredaba del `body`.
-
-    Hoy no cambia nada —los valores son los mismos que hereda—, pero en cuanto
-    el documento pase a papel, esta pantalla fija su texto en `--m-ink`, que es
-    casi blanco. Sin el escudo se volvería ilegible.
-
-    Se retira cuando a jardín le toque su propio repintado.
-  */
+  // Le llegó su turno, así que el escudo `.m-root` se retira: la pantalla pone
+  // ya su propio papel.
   return (
     <main
-      className="m-root"
-      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+      style={{
+        minHeight: "100%",
+        padding: "24px 16px 56px",
+        background: "var(--color-paper)",
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+      }}
     >
       <PageHeader
         title="Tu jardín"
@@ -90,7 +89,9 @@ export default async function GardenPage() {
                   🥀
                 </span>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 550, color: "var(--m-crit)" }}>
+                  {/* Iba en rojo. Lo que avisa ahora son el 🥀 de al lado y el
+                      grosor: el aviso no puede depender del tono. */}
+                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>
                     {wilted === 1 ? "Una planta marchita" : `${wilted} plantas marchitas`}
                   </div>
                   <p style={{ fontSize: 12.5, marginTop: 4 }}>
@@ -124,10 +125,18 @@ export default async function GardenPage() {
                   <div style={{ fontSize: 24 }} aria-hidden>
                     {s.emoji}
                   </div>
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>
                     {s.label}
                   </div>
-                  <div className="m-num" style={{ fontSize: 11 }}>
+                  {/* Los días son un dato: VT323 en su suelo de 16px. */}
+                  <div
+                    style={{
+                      fontFamily: "var(--font-vt)",
+                      fontSize: 16,
+                      lineHeight: 1.1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
                     {s.days}
                   </div>
                 </div>

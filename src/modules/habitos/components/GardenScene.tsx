@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, type CSSProperties } from "react";
 import type { HabitWithStatus } from "@/modules/habitos/lib/habits";
 import { useLocalHour } from "@/modules/habitos/lib/useLocalHour";
 import { isPlantWilted, plantEmoji, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
@@ -72,6 +72,19 @@ const SKY_LABEL: Record<SkyPhase, string> = {
   night: "Noche",
 };
 
+/*
+  Todo lo que se pone encima de la escena va en papel con tinta. Es lo único que
+  garantiza contraste sobre seis cielos distintos: 9,76:1 tanto sobre el
+  mediodía como sobre la medianoche. Las cápsulas negras translúcidas de antes
+  dependían de que el cielo fuera claro.
+*/
+const PEGATINA: CSSProperties = {
+  background: "var(--color-paper)",
+  color: "var(--color-tinta)",
+  border: "2px solid var(--color-line)",
+  fontFamily: "var(--font-cuerpo)",
+};
+
 function seedRand(seed: number) {
   let s = seed;
   return () => {
@@ -108,7 +121,10 @@ export function GardenScene({ habits }: Props) {
     <div
       style={{
         position: "relative",
-        borderRadius: 12,
+        // La escena se lee como una lámina puesta sobre el papel.
+        border: "3px solid var(--color-line)",
+        borderRadius: "var(--radius-card)",
+        boxShadow: "var(--shadow-hard)",
         overflow: "hidden",
         minHeight: "30rem",
       }}
@@ -131,15 +147,15 @@ export function GardenScene({ habits }: Props) {
 
       <div
         style={{
+          ...PEGATINA,
           position: "absolute",
           top: 12,
           left: 12,
           zIndex: 20,
           padding: "3px 9px",
           borderRadius: 999,
-          background: "rgba(0, 0, 0, 0.35)",
-          color: "var(--m-ink)",
           fontSize: 11,
+          fontWeight: 700,
         }}
       >
         {SKY_LABEL[phase]}
@@ -176,9 +192,9 @@ export function GardenScene({ habits }: Props) {
                 top: `${s.top}%`,
                 width: s.size,
                 height: s.size,
-                borderRadius: "50%",
+                // Cuadradas y sin halo: un píxel no tiene esquinas redondeadas
+                // ni resplandor.
                 background: "#f2f2f5",
-                boxShadow: "0 0 4px rgba(242, 242, 245, 0.6)",
                 animationDelay: `${s.delay}s`,
                 pointerEvents: "none",
               }}
@@ -366,28 +382,31 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
         aria-hidden
         style={{
           width: 72,
-          height: 7,
-          borderRadius: 4,
+          height: 8,
           marginTop: 4,
-          background: "linear-gradient(180deg, #5a4028 0%, #3b2a1a 100%)",
+          // Plana y con esquinas: sin radio y sin degradado.
+          background: "#3b2a1a",
+          border: "2px solid var(--color-line)",
         }}
       />
 
       <div
         style={{
+          ...PEGATINA,
           marginTop: 6,
           maxWidth: "9rem",
-          padding: "4px 8px",
-          borderRadius: 7,
-          background: "rgba(0, 0, 0, 0.4)",
-          borderLeft: `3px solid ${accent}`,
+          padding: "5px 8px",
+          borderRadius: "var(--radius-control)",
+          // El filo de color es identidad de hábito y sigue cumpliendo la misma
+          // función que en la fila.
+          borderLeft: `6px solid ${accent}`,
           textAlign: "left",
         }}
       >
         <div
           style={{
             fontSize: 12,
-            color: "var(--m-ink)",
+            fontWeight: 700,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -395,7 +414,15 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
         >
           {habit.name}
         </div>
-        <div className="m-num" style={{ fontSize: 10.5, color: "var(--m-ink-2)" }}>
+        {/* La racha es un dato: VT323 en su suelo de 16px. */}
+        <div
+          style={{
+            fontFamily: "var(--font-vt)",
+            fontSize: 16,
+            lineHeight: 1.1,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
           {habit.streak} d · {estado}
         </div>
       </div>
