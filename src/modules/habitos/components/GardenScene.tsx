@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, type CSSProperties } from "react";
 import type { HabitWithStatus } from "@/modules/habitos/lib/habits";
 import { useLocalHour } from "@/modules/habitos/lib/useLocalHour";
 import { isPlantWilted, plantEmoji, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
@@ -27,24 +27,32 @@ function phaseFor(hour: number): SkyPhase {
 /** Donde acaba el cielo y empieza la tierra. */
 const HORIZON = "62%";
 
-// Cielo y suelo van en capas separadas. Antes compartían un mismo degradado con
-// una parada dura en el horizonte, y esa parada era el bandeado pixel.
+// Cielo y suelo van en capas separadas para poder darle al horizonte su propio
+// trazo.
+//
+// Las paradas son DURAS a propósito: `a 0 34%, b 34% 67%` pinta tres franjas
+// planas en vez de interpolarlas. Ese bandeado es lo que hace que la escena sea
+// pixel art conservando sus seis fases —la noche sigue siendo noche—, y es justo
+// lo contrario de lo que buscaba la versión anterior, que lo trataba como un
+// defecto a evitar. Si te dan ganas de suavizarlo, es que no has leído esto.
+//
+// Los colores son los mismos de siempre. Lo único que cambió es cómo se reparten.
 const SKY: Record<SkyPhase, string> = {
-  dawn: "linear-gradient(180deg, #2b2440 0%, #6b4f74 45%, #c98f6d 100%)",
-  morning: "linear-gradient(180deg, #4a6f9e 0%, #7fa3c9 50%, #cfd9e2 100%)",
-  midday: "linear-gradient(180deg, #3d7ab5 0%, #6ba3d4 50%, #bcd8ea 100%)",
-  afternoon: "linear-gradient(180deg, #55749e 0%, #8f9cba 50%, #d9b48f 100%)",
-  dusk: "linear-gradient(180deg, #241d38 0%, #6d5480 45%, #c07f92 100%)",
-  night: "linear-gradient(180deg, #0c0c14 0%, #16162a 55%, #232144 100%)",
+  dawn: "linear-gradient(180deg, #2b2440 0 34%, #6b4f74 34% 67%, #c98f6d 67% 100%)",
+  morning: "linear-gradient(180deg, #4a6f9e 0 34%, #7fa3c9 34% 67%, #cfd9e2 67% 100%)",
+  midday: "linear-gradient(180deg, #3d7ab5 0 34%, #6ba3d4 34% 67%, #bcd8ea 67% 100%)",
+  afternoon: "linear-gradient(180deg, #55749e 0 34%, #8f9cba 34% 67%, #d9b48f 67% 100%)",
+  dusk: "linear-gradient(180deg, #241d38 0 34%, #6d5480 34% 67%, #c07f92 67% 100%)",
+  night: "linear-gradient(180deg, #0c0c14 0 34%, #16162a 34% 67%, #232144 67% 100%)",
 };
 
 const GROUND: Record<SkyPhase, string> = {
-  dawn: "linear-gradient(180deg, #3a4a2c 0%, #26301c 100%)",
-  morning: "linear-gradient(180deg, #46603a 0%, #2c3d24 100%)",
-  midday: "linear-gradient(180deg, #4d6b3d 0%, #314426 100%)",
-  afternoon: "linear-gradient(180deg, #445c36 0%, #2b3a22 100%)",
-  dusk: "linear-gradient(180deg, #2f3a24 0%, #1e2617 100%)",
-  night: "linear-gradient(180deg, #1b2416 0%, #121810 100%)",
+  dawn: "linear-gradient(180deg, #3a4a2c 0 50%, #26301c 50% 100%)",
+  morning: "linear-gradient(180deg, #46603a 0 50%, #2c3d24 50% 100%)",
+  midday: "linear-gradient(180deg, #4d6b3d 0 50%, #314426 50% 100%)",
+  afternoon: "linear-gradient(180deg, #445c36 0 50%, #2b3a22 50% 100%)",
+  dusk: "linear-gradient(180deg, #2f3a24 0 50%, #1e2617 50% 100%)",
+  night: "linear-gradient(180deg, #1b2416 0 50%, #121810 50% 100%)",
 };
 
 // El amanecer y el atardecer también cuentan como "oscuros" para las estrellas,
@@ -62,6 +70,19 @@ const SKY_LABEL: Record<SkyPhase, string> = {
   afternoon: "Tarde",
   dusk: "Atardecer",
   night: "Noche",
+};
+
+/*
+  Todo lo que se pone encima de la escena va en papel con tinta. Es lo único que
+  garantiza contraste sobre seis cielos distintos: 9,76:1 tanto sobre el
+  mediodía como sobre la medianoche. Las cápsulas negras translúcidas de antes
+  dependían de que el cielo fuera claro.
+*/
+const PEGATINA: CSSProperties = {
+  background: "var(--color-paper)",
+  color: "var(--color-tinta)",
+  border: "2px solid var(--color-line)",
+  fontFamily: "var(--font-cuerpo)",
 };
 
 function seedRand(seed: number) {
@@ -100,7 +121,10 @@ export function GardenScene({ habits }: Props) {
     <div
       style={{
         position: "relative",
-        borderRadius: 12,
+        // La escena se lee como una lámina puesta sobre el papel.
+        border: "3px solid var(--color-line)",
+        borderRadius: "var(--radius-card)",
+        boxShadow: "var(--shadow-hard)",
         overflow: "hidden",
         minHeight: "30rem",
       }}
@@ -114,21 +138,24 @@ export function GardenScene({ habits }: Props) {
           top: HORIZON,
           bottom: 0,
           background: GROUND[phase],
+          // El horizonte era el único corte duro de la escena y por eso se leía
+          // como horizonte. Ahora hay tres más arriba, así que se marca.
+          borderTop: "3px solid var(--color-line)",
           transition: fade,
         }}
       />
 
       <div
         style={{
+          ...PEGATINA,
           position: "absolute",
           top: 12,
           left: 12,
           zIndex: 20,
           padding: "3px 9px",
           borderRadius: 999,
-          background: "rgba(0, 0, 0, 0.35)",
-          color: "var(--m-ink)",
           fontSize: 11,
+          fontWeight: 700,
         }}
       >
         {SKY_LABEL[phase]}
@@ -165,9 +192,9 @@ export function GardenScene({ habits }: Props) {
                 top: `${s.top}%`,
                 width: s.size,
                 height: s.size,
-                borderRadius: "50%",
+                // Cuadradas y sin halo: un píxel no tiene esquinas redondeadas
+                // ni resplandor.
                 background: "#f2f2f5",
-                boxShadow: "0 0 4px rgba(242, 242, 245, 0.6)",
                 animationDelay: `${s.delay}s`,
                 pointerEvents: "none",
               }}
@@ -355,28 +382,31 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
         aria-hidden
         style={{
           width: 72,
-          height: 7,
-          borderRadius: 4,
+          height: 8,
           marginTop: 4,
-          background: "linear-gradient(180deg, #5a4028 0%, #3b2a1a 100%)",
+          // Plana y con esquinas: sin radio y sin degradado.
+          background: "#3b2a1a",
+          border: "2px solid var(--color-line)",
         }}
       />
 
       <div
         style={{
+          ...PEGATINA,
           marginTop: 6,
           maxWidth: "9rem",
-          padding: "4px 8px",
-          borderRadius: 7,
-          background: "rgba(0, 0, 0, 0.4)",
-          borderLeft: `3px solid ${accent}`,
+          padding: "5px 8px",
+          borderRadius: "var(--radius-control)",
+          // El filo de color es identidad de hábito y sigue cumpliendo la misma
+          // función que en la fila.
+          borderLeft: `6px solid ${accent}`,
           textAlign: "left",
         }}
       >
         <div
           style={{
             fontSize: 12,
-            color: "var(--m-ink)",
+            fontWeight: 700,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -384,7 +414,15 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
         >
           {habit.name}
         </div>
-        <div className="m-num" style={{ fontSize: 10.5, color: "var(--m-ink-2)" }}>
+        {/* La racha es un dato: VT323 en su suelo de 16px. */}
+        <div
+          style={{
+            fontFamily: "var(--font-vt)",
+            fontSize: 16,
+            lineHeight: 1.1,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
           {habit.streak} d · {estado}
         </div>
       </div>
