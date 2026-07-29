@@ -139,6 +139,20 @@ export async function renameTask(taskId: string, newTitle: string) {
   refresh();
 }
 
+export async function apuntarCantidad(habitId: string, count: number) {
+  const r = await m.setHabitCount(db, habitId, count);
+  refresh();
+  return r;
+}
+
+export async function cambiarObjetivoHabito(
+  habitId: string,
+  targetCount: number | null,
+) {
+  await m.updateHabitTarget(db, habitId, targetCount);
+  refresh();
+}
+
 // ---------- CATEGORÍAS DE TAREA ----------
 
 export async function crearCategoria(name: string, color: string) {

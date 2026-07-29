@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS habits (
   is_anchor     INTEGER NOT NULL DEFAULT 0,
   schedule      TEXT NOT NULL DEFAULT '1111111',
   intention     TEXT,
+  target_count  INTEGER,
   created_at    INTEGER NOT NULL
 );
 
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS habit_logs (
   partial    INTEGER NOT NULL DEFAULT 0,
   shielded   INTEGER NOT NULL DEFAULT 0,
   xp_awarded INTEGER NOT NULL DEFAULT 0,
+  count      INTEGER,
   created_at INTEGER NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS habit_logs_habit_date_unq ON habit_logs(habit_id, date);

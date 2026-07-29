@@ -9,6 +9,7 @@ import {
   toggleToday,
   createTask,
   updateTaskStatus,
+  setHabitCount,
 } from "./mutations";
 
 const HOY = dayKey();
@@ -288,5 +289,96 @@ describe("updateTaskStatus con cascada", () => {
 
     const [hijo] = await db.select().from(tasks).where(eq(tasks.id, "h"));
     expect(hijo.status).toBe("DONE");
+  });
+});
+
+describe("hábitos con cantidad", () => {
+  const TQ = new Date(1700000000000);
+
+  async function conObjetivo(target: number | null) {
+    const db = createTestDb();
+    await db.insert(habits).values({
+      id: "h1",
+      name: "Agua",
+      schedule: "1111111",
+      targetCount: target,
+      createdAt: TQ,
+    });
+    return db;
+  }
+
+  it("llegar al objetivo cuenta como completo", async () => {
+    const db = await conObjetivo(8);
+    await setHabitCount(db, "h1", 8);
+    const [l] = await db.select().from(habitLogs);
+    expect(l.count).toBe(8);
+    expect(l.partial).toBe(false);
+  });
+
+  it("quedarse corto cuenta como a medias", async () => {
+    const db = await conObjetivo(8);
+    await setHabitCount(db, "h1", 5);
+    const [l] = await db.select().from(habitLogs);
+    expect(l.count).toBe(5);
+    expect(l.partial).toBe(true);
+  });
+
+  it("apuntar cero borra el registro del día", async () => {
+    const db = await conObjetivo(8);
+    await setHabitCount(db, "h1", 5);
+    await setHabitCount(db, "h1", 0);
+    expect(await db.select().from(habitLogs)).toHaveLength(0);
+  });
+
+  /*
+    Volver a apuntar el mismo día ACTUALIZA, no inserta: el índice único de
+    (habit_id, date) lo impide, y de él depende el cálculo de rachas.
+  */
+  it("apuntar dos veces el mismo día no duplica", async () => {
+    const db = await conObjetivo(8);
+    await setHabitCount(db, "h1", 3);
+    await setHabitCount(db, "h1", 8);
+    const filas = await db.select().from(habitLogs);
+    expect(filas).toHaveLength(1);
+    expect(filas[0].count).toBe(8);
+    expect(filas[0].partial).toBe(false);
+  });
+
+  it("subir dentro del mismo tramo solo mueve el número", async () => {
+    const db = await conObjetivo(8);
+    await setHabitCount(db, "h1", 2);
+    const r = await setHabitCount(db, "h1", 3);
+    const filas = await db.select().from(habitLogs);
+    expect(filas[0].count).toBe(3);
+    expect(filas[0].partial).toBe(true);
+    // Ni XP ni eventos: el día ya estaba registrado y sigue corto.
+    expect(r.xpDelta).toBe(0);
+    expect(r.milestone).toBeNull();
+  });
+
+  it("un hábito sin objetivo no acepta cantidad", async () => {
+    const db = await conObjetivo(null);
+    const r = await setHabitCount(db, "h1", 5);
+    expect(r.reason).toBe("no-target");
+    expect(await db.select().from(habitLogs)).toHaveLength(0);
+  });
+
+  /*
+    El XP tiene que cuadrar en las dos direcciones: subir de corto a pleno da la
+    diferencia, no el total otra vez.
+  */
+  it("subir del corto al objetivo ajusta el XP, no lo duplica", async () => {
+    const db = await conObjetivo(8);
+    const corto = await setHabitCount(db, "h1", 3);
+    expect(corto.player.xp).toBe(Math.floor(XP_PER_HABIT / 2));
+    const pleno = await setHabitCount(db, "h1", 8);
+    expect(pleno.player.xp).toBe(XP_PER_HABIT);
+  });
+
+  it("bajar del objetivo al corto también ajusta", async () => {
+    const db = await conObjetivo(8);
+    await setHabitCount(db, "h1", 8);
+    const corto = await setHabitCount(db, "h1", 2);
+    expect(corto.player.xp).toBe(Math.floor(XP_PER_HABIT / 2));
   });
 });

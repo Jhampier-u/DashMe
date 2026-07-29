@@ -1,6 +1,7 @@
 import { asc, count, eq, gte } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
+import { diasQueCuentan } from "./cantidad";
 import {
   addDays,
   dayKey,
@@ -56,7 +57,10 @@ export async function getHabitStats(
 
   const today = dayKey();
   const schedule = sanitizeSchedule(habit.schedule);
-  const doneKeys = new Set(logs.map((l) => normalizeDayKey(l.date).getTime()));
+  const doneKeys = diasQueCuentan(
+    logs.map((l) => ({ date: l.date, partial: !!l.partial, count: l.count })),
+    habit.targetCount,
+  );
   const createdKey = dayKey(habit.createdAt);
   const firstKey = logs.length ? normalizeDayKey(logs[0].date) : createdKey;
   // El historial empieza en lo más antiguo que conocemos: la creación o el
