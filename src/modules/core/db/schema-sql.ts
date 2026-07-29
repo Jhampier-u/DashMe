@@ -100,6 +100,26 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at   INTEGER NOT NULL,
   completed_at INTEGER
 );
+CREATE TABLE IF NOT EXISTS task_attachments (
+  id         TEXT PRIMARY KEY,
+  task_id    TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  kind       TEXT NOT NULL,
+  name       TEXT NOT NULL,
+  url        TEXT,
+  stored_as  TEXT,
+  size       INTEGER,
+  mime       TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS task_attachments_task_idx ON task_attachments(task_id);
+-- Esta foránea SÍ la vigila el motor también en la base del usuario, al
+-- contrario que las columnas que se añadieron con ALTER: la tabla es nueva y
+-- nace con la referencia declarada. (Sin acentos graves aquí: esto es una
+-- plantilla literal y cualquiera de ellos la cerraría a media cadena.)
+--
+-- Y sus índices sí pueden ir aquí, por lo mismo: se crean junto a la tabla, no
+-- sobre una que ya existía sin las columnas.
+
 -- Los índices de parent_id, project_id y category_id NO van aquí: los crea
 -- ponerAlDia(), que corre justo después.
 --

@@ -42,6 +42,7 @@ import {
 } from "./level";
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
 import { planCascada } from "./cascada";
+import { borrarDeDisco, storedNamesOfTasks } from "./adjuntos";
 import { resolvePrioridad } from "./prioridad";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
 import { syncDailyQuests, type QuestCompletion } from "./quests";
@@ -653,7 +654,7 @@ export async function updateTaskStatus(
  * tablero NI debajo de nadie: desaparecería de la vista sin que nadie lo
  * hubiera borrado.
  */
-export async function deleteTaskById(db: Db, id: string) {
+export async function deleteTaskById(db: Db, id: string, base?: string) {
   if (!id) return;
 
   // Se baja por niveles en memoria en vez de con un CTE recursivo: son cuatro
@@ -673,7 +674,25 @@ export async function deleteTaskById(db: Db, id: string) {
     }
   }
 
-  await db.delete(tasks).where(inArray(tasks.id, [...aBorrar]));
+  const ids = [...aBorrar];
+
+  /*
+    TRES pasos y no dos, y el orden importa:
+
+    1. LEER los nombres en disco. La foránea de `task_attachments` es en cascada,
+       así que en cuanto se borren las tareas estas filas se van con ellas — y
+       con ellas el único sitio donde estaba escrito cómo se llama cada archivo.
+       Quien borre primero y pregunte después deja huérfanos para siempre.
+    2. Borrar las tareas. Sus adjuntos caen por la cascada.
+    3. Borrar los archivos. Si esto falla, lo peor es un huérfano en la carpeta,
+       que no rompe nada. Al revés quedarían filas enseñando adjuntos roídos.
+  */
+  const enDisco = await storedNamesOfTasks(db, ids);
+
+  await db.delete(tasks).where(inArray(tasks.id, ids));
+
+  for (const nombre of enDisco) await borrarDeDisco(nombre, base);
+
   const quests = await syncDailyQuests(db);
   await grantXp(db, quests.xpDelta);
 }
@@ -801,6 +820,45 @@ export async function createSubtask(db: Db, parentId: string, title: string) {
     createdAt: ahora,
     updatedAt: ahora,
   });
+}
+
+export async function updateTaskDescription(
+  db: Db,
+  taskId: string,
+  description: string,
+) {
+  if (!taskId) return;
+  await db
+    .update(tasks)
+    .set({
+      description: text(description, LIMITS.taskDescription),
+      updatedAt: new Date(),
+    })
+    .where(eq(tasks.id, taskId));
+}
+
+export async function updateTaskCategory(
+  db: Db,
+  taskId: string,
+  categoryId: string | null,
+) {
+  if (!taskId) return;
+  await db
+    .update(tasks)
+    .set({ categoryId, updatedAt: new Date() })
+    .where(eq(tasks.id, taskId));
+}
+
+export async function updateTaskPriority(
+  db: Db,
+  taskId: string,
+  priority: string | null,
+) {
+  if (!taskId) return;
+  await db
+    .update(tasks)
+    .set({ priority: resolvePrioridad(priority), updatedAt: new Date() })
+    .where(eq(tasks.id, taskId));
 }
 
 export async function renameTask(db: Db, taskId: string, newTitle: string) {

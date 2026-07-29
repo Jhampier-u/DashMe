@@ -163,3 +163,34 @@ export const tasks = sqliteTable(
 );
 
 export type TaskRow = typeof tasks.$inferSelect;
+
+/**
+ * Archivos y enlaces de una tarea, en una sola tabla.
+ *
+ * Una y no dos porque se leen, se ordenan y se borran juntos: en la pantalla
+ * son una sola lista. Separarlos duplicaría cada consulta para ganar unas
+ * columnas nulas.
+ */
+export const taskAttachments = sqliteTable(
+  "task_attachments",
+  {
+    id: text("id").primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    /** 'file' | 'link' */
+    kind: text("kind").notNull(),
+    /** Lo que se muestra. En un archivo, el nombre con el que lo subiste. */
+    name: text("name").notNull(),
+    /** Solo los enlaces. */
+    url: text("url"),
+    /** Solo los archivos: su nombre EN DISCO, que es un UUID sin extensión. */
+    storedAs: text("stored_as"),
+    size: integer("size"),
+    mime: text("mime"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => ({ byTask: index("task_attachments_task_idx").on(t.taskId) }),
+);
+
+export type TaskAttachmentRow = typeof taskAttachments.$inferSelect;

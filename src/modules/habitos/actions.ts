@@ -17,6 +17,7 @@ import { db } from "@/modules/core/db";
 import type { TaskStatus } from "./lib/tasks";
 import * as m from "./lib/mutations";
 import * as c from "./lib/categorias";
+import * as adj from "./lib/adjuntos";
 
 export type {
   ToggleResult,
@@ -159,5 +160,61 @@ export async function cambiarColorCategoria(id: string, color: string) {
 
 export async function borrarCategoria(id: string) {
   await c.deleteCategoria(db, id);
+  refresh();
+}
+
+export async function cambiarDescripcionTarea(
+  taskId: string,
+  description: string,
+) {
+  await m.updateTaskDescription(db, taskId, description);
+  refresh();
+}
+
+export async function cambiarCategoriaTarea(
+  taskId: string,
+  categoryId: string | null,
+) {
+  await m.updateTaskCategory(db, taskId, categoryId);
+  refresh();
+}
+
+export async function cambiarPrioridadTarea(
+  taskId: string,
+  priority: string | null,
+) {
+  await m.updateTaskPriority(db, taskId, priority);
+  refresh();
+}
+
+// ---------- ADJUNTOS ----------
+
+export async function anadirEnlace(taskId: string, name: string, url: string) {
+  const r = await adj.addLink(db, taskId, name, url);
+  refresh();
+  return r;
+}
+
+/*
+  Recibe el FormData entero y no un File suelto: es la forma que sí sobrevive al
+  paso por la frontera del server action. Aquí se leen los bytes y se delega en
+  `addFileBytes`, que es la parte testeable.
+*/
+export async function anadirArchivo(taskId: string, formData: FormData) {
+  const f = formData.get("file");
+  if (!(f instanceof File)) return { ok: false as const, motivo: "sin-archivo" };
+  const bytes = Buffer.from(await f.arrayBuffer());
+  const r = await adj.addFileBytes(
+    db,
+    taskId,
+    { name: f.name, size: f.size, mime: f.type },
+    bytes,
+  );
+  refresh();
+  return r;
+}
+
+export async function borrarAdjunto(id: string) {
+  await adj.deleteAttachment(db, id);
   refresh();
 }

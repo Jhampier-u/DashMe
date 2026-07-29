@@ -1,4 +1,7 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/modules/core/db/schema";
@@ -6,6 +9,7 @@ import { ponerAlDia } from "@/modules/core/db/migrar";
 import { SCHEMA_SQL } from "@/modules/core/db/schema-sql";
 import type { Db } from "@/modules/core/db";
 import { projects, tasks } from "@/modules/habitos/schema";
+import { addFileBytes } from "./adjuntos";
 import { createCategoria, deleteCategoria } from "./categorias";
 import { deleteProject, deleteTaskById } from "./mutations";
 import { getTasksGrouped } from "./tasks";
@@ -153,5 +157,46 @@ describe("borrar una categoría", () => {
     const [t] = await db.select().from(tasks);
     expect(t.title).toBe("t1");
     expect(t.categoryId).toBeNull();
+  });
+});
+
+describe("borrar una tarea con adjuntos", () => {
+  /*
+    El ORDEN es lo que se prueba aquí. La foránea es en cascada: al borrar las
+    tareas, sus filas de adjuntos desaparecen solas y con ellas los nombres de
+    los archivos en disco. Hay que LEERLOS antes, o quedan huérfanos para
+    siempre y sin forma de saber cuáles eran.
+  */
+  it("se lleva los archivos de todo el árbol", async () => {
+    const db = basePuestaAlDia();
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "adjuntos-borrado-"));
+    await db
+      .insert(tasks)
+      .values([tarea("padre"), tarea("hijo", { parentId: "padre" })]);
+    for (const id of ["padre", "hijo"]) {
+      await addFileBytes(
+        db,
+        id,
+        { name: "x.txt", size: 1, mime: "text/plain" },
+        Buffer.from("a"),
+        dir,
+      );
+    }
+    expect(fs.readdirSync(dir)).toHaveLength(2);
+
+    await deleteTaskById(db, "padre", dir);
+
+    expect(fs.readdirSync(dir)).toEqual([]);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("un enlace no deja nada en disco y tampoco estorba", async () => {
+    const db = basePuestaAlDia();
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "adjuntos-enlace-"));
+    await db.insert(tasks).values(tarea("sola"));
+
+    await expect(deleteTaskById(db, "sola", dir)).resolves.not.toThrow();
+
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });
