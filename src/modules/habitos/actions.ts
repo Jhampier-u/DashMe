@@ -128,6 +128,11 @@ export async function deleteProjectItem(itemId: string) {
   refresh();
 }
 
+export async function crearSubtarea(parentId: string, title: string) {
+  await m.createSubtask(db, parentId, title);
+  refresh();
+}
+
 export async function renameTask(taskId: string, newTitle: string) {
   await m.renameTask(db, taskId, newTitle);
   refresh();

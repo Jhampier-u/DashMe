@@ -41,6 +41,7 @@ import {
   type LevelInfo,
 } from "./level";
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
+import { planCascada } from "./cascada";
 import { resolvePrioridad } from "./prioridad";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
 import { syncDailyQuests, type QuestCompletion } from "./quests";
@@ -506,6 +507,8 @@ export async function fetchHabitStats(db: Db, habitId: string) {
 
 export type StatusChangeResult = {
   becameDone: boolean;
+  /** Cuántas tareas movió en total, contando la cascada. */
+  cambiadas: number;
   xpDelta: number;
   leveledUp: boolean;
   player: PlayerSnapshot;
@@ -515,6 +518,7 @@ export type StatusChangeResult = {
 async function emptyStatusChange(db: Db): Promise<StatusChangeResult> {
   return {
     becameDone: false,
+    cambiadas: 0,
     xpDelta: 0,
     leveledUp: false,
     player: await playerSnapshot(db),
@@ -572,33 +576,62 @@ export async function updateTaskStatus(
   if (!taskId || !TASK_STATUSES.includes(newStatus)) {
     return emptyStatusChange(db);
   }
-  const [task] = await db
-    .select()
-    .from(tasks)
-    .where(eq(tasks.id, taskId))
-    .limit(1);
-  if (!task) return emptyStatusChange(db);
 
-  const wasDone = task.status === "DONE";
-  const willBeDone = newStatus === "DONE";
-  let xpDelta = 0;
-  if (!wasDone && willBeDone) xpDelta = XP_PER_TASK;
-  if (wasDone && !willBeDone) xpDelta = -XP_PER_TASK;
+  const filas = await db
+    .select({ id: tasks.id, parentId: tasks.parentId, status: tasks.status })
+    .from(tasks);
 
-  await db
-    .update(tasks)
-    .set({
-      status: newStatus,
-      completedAt: willBeDone ? new Date() : null,
-      updatedAt: new Date(),
-    })
-    .where(eq(tasks.id, taskId));
+  const plan = planCascada(
+    filas.map((f) => ({
+      id: f.id,
+      parentId: f.parentId,
+      status: (f.status as TaskStatus) ?? "TODO",
+    })),
+    { id: taskId, nuevo: newStatus },
+  );
+  if (plan.length === 0) return emptyStatusChange(db);
+
+  const ahora = new Date();
+  /*
+    Una transacción SÍNCRONA. En better-sqlite3, `db.transaction(cb)` de Drizzle
+    devuelve `T` y no `Promise<T>`: dentro va la forma síncrona `.run()`, no
+    `await`. Un `async` aquí compila y no espera a nada.
+
+    Los cambios se agrupan por estado destino, así que son como mucho tres
+    sentencias. O se escriben las tres o ninguna: un árbol a medio cerrar sería
+    peor que no haber tocado nada.
+  */
+  db.transaction((tx) => {
+    for (const destino of TASK_STATUSES) {
+      const ids = plan.filter((c) => c.a === destino).map((c) => c.id);
+      if (ids.length === 0) continue;
+      tx.update(tasks)
+        .set({
+          status: destino,
+          completedAt: destino === "DONE" ? ahora : null,
+          updatedAt: ahora,
+        })
+        .where(inArray(tasks.id, ids))
+        .run();
+    }
+  });
+
+  // El XP sale del CONJUNTO de cambios, no de la tarea que se tocó: así cerrar
+  // de arriba abajo y de abajo arriba premian igual.
+  const entran = plan.filter((c) => c.a === "DONE").length;
+  const salen = plan.filter((c) => c.de === "DONE").length;
+  const xpDelta = (entran - salen) * XP_PER_TASK;
 
   const quests = await syncDailyQuests(db);
   const { oldLevel, player } = await grantXp(db, xpDelta + quests.xpDelta);
 
+  const tocada = plan.find((c) => c.id === taskId);
+
   return {
-    becameDone: !wasDone && willBeDone,
+    // Sigue hablando de la tarea que TOCASTE: de eso dependen el sonido y el
+    // aviso, y anunciar el cierre de un padre que se movió solo confundiría.
+    becameDone: tocada?.de !== "DONE" && tocada?.a === "DONE",
+    cambiadas: plan.length,
     xpDelta: xpDelta + quests.xpDelta,
     leveledUp: player.level > oldLevel,
     player,
@@ -731,6 +764,44 @@ export async function createProjectTask(
   `updateTaskStatus` salvo el nombre de la tabla; ahora es la misma tabla, así
   que es la misma función. Colapsarlas es el motivo de haber unificado.
 */
+
+/**
+ * Crea una subtarea colgando de otra.
+ *
+ * HEREDA el proyecto del padre: una subtarea pertenece al mismo proyecto que su
+ * madre, o a ninguno. Es lo que permite que el mismo árbol sirva en `/tareas` y
+ * en `/proyectos` sin que el componente sepa qué es un proyecto.
+ */
+export async function createSubtask(db: Db, parentId: string, title: string) {
+  const t = title.trim().slice(0, LIMITS.taskTitle);
+  if (!parentId || !t) return;
+
+  const [padre] = await db
+    .select({ projectId: tasks.projectId })
+    .from(tasks)
+    .where(eq(tasks.id, parentId))
+    .limit(1);
+  if (!padre) return;
+
+  const [last] = await db
+    .select({ order: tasks.order })
+    .from(tasks)
+    .where(eq(tasks.parentId, parentId))
+    .orderBy(desc(tasks.order))
+    .limit(1);
+
+  const ahora = new Date();
+  await db.insert(tasks).values({
+    id: crypto.randomUUID(),
+    parentId,
+    projectId: padre.projectId,
+    title: t,
+    order: (last?.order ?? 0) + 1,
+    status: "TODO",
+    createdAt: ahora,
+    updatedAt: ahora,
+  });
+}
 
 export async function renameTask(db: Db, taskId: string, newTitle: string) {
   const t = newTitle.trim().slice(0, LIMITS.taskTitle);

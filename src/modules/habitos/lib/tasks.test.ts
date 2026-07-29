@@ -258,3 +258,33 @@ describe("getTasksGrouped con árbol y filtro", () => {
     expect(g.TODO[0].priority).toBeNull();
   });
 });
+
+describe("getTasksGrouped trae el árbol de cada raíz", () => {
+  const base = {
+    title: "x",
+    status: "TODO",
+    order: 1,
+    createdAt: T0,
+    updatedAt: T0,
+  };
+
+  it("cuelga los descendientes de su raíz", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([
+      { ...base, id: "p" },
+      { ...base, id: "h", parentId: "p" },
+      { ...base, id: "n", parentId: "h" },
+    ]);
+    const g = await getTasksGrouped(db);
+    expect(g.TODO).toHaveLength(1);
+    expect(g.TODO[0].arbol[0].id).toBe("h");
+    expect(g.TODO[0].arbol[0].children[0].id).toBe("n");
+  });
+
+  it("una tarea sin subtareas trae el árbol vacío", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values({ ...base, id: "sola" });
+    const g = await getTasksGrouped(db);
+    expect(g.TODO[0].arbol).toEqual([]);
+  });
+});

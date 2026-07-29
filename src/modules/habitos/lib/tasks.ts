@@ -63,6 +63,17 @@ export function buildTaskTree<T extends TaskTreeInput>(
   return raices;
 }
 
+/** Lo que el árbol de la interfaz necesita de cada nodo. */
+export type NodoArbol = {
+  id: string;
+  parentId: string | null;
+  title: string;
+  status: TaskStatus;
+  order: number;
+  createdAt: Date;
+  completedAt: Date | null;
+};
+
 export type TaskFilter = {
   categoriaId: string | null;
   prioridad: Prioridad | null;
@@ -101,6 +112,8 @@ export type TaskRow = {
   priority: Prioridad | null;
   /** Cuántas subtareas cuelgan de ella y cuántas están hechas. */
   hijos: { total: number; hechos: number };
+  /** Sus descendientes, ya anidados. Vacío si no tiene. */
+  arbol: TaskTreeNode<NodoArbol>[];
 };
 
 const SIN_FILTRO: TaskFilter = { categoriaId: null, prioridad: null };
@@ -133,6 +146,23 @@ export async function getTasksGrouped(
     hijosDe.set(t.parentId, c);
   }
 
+  // El árbol se monta UNA vez sobre todas las filas y después se reparte. Con
+  // `buildTaskTree` por raíz habría que recorrer la lista entera una vez por
+  // tarjeta.
+  const arbolPorRaiz = new Map(
+    buildTaskTree(
+      all.map((t) => ({
+        id: t.id,
+        parentId: t.parentId,
+        title: t.title,
+        status: (t.status as TaskStatus) ?? "TODO",
+        order: t.order,
+        createdAt: t.createdAt,
+        completedAt: t.completedAt,
+      })),
+    ).map((r) => [r.id, r.children]),
+  );
+
   const grouped: Record<TaskStatus, TaskRow[]> = {
     TODO: [],
     IN_PROGRESS: [],
@@ -156,6 +186,7 @@ export async function getTasksGrouped(
       categoryId: t.categoryId,
       priority: prioridad,
       hijos: hijosDe.get(t.id) ?? { total: 0, hechos: 0 },
+      arbol: arbolPorRaiz.get(t.id) ?? [],
     });
   }
   return grouped;

@@ -195,3 +195,98 @@ describe("las misiones del día no descuadran el XP", () => {
     expect(HOY.getTime()).toBeLessThanOrEqual(Date.now());
   });
 });
+
+describe("updateTaskStatus con cascada", () => {
+  const TC = new Date(1700000000000);
+  const t = (id: string, parentId: string | null, status = "TODO") => ({
+    id,
+    title: id,
+    status,
+    order: 1,
+    parentId,
+    createdAt: TC,
+    updatedAt: TC,
+  });
+
+  it("cierra a los descendientes", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([t("p", null), t("h", "p"), t("n", "h")]);
+
+    await updateTaskStatus(db, "p", "DONE");
+
+    const filas = await db.select().from(tasks);
+    expect(filas.every((f) => f.status === "DONE")).toBe(true);
+  });
+
+  it("les pone fecha de cierre, que es de donde salen las métricas", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([t("p", null), t("h", "p")]);
+
+    await updateTaskStatus(db, "p", "DONE");
+
+    const filas = await db.select().from(tasks);
+    expect(filas.every((f) => f.completedAt !== null)).toBe(true);
+  });
+
+  it("al reabrir, la fecha de cierre se borra", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([t("p", null), t("h", "p")]);
+    await updateTaskStatus(db, "p", "DONE");
+
+    await updateTaskStatus(db, "h", "TODO");
+
+    const [padre] = await db.select().from(tasks).where(eq(tasks.id, "p"));
+    expect(padre.status).toBe("TODO");
+    expect(padre.completedAt).toBeNull();
+  });
+
+  /*
+    La razón por la que se eligió dar XP por toda la cascada: el premio no debe
+    depender del orden de los clics. Este test es esa frase, comprobada.
+  */
+  it("da el mismo XP de arriba abajo que de abajo arriba", async () => {
+    const abajoArriba = createTestDb();
+    await abajoArriba
+      .insert(tasks)
+      .values([t("p", null), t("h1", "p"), t("h2", "p")]);
+    await updateTaskStatus(abajoArriba, "h1", "DONE");
+    const r1 = await updateTaskStatus(abajoArriba, "h2", "DONE");
+
+    const arribaAbajo = createTestDb();
+    await arribaAbajo
+      .insert(tasks)
+      .values([t("p", null), t("h1", "p"), t("h2", "p")]);
+    const r2 = await updateTaskStatus(arribaAbajo, "p", "DONE");
+
+    expect(r1.player.xp).toBe(r2.player.xp);
+  });
+
+  it("dice cuántas se movieron", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([t("p", null), t("h1", "p"), t("h2", "p")]);
+
+    const r = await updateTaskStatus(db, "p", "DONE");
+
+    expect(r.cambiadas).toBe(3);
+  });
+
+  it("becameDone sigue hablando de la tarea que tocaste", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([t("p", null), t("h", "p")]);
+
+    const r = await updateTaskStatus(db, "h", "DONE");
+
+    expect(r.becameDone).toBe(true);
+  });
+
+  it("desmarcar un padre no toca a sus hijos", async () => {
+    const db = createTestDb();
+    await db.insert(tasks).values([t("p", null), t("h", "p")]);
+    await updateTaskStatus(db, "p", "DONE");
+
+    await updateTaskStatus(db, "p", "TODO");
+
+    const [hijo] = await db.select().from(tasks).where(eq(tasks.id, "h"));
+    expect(hijo.status).toBe("DONE");
+  });
+});

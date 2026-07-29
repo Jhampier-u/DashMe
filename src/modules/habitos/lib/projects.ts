@@ -2,7 +2,12 @@ import { and, asc, eq, isNotNull } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import { projects, tasks } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
-import { buildTaskTree, type TaskStatus, type TaskTreeNode } from "./tasks";
+import {
+  buildTaskTree,
+  type NodoArbol,
+  type TaskStatus,
+  type TaskTreeNode,
+} from "./tasks";
 import {
   daysSince,
   periodChange,
@@ -25,16 +30,7 @@ export { TASK_STATUSES as PROJECT_ITEM_STATUSES } from "./tasks";
  * alias, que fija `projectId` como `string` porque dentro de un proyecto
  * siempre lo hay.
  */
-export type ProjectItemNode = TaskTreeNode<{
-  id: string;
-  projectId: string;
-  parentId: string | null;
-  title: string;
-  status: TaskStatus;
-  order: number;
-  createdAt: Date;
-  completedAt: Date | null;
-}>;
+export type ProjectItemNode = TaskTreeNode<NodoArbol & { projectId: string }>;
 
 export type ProjectSummary = {
   id: string;
@@ -133,8 +129,7 @@ export async function getProjectWithTree(db: Db, id: string) {
       // `?? id` no es defensa por si acaso: la consulta filtra por
       // `projectId = id`, así que solo le dice a TypeScript lo que el SQL ya
       // garantiza, y de paso el nodo sale con `projectId: string` en vez de
-      // `string | null`. `ProjectTreeItem` se lo pasa a `createProjectTask`,
-      // que exige un string.
+      // `string | null`, que es lo que `ProjectItemNode` promete.
       projectId: it.projectId ?? id,
       parentId: it.parentId,
       title: it.title,
