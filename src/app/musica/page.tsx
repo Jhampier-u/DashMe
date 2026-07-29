@@ -105,7 +105,7 @@ export default async function Portada({
       <TopBar me={me} active="portada" />
 
       <section className="px-8 py-5 hairline-b">
-        <RangePicker range={range} />
+        <RangePicker range={range} base="/musica" />
       </section>
 
       {/* ---------------- Cifra protagonista ---------------- */}
