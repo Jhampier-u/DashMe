@@ -23,7 +23,7 @@ export default function StatTiles({ tiles }: { tiles: Tile[] }) {
         >
           <dt className="label-mono text-mute mb-3">{t.label}</dt>
           <dd
-            className={`num-tabular text-[clamp(1.6rem,3.4vw,2.6rem)] leading-none ${
+            className={`num-tabular text-[clamp(0.64rem,1.36vw,1.04rem)] leading-none ${
               t.acento ? "text-tinta font-bold" : "text-cream"
             }`}
           >

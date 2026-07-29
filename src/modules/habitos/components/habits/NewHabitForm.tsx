@@ -38,7 +38,7 @@ const CHIP =
   "active:translate-x-0.5 active:translate-y-0.5 " +
   "active:shadow-[2px_2px_0_var(--color-line)] " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
-  "aria-pressed:bg-sky";
+  "aria-pressed:bg-pink";
 
 const LABEL = {
   display: "block",
@@ -147,7 +147,7 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
               aria-pressed={color === choice.key}
               aria-label={choice.label}
               title={choice.label}
-              // La muestra ES el color, así que `aria-pressed:bg-sky` sobra:
+              // La muestra ES el color, así que `aria-pressed:bg-pink` sobra:
               // se quita del juego y lo elegido se marca con un ✓ en tinta.
               // Que la selección tenga forma y no solo tono importa el doble
               // aquí, que es justo el sitio donde se eligen colores.

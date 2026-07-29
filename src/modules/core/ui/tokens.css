@@ -126,7 +126,10 @@
    obligada por `color.test.ts` a devolver exactamente `var(--h-aqua)`.
    Renombrarlas costaría una migración de filas y un test tocado, y los tests no
    se tocan. Lo que ve el usuario son las etiquetas de `HABIT_COLORS`, que sí
-   se han puesto al día: Menta, Lavanda y Rosa.
+   se han puesto al día: Menta, Lavanda y Cielo.
+
+   El rosa salió de aquí: pasó a ser el acento principal del dashboard, y un
+   color no puede identificar un hábito y significar «acción primaria» a la vez.
 
    No van en `@theme` porque `--h-*` no es un espacio de nombres de Tailwind:
    aquí solo se les da valor, y quien los consume lo hace por `var()`.
@@ -137,5 +140,5 @@
 :root {
   --h-aqua: var(--color-mint);
   --h-violet: var(--color-lav);
-  --h-orange: var(--color-pink);
+  --h-orange: var(--color-sky);
 }

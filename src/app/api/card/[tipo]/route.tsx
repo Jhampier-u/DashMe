@@ -17,12 +17,31 @@ export const dynamic = "force-dynamic";
 const ANCHO = 1080;
 const ALTO = 1920;
 
-const INK = "#0c0a09";
-const CREAM = "#f4ede4";
-const CREAM_DIM = "#c4bdb2";
-const MUTE = "#6b6358";
-const RULE = "#2a2521";
-const ACID = "#d2ff3a";
+/*
+  La paleta del sistema pixel, escrita a mano.
+
+  Aquí no valen las variables CSS: `ImageResponse` renderiza con satori fuera
+  del navegador, así que no hay `:root` del que leer. Es una copia y hay que
+  saberlo: si la paleta cambia, este archivo no se entera solo.
+
+  Los nombres son los del sistema, no los del mundo editorial anterior.
+*/
+const PAPEL = "#fff5fb";
+const TINTA = "#4a3a52";
+const ROSA = "#ff9ec7";
+
+/*
+  `ACID` servía dos papeles: relleno una vez y color de texto cinco. Sobre
+  papel, el rosa como texto da 1,42:1 —invisible— así que solo se queda donde
+  rellena. Lo que era acento de texto pasa a tinta con más grosor, igual que en
+  el resto del dashboard.
+*/
+const INK = PAPEL;
+const CREAM = TINTA;
+const CREAM_DIM = TINTA;
+const MUTE = TINTA;
+const RULE = TINTA;
+const ACID = ROSA;
 
 const TIPOS = ["resumen", "top-artistas", "racha"] as const;
 type Tipo = (typeof TIPOS)[number];
@@ -36,16 +55,16 @@ type Tipo = (typeof TIPOS)[number];
  *
  * Se cachean en memoria: leer 500 KB de disco en cada petición sería tonto.
  */
-let fuentesCache: { serif: Buffer; mono: Buffer } | null = null;
+let fuentesCache: { pixel: Buffer; cuerpo: Buffer } | null = null;
 
 async function fuentes() {
   if (fuentesCache) return fuentesCache;
   const dir = path.join(process.cwd(), "public", "fonts");
-  const [serif, mono] = await Promise.all([
-    fs.readFile(path.join(dir, "Fraunces.ttf")),
-    fs.readFile(path.join(dir, "JetBrainsMono.ttf")),
+  const [pixel, cuerpo] = await Promise.all([
+    fs.readFile(path.join(dir, "PressStart2P-Regular.ttf")),
+    fs.readFile(path.join(dir, "Quicksand-Bold.ttf")),
   ]);
-  fuentesCache = { serif, mono };
+  fuentesCache = { pixel, cuerpo };
   return fuentesCache;
 }
 
@@ -75,23 +94,23 @@ function Marco({
         backgroundColor: INK,
         color: CREAM,
         padding: 90,
-        fontFamily: "Fraunces",
+        fontFamily: "Pixel",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <span
           style={{
-            fontFamily: "JetBrains",
+            fontFamily: "Cuerpo",
             fontSize: 26,
             letterSpacing: 4,
-            color: ACID,
+            color: TINTA,
           }}
         >
           {etiqueta.toUpperCase()}
         </span>
         <span
           style={{
-            fontFamily: "JetBrains",
+            fontFamily: "Cuerpo",
             fontSize: 26,
             letterSpacing: 4,
             color: MUTE,
@@ -108,7 +127,7 @@ function Marco({
           display: "flex",
           borderTop: `2px solid ${RULE}`,
           paddingTop: 28,
-          fontFamily: "JetBrains",
+          fontFamily: "Cuerpo",
           fontSize: 24,
           letterSpacing: 3,
           color: MUTE,
@@ -145,13 +164,13 @@ export async function GET(
     timeZone,
   );
 
-  const { serif, mono } = await fuentes();
+  const { pixel, cuerpo } = await fuentes();
   const opciones = {
     width: ANCHO,
     height: ALTO,
     fonts: [
-      { name: "Fraunces", data: serif, weight: 400 as const, style: "normal" as const },
-      { name: "JetBrains", data: mono, weight: 400 as const, style: "normal" as const },
+      { name: "Pixel", data: pixel, weight: 400 as const, style: "normal" as const },
+      { name: "Cuerpo", data: cuerpo, weight: 700 as const, style: "normal" as const },
     ],
   };
 
@@ -166,10 +185,13 @@ export async function GET(
       (
         <Marco etiqueta={range.label} pie={`${range.fromDate} — ${range.toDate}`}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 300, color: ACID, lineHeight: 1 }}>
+            {/* 200 y no 300: Pixel es monoespaciada a 1em, así que una cifra de
+                cuatro dígitos ocupa 4× el tamaño. La tarjeta mide 1080 y quedan
+                920 útiles tras los márgenes. */}
+            <span style={{ fontSize: 200, color: TINTA, lineHeight: 1.2 }}>
               {horas.toLocaleString("es")}
             </span>
-            <span style={{ fontSize: 58, color: CREAM_DIM, marginTop: 10 }}>
+            <span style={{ fontFamily: "Cuerpo", fontSize: 46, color: CREAM_DIM, marginTop: 16 }}>
               horas de música
             </span>
 
@@ -221,9 +243,12 @@ export async function GET(
                 <div style={{ display: "flex", alignItems: "baseline" }}>
                   <span
                     style={{
-                      fontFamily: "JetBrains",
+                      fontFamily: "Cuerpo",
                       fontSize: 40,
-                      color: i === 0 ? ACID : MUTE,
+                      // Tinta siempre: el rosa como texto sobre papel da
+                      // 1,42:1. Lo que marca al primero es el grosor.
+                      color: TINTA,
+                      fontWeight: i === 0 ? 700 : 400,
                       width: 90,
                     }}
                   >
@@ -231,8 +256,12 @@ export async function GET(
                   </span>
                   <span
                     style={{
-                      fontSize: i === 0 ? 82 : 62,
-                      color: i === 0 ? ACID : CREAM,
+                      // Quicksand y no la pixelada: son nombres, no títulos,
+                      // y en monoespaciada uno largo se saldría de la tarjeta.
+                      fontFamily: "Cuerpo",
+                      fontSize: i === 0 ? 68 : 52,
+                      color: TINTA,
+                      fontWeight: i === 0 ? 700 : 400,
                     }}
                   >
                     {a.name}
@@ -249,7 +278,7 @@ export async function GET(
                   />
                   <span
                     style={{
-                      fontFamily: "JetBrains",
+                      fontFamily: "Cuerpo",
                       fontSize: 28,
                       color: MUTE,
                       marginLeft: 20,
@@ -275,16 +304,16 @@ export async function GET(
     (
       <Marco etiqueta="racha" pie={`máxima ${rachas.maxima} días`}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontSize: 340, color: ACID, lineHeight: 1 }}>
+          <span style={{ fontSize: 200, color: TINTA, lineHeight: 1.2 }}>
             {rachas.actual}
           </span>
-          <span style={{ fontSize: 58, color: CREAM_DIM, marginTop: 10 }}>
+          <span style={{ fontFamily: "Cuerpo", fontSize: 46, color: CREAM_DIM, marginTop: 16 }}>
             {rachas.actual === 1 ? "día seguido" : "días seguidos"} con música
           </span>
           {rachas.maximaDesde && (
             <span
               style={{
-                fontFamily: "JetBrains",
+                fontFamily: "Cuerpo",
                 fontSize: 32,
                 color: MUTE,
                 marginTop: 70,

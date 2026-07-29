@@ -83,7 +83,7 @@ function Header({ total }: { total: number }) {
           <p className="label-mono text-tinta mb-6">
             Volumen 02 — Tu biblioteca personal
           </p>
-          <h1 className="display-italic text-[clamp(3.5rem,10vw,10rem)] leading-[0.9]">
+          <h1 className="display-italic text-[clamp(1.4rem,4vw,4rem)]">
             Liked
             <br />
             <span className="display not-italic text-cream-dim">Songs.</span>
@@ -97,7 +97,7 @@ function Header({ total }: { total: number }) {
         <div className="col-span-12 lg:col-span-4 flex flex-col items-end justify-end fade-in">
           <p className="label-mono text-mute mb-2">Canciones guardadas</p>
           <p
-            className="display num-tabular text-[clamp(5rem,16vw,13rem)] text-tinta leading-none"
+            className="display num-tabular text-[clamp(2rem,6.4vw,5.2rem)] text-tinta"
             style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
           >
             {total.toLocaleString("es")}

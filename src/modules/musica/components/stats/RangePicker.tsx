@@ -38,7 +38,7 @@ export default function RangePicker({
             */
             className={
               activo
-                ? "label-mono px-2.5 py-1 border-2 border-line bg-sky text-tinta font-bold"
+                ? "label-mono px-2.5 py-1 border-2 border-line bg-pink text-tinta font-bold"
                 : "label-mono px-2.5 py-1 border-2 border-transparent text-tinta hover:underline"
             }
           >

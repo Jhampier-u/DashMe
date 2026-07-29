@@ -60,14 +60,14 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                   <span style={CIFRA}>{pct(habit.rate)}</span>
                 </div>
                 {/*
-                  Peach por debajo de la mitad, sky por encima. El color es
+                  Peach por debajo de la mitad, rosa por encima. El color es
                   refuerzo, no información: el porcentaje va escrito justo
                   encima, así que quien no distinga los dos tonos lo tiene igual
                   de claro.
                 */}
                 <ProgressBar
                   value={habit.rate ?? 0}
-                  fill={(habit.rate ?? 0) < 0.5 ? "var(--color-peach)" : "var(--color-sky)"}
+                  fill={(habit.rate ?? 0) < 0.5 ? "var(--color-peach)" : "var(--color-pink)"}
                 />
               </div>
             ))}
@@ -105,7 +105,7 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                         style={{
                           width: "100%",
                           height: rate === null ? 0 : `${Math.max(4, rate * 100)}%`,
-                          background: esPeor ? "var(--color-peach)" : "var(--color-sky)",
+                          background: esPeor ? "var(--color-peach)" : "var(--color-pink)",
                           border: rate === null ? "none" : "2px solid var(--color-line)",
                           borderBottom: "none",
                           borderRadius: "6px 6px 0 0",

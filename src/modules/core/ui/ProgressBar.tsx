@@ -11,7 +11,7 @@ export function ProgressBar({
   /** De 0 a 1. Se acota, así que un valor fuera de rango no rompe el dibujo. */
   value,
   /** Color del relleno. Pastel o tinta, nunca un tono pensado para texto. */
-  fill = "var(--color-sky)",
+  fill = "var(--color-pink)",
   height = 12,
 }: {
   value: number;

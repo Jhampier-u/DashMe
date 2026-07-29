@@ -32,7 +32,7 @@ const STATUS_MARK: Record<ProjectItemStatus, string> = {
 */
 const STATUS_FILL: Record<ProjectItemStatus, string> = {
   TODO: "var(--color-paper)",
-  IN_PROGRESS: "var(--color-sky)",
+  IN_PROGRESS: "var(--color-pink)",
   DONE: "var(--color-tinta)",
 };
 

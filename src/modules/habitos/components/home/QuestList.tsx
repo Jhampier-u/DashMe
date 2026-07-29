@@ -56,7 +56,7 @@ export function QuestList({ quests }: { quests: DailyQuestRow[] }) {
             <ProgressBar
               value={ratio}
               height={10}
-              fill={q.completed ? "var(--color-tinta)" : "var(--color-sky)"}
+              fill={q.completed ? "var(--color-tinta)" : "var(--color-pink)"}
             />
           </div>
         );

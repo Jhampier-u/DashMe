@@ -409,24 +409,27 @@ export const PALETA = {
   lo eran en el sistema anterior: con la lista completa de pares, ningún
   conjunto de cuatro mantiene la separación bajo daltonismo.
 
-  ΔE CIE76 de los tres pares, medido tras simular cada visión:
+  EL ROSA SALIÓ DE AQUÍ. Pasó a ser el acento principal de todo el dashboard, y
+  un color no puede identificar un hábito y significar «acción primaria» a la
+  vez: en la pantalla de hábitos convivirían. Su hueco lo ocupa `sky`.
 
-                    normal   deutan   protan
-    pink ~ lav       35.2     33.8     23.6
-    pink ~ mint      75.4     15.9     37.7
-    lav  ~ mint      69.4     47.5     56.6
+  Se midieron las veinte ternas posibles antes de elegir. ΔE CIE76 tras simular
+  cada visión:
+
+                   normal   deutan   protan
+    lav  ~ mint     69.4     47.5     56.6
+    lav  ~ sky      29.6     10.1     17.2
+    mint ~ sky      43.7     33.4     34.1
     ------------------------------------------
-    peor par         35.2     15.9     23.6
-    umbral exigido   20        9        9
+    peor par        29.6     10.1     17.2
+    umbral exigido  20        9        9
 
-  El par que manda es pink~mint en deuteranopía: ahí el rosa se va a gris
-  (#c1c1c5) y la menta a un blanco amarillento (#dedeca), y lo único que los
-  separa es esa diferencia de tono. Aun así sobra margen, así que los tres
-  pasteles se quedan con su valor original — no hizo falta oscurecer ninguno
-  para ganar separación.
+  El par que manda es lav~sky en deuteranopía, y 10,1 es el número más justo de
+  todo el sistema: pasa, pero con poco margen. La alternativa era lav+mint+peach
+  (22,0 en deutan), descartada porque peach es el destructivo y chocaría con él.
 */
 export const ACENTOS_HABITO = {
-  pink: PALETA.acentos.pink,
   lav: PALETA.acentos.lav,
   mint: PALETA.acentos.mint,
+  sky: PALETA.acentos.sky,
 } as const;

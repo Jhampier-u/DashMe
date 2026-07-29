@@ -101,7 +101,7 @@ export function TodayCard({ done, scheduled, partial, pending }: Props) {
                   height: 9,
                   borderRadius: "50%",
                   border: "2px solid var(--color-tinta)",
-                  background: habit.critical ? "var(--color-peach)" : "var(--color-sky)",
+                  background: habit.critical ? "var(--color-peach)" : "var(--color-pink)",
                 }}
               />
               {habit.name}
