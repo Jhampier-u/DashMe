@@ -114,7 +114,7 @@ export default async function Portada({
           <div className="col-span-12 lg:col-span-7 fade-in">
             <p className="label-mono text-tinta mb-6">{range.label}</p>
             <p
-              className="display num-tabular text-[clamp(4rem,15vw,12rem)] text-tinta leading-[0.82]"
+              className="display num-tabular text-[clamp(1.6rem,6vw,4.8rem)] text-tinta"
               style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
             >
               {minutos.toLocaleString("es")}

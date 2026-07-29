@@ -27,7 +27,7 @@ export default async function AjustesPage() {
 
       <section className="px-8 py-16 hairline-b">
         <p className="label-mono text-tinta mb-6">Ajustes</p>
-        <h1 className="display-italic text-[clamp(3rem,8vw,7rem)] leading-[0.9]">
+        <h1 className="display-italic text-[clamp(1.2rem,3.2vw,2.8rem)]">
           El taller.
         </h1>
       </section>

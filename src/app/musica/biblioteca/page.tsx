@@ -73,7 +73,7 @@ function LoginScreen() {
           <p className="label-mono text-tinta mb-8">
             № 01 — Una nueva forma de mirar tu música
           </p>
-          <h1 className="display-italic text-[clamp(3.5rem,9vw,9rem)] mb-8">
+          <h1 className="display-italic text-[clamp(1.4rem,3.6vw,3.6rem)] mb-8">
             Tu biblioteca,
             <br />
             <span className="display text-cream-dim not-italic">ordenada</span>
@@ -299,7 +299,7 @@ function Featured({ playlist }: { playlist: SpotifyPlaylist }) {
             href={`/musica/playlist/${playlist.id}`}
             className="group inline-block"
           >
-            <h2 className="display-italic text-[clamp(2.75rem,6vw,6rem)] leading-[0.95] [text-wrap:balance] group-hover:underline transition-colors duration-500">
+            <h2 className="display-italic text-[clamp(1.1rem,2.4vw,2.4rem)] [text-wrap:balance] group-hover:underline transition-colors duration-500">
               {playlist.name}
             </h2>
           </Link>
@@ -408,7 +408,7 @@ function EditorialHeader({ total }: { total: number }) {
           <p className="label-mono text-tinta mb-6">
             Volumen 01 — Índice de la biblioteca
           </p>
-          <h1 className="display-italic text-[clamp(4rem,12vw,12rem)]">
+          <h1 className="display-italic text-[clamp(1.6rem,4.8vw,4.8rem)]">
             Tu
             <br />
             biblioteca.
@@ -422,7 +422,7 @@ function EditorialHeader({ total }: { total: number }) {
         <div className="col-span-12 lg:col-span-4 flex flex-col items-end justify-end fade-in">
           <p className="label-mono text-mute mb-2">Entradas totales</p>
           <p
-            className="display num-tabular text-[clamp(6rem,18vw,15rem)] text-tinta leading-none"
+            className="display num-tabular text-[clamp(2.4rem,7.2vw,6rem)] text-tinta"
             style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
           >
             {pad(total)}

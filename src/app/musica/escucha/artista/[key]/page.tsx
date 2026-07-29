@@ -67,7 +67,7 @@ export default async function FichaArtista({
           {posicion} en tu ranking · {range.label}
         </p>
         <h1
-          className="display-italic text-[clamp(2.6rem,9vw,7rem)] leading-[0.9] break-words"
+          className="display-italic text-[clamp(1.04rem,3.6vw,2.8rem)] break-words"
           style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
         >
           {ficha.name}
@@ -94,7 +94,7 @@ export default async function FichaArtista({
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <dt className="label-mono text-mute mb-3">{t.label}</dt>
-              <dd className="num-tabular text-[clamp(1.2rem,2.4vw,1.7rem)] leading-tight">
+              <dd className="num-tabular text-[clamp(0.48rem,0.96vw,0.68rem)] leading-tight">
                 {t.valor}
               </dd>
             </div>

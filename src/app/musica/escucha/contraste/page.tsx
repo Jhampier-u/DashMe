@@ -161,7 +161,7 @@ export default async function Contraste({
       <section className="px-8 pt-16 pb-12 hairline-b">
         <p className="label-mono text-tinta mb-6">Contraste</p>
         <h1
-          className="display-italic text-[clamp(2.4rem,8vw,6rem)] leading-[0.9]"
+          className="display-italic text-[clamp(0.96rem,3.2vw,2.4rem)]"
           style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
         >
           Lo que Spotify

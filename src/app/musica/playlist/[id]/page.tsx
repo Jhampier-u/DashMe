@@ -230,7 +230,7 @@ function DetailHeader({
               </>
             )}
           </p>
-          <h1 className="display-italic text-[clamp(3rem,8vw,8rem)] [text-wrap:balance]">
+          <h1 className="display-italic text-[clamp(1.2rem,3.2vw,3.2rem)] [text-wrap:balance]">
             {playlist.name}
           </h1>
           {playlist.description && (
