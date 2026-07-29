@@ -238,7 +238,7 @@ filtros, no una columna en blanco sin explicación.
 | `habitos/lib/categorias.test.ts` | **Nuevo.** |
 | `habitos/lib/tasks.ts` | Filtrado, y el árbol que sube desde `projects.ts` |
 | `habitos/lib/projects.ts` | Repuntado a `tasks` |
-| `habitos/lib/quests.ts` | Una sola cuenta en vez de dos |
+| `habitos/lib/quests.ts` | Las dos cuentas, separadas por `project_id` |
 | `habitos/lib/mutations.ts` | Las cuatro funciones de `projectItems` pasan a `tasks` |
 | `habitos/components/tasks/PriorityDot.tsx` | **Nuevo.** |
 | `habitos/components/tasks/FilterBar.tsx` | **Nuevo.** |
@@ -268,9 +268,20 @@ haría el cambio imposible de revisar.
 
 - Los tres estados y sus nombres.
 - El orden manual dentro de cada columna.
-- El XP por tarea completada y las misiones diarias. La misión de tareas hoy
-  suma dos consultas —tareas sueltas más elementos de proyecto— y pasa a una
-  sola; **el número que se ve es el mismo**.
+- El XP por tarea completada.
+- **Las dos misiones diarias siguen contando exactamente lo mismo.** Hay dos, no
+  una: «Dos tareas» cuenta filas de `tasks` y «Una subtarea de proyecto» cuenta
+  filas de `project_items`. Como hoy ninguna tarea tiene proyecto y todo elemento
+  lo tiene, al unificar se separan por esa misma línea:
+
+  | Misión | Hoy | Después |
+  |---|---|---|
+  | Dos tareas | filas de `tasks` | tareas **sin** proyecto |
+  | Una subtarea de proyecto | filas de `project_items` | tareas **con** proyecto |
+
+  Los dos conjuntos son idénticos fila a fila. Una tarea que metas en un
+  proyecto dejará de contar para la primera y pasará a contar para la segunda,
+  que es justo lo que dicen sus rótulos.
 - Ninguna fila se pierde.
 
 ## 11. Riesgos
