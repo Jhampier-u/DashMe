@@ -18,14 +18,23 @@ export default function ErrorPage({
   return (
     <main style={{ maxWidth: 460, margin: "0 auto", padding: "64px 16px" }}>
       <Card style={{ textAlign: "center", padding: 32 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+        <h2
+          style={{
+            fontFamily: "var(--font-pixel)",
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 14,
+            overflowWrap: "anywhere",
+          }}
+        >
           Algo se rompió
         </h2>
-        <p style={{ fontSize: 13.5, color: "var(--m-ink-2)", marginBottom: 6 }}>
+        <p style={{ fontSize: 13.5, marginBottom: 6 }}>
           No hemos podido cargar esta pantalla.
         </p>
         {error.digest ? (
-          <p style={{ fontSize: 12, color: "var(--m-ink-3)", marginBottom: 20 }}>
+          // El código es un dato, así que va en VT323, a su suelo de 16px.
+          <p style={{ fontFamily: "var(--font-vt)", fontSize: 16, marginBottom: 20 }}>
             Código: {error.digest}
           </p>
         ) : (
