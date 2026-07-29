@@ -6,6 +6,7 @@
 
 import { useState, type ReactNode } from "react";
 import { areaPath, invertLinear, linePath, scaleLinear, segments, type Point } from "@/modules/habitos/lib/chart";
+import { ChartTooltip } from "./ChartTooltip";
 
 export type LineChartProps = {
   /** Serie principal (la que se dibuja como línea y área). `null` = hueco. */
@@ -71,13 +72,9 @@ export function LineChart({
   // Índice activo ya acotado: evita la aserción no nula `hover!` más abajo.
   const activeIndex = hover === null ? null : Math.min(line.length - 1, Math.max(0, hover));
 
+  // Misma escala X que la cruceta del SVG: si difiriera, la cruceta y el
+  // tooltip señalarían días distintos al pasar el ratón.
   const tooltipLeft = activeIndex === null ? 0 : (x(activeIndex) / W) * 100;
-  const tooltipAnchor =
-    tooltipLeft < 15
-      ? "translateX(0)"
-      : tooltipLeft > 85
-        ? "translateX(-100%)"
-        : "translateX(-50%)";
 
   return (
     <div style={{ position: "relative" }}>
@@ -160,28 +157,7 @@ export function LineChart({
       </svg>
 
       {activeIndex !== null ? (
-        <div
-          style={{
-            position: "absolute",
-            // Misma escala X que la cruceta del SVG: si difiriera, la cruceta
-            // y el tooltip señalarían días distintos al pasar el mouse.
-            left: `${tooltipLeft}%`,
-            top: 0,
-            // Cerca de los bordes el tooltip se ancla por su lado en vez de
-            // centrarse, para no desbordar la tarjeta.
-            transform: tooltipAnchor,
-            pointerEvents: "none",
-            background: "var(--m-elevated)",
-            border: "1px solid var(--m-line)",
-            borderRadius: 7,
-            padding: "7px 10px",
-            fontSize: 11.5,
-            lineHeight: 1.5,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {renderTooltip(activeIndex)}
-        </div>
+        <ChartTooltip left={tooltipLeft}>{renderTooltip(activeIndex)}</ChartTooltip>
       ) : null}
     </div>
   );

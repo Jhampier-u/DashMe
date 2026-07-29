@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { ChartTooltip } from "./ChartTooltip";
 
 export type BarChartProps = {
   /** Una barra por elemento. */
@@ -85,29 +86,9 @@ export function BarChart({
       </div>
 
       {hover !== null ? (
-        <div
-          style={{
-            position: "absolute",
-            left: `${((hover + 0.5) / values.length) * 100}%`,
-            top: 0,
-            transform:
-              hover < values.length * 0.15
-                ? "translateX(0)"
-                : hover > values.length * 0.85
-                  ? "translateX(-100%)"
-                  : "translateX(-50%)",
-            pointerEvents: "none",
-            background: "var(--m-elevated)",
-            border: "1px solid var(--m-line)",
-            borderRadius: 7,
-            padding: "6px 9px",
-            fontSize: 11.5,
-            lineHeight: 1.5,
-            whiteSpace: "nowrap",
-          }}
-        >
+        <ChartTooltip left={((hover + 0.5) / values.length) * 100}>
           {renderTooltip(hover)}
-        </div>
+        </ChartTooltip>
       ) : null}
     </div>
   );
