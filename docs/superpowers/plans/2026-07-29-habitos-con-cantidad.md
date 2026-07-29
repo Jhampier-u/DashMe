@@ -902,13 +902,13 @@ git commit -m "feat(habitos): contador en la fila y aviso de racha en riesgo"
 
 ### Tarea 6: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: Que los cinco pasen por la regla**
+- [x] **Paso 2: Que los cinco pasen por la regla**
 
 ```bash
 grep -rn "computeStreak(" src/modules/habitos/lib/*.ts | grep -v streak.ts
@@ -917,7 +917,7 @@ grep -rn "diasQueCuentan" src/modules/habitos/lib/*.ts | grep -v cantidad
 
 El segundo grep tiene que cubrir todos los sitios del primero.
 
-- [ ] **Paso 3: Que `streak.test.ts` no se haya tocado**
+- [x] **Paso 3: Que `streak.test.ts` no se haya tocado**
 
 ```bash
 git diff main --stat -- '*streak.test.ts'
@@ -925,7 +925,7 @@ git diff main --stat -- '*streak.test.ts'
 
 Esperado: **nada**.
 
-- [ ] **Paso 4: La base real**
+- [x] **Paso 4: La base real**
 
 ```bash
 node -e "
@@ -936,7 +936,7 @@ console.log('con objetivo:', d.prepare('select count(*) c from habits where targ
 "
 ```
 
-- [ ] **Paso 5: En pantalla**
+- [x] **Paso 5: En pantalla**
 
 1. Crea un hábito con objetivo 3.
 2. Suma uno: la fila dice `1 / 3` y **avisa de que la racha no está a salvo**.
@@ -948,17 +948,32 @@ console.log('con objetivo:', d.prepare('select count(*) c from habits where targ
 > Hazlo sobre un hábito de prueba tuyo. Marcar y desmarcar mueve el XP, las
 > misiones del día y —si el hábito es ancla— el bonus.
 
-- [ ] **Paso 6: Marcar el plan y el spec**
+**Medido en la ejecución**, con objetivo 3 y XP_PER_HABIT = 25:
+
+```
+0 / 3   sin aviso
+1 / 3   avisa · 2 / 3  avisa
+3 / 3   sin aviso · partial 0 · XP +25 en total, no +25 por clic
+2 / 3   avisa · partial 1 · XP a la mitad, 12
+borrado tres habitos intactos, XP de vuelta al valor inicial
+```
+
+**Y un aviso para quien verifique así:** no llames al hábito de prueba
+«…borrar». Buscar `/borrar/i` en los `aria-label` casa con el NOMBRE del hábito y
+acaba pulsando el botón de marcar en vez del de borrar. Pasó aquí. Filtra por
+`aria-label === "Borrar <nombre>"` exacto.
+
+- [x] **Paso 6: Marcar el plan y el spec**
 
 ---
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. La migración añade las dos columnas y es idempotente
-- [ ] 3. Un hábito sin objetivo se comporta exactamente como hoy
-- [ ] 4. Con objetivo 8: apuntar 8 da XP completo y mantiene la racha
-- [ ] 5. Con objetivo 8: apuntar 5 da la mitad y **no** mantiene la racha
-- [ ] 6. Los cinco cálculos de racha pasan por `diasQueCuentan`
-- [ ] 7. `streak.test.ts` sigue pasando **sin tocarse**
-- [ ] 8. La fila avisa de que apuntar por debajo no protege la racha
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. La migración añade las dos columnas y es idempotente
+- [x] 3. Un hábito sin objetivo se comporta exactamente como hoy
+- [x] 4. Con objetivo 8: apuntar 8 da XP completo y mantiene la racha
+- [x] 5. Con objetivo 8: apuntar 5 da la mitad y **no** mantiene la racha
+- [x] 6. Los cinco cálculos de racha pasan por `diasQueCuentan`
+- [x] 7. `streak.test.ts` sigue pasando **sin tocarse**
+- [x] 8. La fila avisa de que apuntar por debajo no protege la racha
