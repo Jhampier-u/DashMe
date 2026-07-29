@@ -114,31 +114,31 @@
 }
 
 /* ==========================================================================
-   Identidad de hábito
+   La paleta categórica
 
-   Los tres `--h-*` vienen de `globals.css`, donde valían el aqua, el violeta y
-   el naranja validados sobre superficie oscura. Cambian de valor y no de
-   papel, que es justo lo que pedía el spec: siguen siendo el acento de la fila
-   y el tinte del cartel de la planta.
+   Los colores con los que el usuario distingue cosas entre sí: hábitos,
+   etiquetas de música y, más adelante, categorías y prioridades de tarea.
 
-   LOS NOMBRES YA NO DESCRIBEN EL COLOR, y no es un descuido. `aqua`, `violet` y
-   `orange` son claves guardadas en la base de datos, y `habitColorVar()` está
-   obligada por `color.test.ts` a devolver exactamente `var(--h-aqua)`.
-   Renombrarlas costaría una migración de filas y un test tocado, y los tests no
-   se tocan. Lo que ve el usuario son las etiquetas de `HABIT_COLORS`, que sí
-   se han puesto al día: Menta, Lavanda y Cielo.
+   Los declara `paleta.ts` con su hexadecimal y su etiqueta; aquí solo se les da
+   nombre de token para poder usarlos desde CSS. Sustituyen a los `--h-*`, que
+   solo servían a hábitos y cuyos nombres —`aqua`, `violet`, `orange`— hacía
+   tiempo que no describían su color.
 
-   El rosa salió de aquí: pasó a ser el acento principal del dashboard, y un
-   color no puede identificar un hábito y significar «acción primaria» a la vez.
+   No van en `@theme` porque `--c-*` no es un espacio de nombres de Tailwind y
+   tampoco queremos una utilidad por color: se consumen por `var()`, resolviendo
+   una clave guardada en la base.
 
-   No van en `@theme` porque `--h-*` no es un espacio de nombres de Tailwind:
-   aquí solo se les da valor, y quien los consume lo hace por `var()`.
-
-   La separación bajo daltonismo de esta terna la afirma `contraste.test.ts`
-   (peor par rosa~menta en deuteranopía, ΔE 15.9 contra un umbral de 9).
+   La separación de los siete que se ofrecen como hábito la afirma
+   `contraste.test.ts`. Añadir uno más obliga a volver a medir el conjunto,
+   porque la separación es una propiedad del grupo y no de cada color suelto.
    ========================================================================== */
 :root {
-  --h-aqua: var(--color-mint);
-  --h-violet: var(--color-lav);
-  --h-orange: var(--color-sky);
+  --c-pink: #ff9ec7;
+  --c-lav: #c4b5fd;
+  --c-mint: #a7f0c8;
+  --c-peach: #ffd6a5;
+  --c-sky: #a5d8ff;
+  --c-amber: #f4b942;
+  --c-coral: #ff9980;
+  --c-acid: #d2ff3a;
 }
