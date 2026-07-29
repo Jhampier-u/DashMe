@@ -36,18 +36,33 @@ export function Stat({ label, value, meta, size = "md" }: StatProps) {
   const body = (
     <>
       <div style={ETIQUETA}>{label}</div>
-      <div
-        style={{
-          // 26 y 20: los dos por encima del mínimo de 16px de VT323.
-          fontFamily: "var(--font-vt)",
-          fontSize: md ? 26 : 20,
-          lineHeight: 1,
-          fontVariantNumeric: "tabular-nums",
-          color: "var(--color-tinta)",
-          marginTop: md ? 6 : 4,
-        }}
-      >
-        {value}
+      {/*
+        La cifra se subraya con una barra de rosa.
+
+        Es lo que le da vida a las rejillas de métricas, que son media portada y
+        casi todo el jardín: sin ella son texto sobre papel y nada más. Va por
+        debajo y no detrás para no tocar el contraste — la tinta sigue cayendo
+        sobre papel, 9,76:1.
+
+        `inline-block` para que la barra mida lo que mide la cifra y no toda la
+        columna: subrayar «1» y subrayar «1.976» no deben ocupar lo mismo.
+      */}
+      <div style={{ marginTop: md ? 6 : 4 }}>
+        <span
+          style={{
+            // 26 y 20: los dos por encima del mínimo de 16px de VT323.
+            display: "inline-block",
+            fontFamily: "var(--font-vt)",
+            fontSize: md ? 26 : 20,
+            lineHeight: 1,
+            fontVariantNumeric: "tabular-nums",
+            color: "var(--color-tinta)",
+            borderBottom: "4px solid var(--color-pink)",
+            paddingBottom: 2,
+          }}
+        >
+          {value}
+        </span>
       </div>
       {meta === undefined ? null : (
         <div

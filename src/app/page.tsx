@@ -30,14 +30,25 @@ const seccion: React.CSSProperties = {
   gap: 18,
 };
 
-// 16px es el suelo de VT323.
+/*
+  Los rótulos de sección van sellados en rosa, no sueltos sobre el papel. Son
+  las dos únicas divisiones de la portada, así que marcarlas es lo que le da
+  ritmo a la página en vez de dejarla como una lista de tarjetas.
+
+  16px es el suelo de VT323, y la tinta sobre rosa da 5,43:1.
+*/
 const tituloSeccion: React.CSSProperties = {
+  display: "inline-block",
   fontFamily: "var(--font-vt)",
   fontSize: 16,
   lineHeight: 1,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
   color: "var(--color-tinta)",
+  background: "var(--color-pink)",
+  border: "2px solid var(--color-line)",
+  borderRadius: "var(--radius-control)",
+  padding: "5px 10px",
 };
 
 export default async function DashboardPage() {

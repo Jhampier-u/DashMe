@@ -28,12 +28,32 @@ const SUPERFICIE: CSSProperties = {
  * 4,00:1, que solo vale para texto grande.
  */
 const ROTULO: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
   fontFamily: "var(--font-vt)",
   fontSize: 16,
   lineHeight: 1,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
   color: "var(--color-tinta)",
+};
+
+/**
+ * Un cuadrado de rosa delante del rótulo.
+ *
+ * Es lo único decorativo del componente y está aquí a propósito: un cuadrado
+ * sin radio es la forma más pixel que existe, y sitúa el acento de la marca en
+ * cada tarjeta del dashboard sin robarle sitio al contenido.
+ *
+ * Va `aria-hidden` porque no dice nada: el rótulo ya está escrito al lado.
+ */
+const MARCA: CSSProperties = {
+  width: 10,
+  height: 10,
+  flexShrink: 0,
+  background: "var(--color-pink)",
+  border: "2px solid var(--color-line)",
 };
 
 type Props = {
@@ -56,12 +76,19 @@ export function Card({ children, title, action, className, style }: Props) {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "baseline",
+            alignItems: "center",
             gap: 12,
             marginBottom: 14,
           }}
         >
-          {title !== undefined ? <span style={ROTULO}>{title}</span> : <span />}
+          {title !== undefined ? (
+            <span style={ROTULO}>
+              <span aria-hidden style={MARCA} />
+              {title}
+            </span>
+          ) : (
+            <span />
+          )}
           {action}
         </div>
       ) : null}
