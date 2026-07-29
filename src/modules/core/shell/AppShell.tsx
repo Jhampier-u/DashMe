@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { SoundToggle } from "@/modules/habitos/components/SoundToggle";
 import {
   IconGarden,
@@ -28,6 +28,30 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/musica", label: "Música", Icon: IconMusic },
 ];
 
+/*
+  Las tres superficies del armazón comparten piel. El trazo sube de 1px
+  translúcido a los 3px macizos del sistema: es el borde que separa la
+  navegación del contenido y ahora se ve.
+
+  Aquí sí se fija el color, al contrario que en `PageHeader`: quien impone el
+  fondo tiene que imponer también la tinta. Heredar solo es correcto cuando no
+  sabes sobre qué caes.
+*/
+const SUPERFICIE: CSSProperties = {
+  background: "var(--color-paper)",
+  color: "var(--color-tinta)",
+  fontFamily: "var(--font-cuerpo)",
+};
+
+/** El logotipo, en las dos barras. 14px es el suelo de Press Start 2P. */
+const LOGOTIPO: CSSProperties = {
+  fontFamily: "var(--font-pixel)",
+  fontSize: 14,
+  lineHeight: 1.5,
+  color: "var(--color-tinta)",
+  textDecoration: "none",
+};
+
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -46,19 +70,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Lateral · escritorio */}
       <aside
         className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:w-52 lg:px-3 lg:py-4"
-        style={{ background: "var(--m-surface)", borderRight: "1px solid var(--m-line)" }}
+        style={{ ...SUPERFICIE, borderRight: "3px solid var(--color-line)" }}
       >
-        <Link
-          href="/"
-          className="px-2 pb-4"
-          style={{
-            fontSize: 15,
-            fontWeight: 650,
-            letterSpacing: "-0.01em",
-            color: "var(--m-ink)",
-            textDecoration: "none",
-          }}
-        >
+        <Link href="/" className="px-2 pb-5" style={LOGOTIPO}>
           Dashboard
         </Link>
 
@@ -77,20 +91,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           en la lateral, así que esta barra no existe. */}
       <header
         className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3"
-        style={{
-          background: "var(--m-surface)",
-          borderBottom: "1px solid var(--m-line)",
-        }}
+        style={{ ...SUPERFICIE, borderBottom: "3px solid var(--color-line)" }}
       >
-        <Link
-          href="/"
-          style={{
-            fontSize: 14.5,
-            fontWeight: 650,
-            color: "var(--m-ink)",
-            textDecoration: "none",
-          }}
-        >
+        <Link href="/" style={LOGOTIPO}>
           Dashboard
         </Link>
         <SoundToggle />
@@ -109,8 +112,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="lg:hidden fixed bottom-0 inset-x-0 z-30 flex"
         aria-label="Secciones"
         style={{
-          background: "var(--m-surface)",
-          borderTop: "1px solid var(--m-line)",
+          ...SUPERFICIE,
+          borderTop: "3px solid var(--color-line)",
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
@@ -128,13 +131,18 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className="flex items-center gap-2.5 px-2 py-2 rounded-lg"
+      className="flex items-center gap-2.5 px-2.5 py-2 rounded-control"
       style={{
         fontSize: 13,
         textDecoration: "none",
-        color: active ? "var(--m-ink)" : "var(--m-ink-2)",
-        fontWeight: active ? 550 : 400,
-        background: active ? "rgba(57, 135, 229, 0.13)" : "transparent",
+        // Tinta plena siempre: a 13px, tinta-2 se queda en 4,00:1 y no llega a
+        // AA. Lo que distingue al activo es el relleno y el grosor, no el tono.
+        color: "var(--color-tinta)",
+        fontWeight: active ? 700 : 500,
+        background: active ? "var(--color-sky)" : "transparent",
+        // Borde transparente en el inactivo para que al activarse no se mueva
+        // nada de sitio.
+        border: `3px solid ${active ? "var(--color-line)" : "transparent"}`,
       }}
     >
       <Icon className="w-4 h-4 shrink-0" />
@@ -151,10 +159,12 @@ function BottomLink({ item, active }: { item: NavItem; active: boolean }) {
       aria-current={active ? "page" : undefined}
       className="flex-1 flex flex-col items-center gap-1 py-2"
       style={{
+        // El rótulo se queda en Quicksand: por debajo de 16px, VT323 no se lee.
         fontSize: 10,
         textDecoration: "none",
-        color: active ? "var(--m-series)" : "var(--m-ink-2)",
-        fontWeight: active ? 550 : 400,
+        color: "var(--color-tinta)",
+        fontWeight: active ? 700 : 500,
+        background: active ? "var(--color-sky)" : "transparent",
       }}
     >
       <Icon className="w-5 h-5" />

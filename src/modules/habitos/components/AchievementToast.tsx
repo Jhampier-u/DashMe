@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { on } from "@/modules/habitos/lib/events";
 
 type Toast =
@@ -25,6 +25,38 @@ let nextKey = 0;
 // durante los 1300ms que le quedaban de vida.
 const SHORT_MS = 2200;
 const LONG_MS = 3500;
+
+/*
+  El rótulo de las cinco variantes era el mismo objeto copiado cinco veces.
+  Ahora es uno. Va en tinta plena: a 12px, tinta-2 se queda en 4,00:1 y eso
+  solo cubre texto grande.
+*/
+const ROTULO: CSSProperties = {
+  fontFamily: "var(--font-cuerpo)",
+  fontSize: 12,
+  fontWeight: 700,
+  letterSpacing: "0.09em",
+  textTransform: "uppercase",
+  color: "var(--color-tinta)",
+  marginBottom: 10,
+};
+
+/*
+  El premio en XP iba en verde. El verde como color de texto está prohibido por
+  la regla dura, así que pasa a sello: fondo amarillo con la tinta encima
+  (8,49:1). Celebra igual y además se lee sin distinguir tonos.
+*/
+const PREMIO: CSSProperties = {
+  display: "inline-block",
+  fontFamily: "var(--font-vt)",
+  fontSize: 18,
+  lineHeight: 1,
+  color: "var(--color-tinta)",
+  background: "var(--color-yellow)",
+  border: "2px solid var(--color-line)",
+  borderRadius: 999,
+  padding: "4px 10px",
+};
 
 export function AchievementToast() {
   const [queue, setQueue] = useState<Toast[]>([]);
@@ -73,52 +105,57 @@ export function AchievementToast() {
           minWidth: "17rem",
           maxWidth: "22rem",
           textAlign: "center",
-          background: "var(--m-surface)",
-          border: "1px solid var(--m-line)",
-          borderRadius: 14,
+          background: "var(--color-paper)",
+          border: "3px solid var(--color-line)",
+          borderRadius: "var(--radius-card)",
           padding: "26px 24px",
-          boxShadow: "0 22px 60px rgba(0, 0, 0, 0.55)",
+          boxShadow: "var(--shadow-hard)",
+          color: "var(--color-tinta)",
+          fontFamily: "var(--font-cuerpo)",
+          // No tocar: la animación cubre toda la vida del toast y su duración
+          // se inyecta desde aquí. Sin esto se desvanece y vuelve a aparecer.
           animationDuration: `${duration}ms`,
         }}
       >
         {top.kind === "levelup" ? (
           <>
-            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
-              Has subido de nivel
-            </div>
-            <div className="m-num" style={{ fontSize: 46, fontWeight: 650, letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={ROTULO}>Has subido de nivel</div>
+            <div
+              style={{
+                fontFamily: "var(--font-vt)",
+                fontSize: 46,
+                lineHeight: 1,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {top.level}
             </div>
           </>
         ) : top.kind === "milestone" ? (
           <>
-            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
-              Racha de {top.days} días
+            <div style={ROTULO}>Racha de {top.days} días</div>
+            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 12 }}>
+              {top.habit}
             </div>
-            <div style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{top.habit}</div>
-            <div style={{ fontSize: 13.5, color: "var(--m-good)" }}>+{top.bonus} XP</div>
+            <div style={PREMIO}>+{top.bonus} XP</div>
           </>
         ) : top.kind === "shield" ? (
           <>
-            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
-              Escudo usado
-            </div>
-            <div style={{ fontSize: 15, color: "var(--m-ink)" }}>Tu racha sigue viva</div>
+            <div style={ROTULO}>Escudo usado</div>
+            <div style={{ fontSize: 15 }}>Tu racha sigue viva</div>
           </>
         ) : top.kind === "anchor" ? (
           <>
-            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
-              Hábito ancla
-            </div>
-            <div style={{ fontSize: 15, color: "var(--m-ink)" }}>Cumplido · bonus extra</div>
+            <div style={ROTULO}>Hábito ancla</div>
+            <div style={{ fontSize: 15 }}>Cumplido · bonus extra</div>
           </>
         ) : (
           <>
-            <div style={{ fontSize: 12, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--m-ink-3)", marginBottom: 10 }}>
-              Objetivo cumplido
+            <div style={ROTULO}>Objetivo cumplido</div>
+            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 12 }}>
+              {top.label}
             </div>
-            <div style={{ fontSize: 19, fontWeight: 600, marginBottom: 8 }}>{top.label}</div>
-            <div style={{ fontSize: 13.5, color: "var(--m-good)" }}>+{top.xp} XP</div>
+            <div style={PREMIO}>+{top.xp} XP</div>
           </>
         )}
       </div>

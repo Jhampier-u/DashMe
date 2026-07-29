@@ -32,8 +32,22 @@ export default async function GardenPage() {
     isPlantWilted(h.streak, h.doneToday, h.hasEverBeenDone),
   ).length;
 
+  /*
+    `.m-root` es el escudo del lenguaje oscuro: impone fondo y tinta propios en
+    vez de heredarlos del documento. Tareas, proyectos y la portada ya lo
+    llevaban; jardín se había quedado sin él y heredaba del `body`.
+
+    Hoy no cambia nada —los valores son los mismos que hereda—, pero en cuanto
+    el documento pase a papel, esta pantalla fija su texto en `--m-ink`, que es
+    casi blanco. Sin el escudo se volvería ilegible.
+
+    Se retira cuando a jardín le toque su propio repintado.
+  */
   return (
-    <main style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <main
+      className="m-root"
+      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+    >
       <PageHeader
         title="Tu jardín"
         subtitle="Cada hábito es una planta. Riégalas para que crezcan."
@@ -45,10 +59,10 @@ export default async function GardenPage() {
             <div style={{ fontSize: 56, marginBottom: 12 }} aria-hidden>
               🌱
             </div>
-            <p style={{ fontSize: 15, color: "var(--m-ink)", marginBottom: 6 }}>
+            <p style={{ fontSize: 15, marginBottom: 6 }}>
               Tu jardín está esperando su primera semilla.
             </p>
-            <p style={{ fontSize: 13, color: "var(--m-ink-2)", marginBottom: 20 }}>
+            <p style={{ fontSize: 13, marginBottom: 20 }}>
               Crea un hábito para plantar y empezar a regar.
             </p>
             <Link href="/habitos" style={buttonStyle("primary")}>
@@ -79,7 +93,7 @@ export default async function GardenPage() {
                   <div style={{ fontSize: 13.5, fontWeight: 550, color: "var(--m-crit)" }}>
                     {wilted === 1 ? "Una planta marchita" : `${wilted} plantas marchitas`}
                   </div>
-                  <p style={{ fontSize: 12.5, color: "var(--m-ink-2)", marginTop: 4 }}>
+                  <p style={{ fontSize: 12.5, marginTop: 4 }}>
                     {wilted === 1
                       ? "Riégala hoy, desde aquí o desde Hábitos, y revive."
                       : "Riégalas hoy, desde aquí o desde Hábitos, y revivirán."}
@@ -91,7 +105,7 @@ export default async function GardenPage() {
 
           <Card>
             <GardenScene habits={habits} />
-            <p style={{ fontSize: 12, color: "var(--m-ink-3)", marginTop: 10 }}>
+            <p style={{ fontSize: 12, marginTop: 10 }}>
               Click en una planta para regarla. La corona marca el hábito ancla y el
               destello, una racha de 7 días o más.
             </p>
@@ -110,16 +124,16 @@ export default async function GardenPage() {
                   <div style={{ fontSize: 24 }} aria-hidden>
                     {s.emoji}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--m-ink)", marginTop: 4 }}>
+                  <div style={{ fontSize: 12, marginTop: 4 }}>
                     {s.label}
                   </div>
-                  <div className="m-num" style={{ fontSize: 11, color: "var(--m-ink-3)" }}>
+                  <div className="m-num" style={{ fontSize: 11 }}>
                     {s.days}
                   </div>
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 12, color: "var(--m-ink-2)", marginTop: 12 }}>
+            <p style={{ fontSize: 12, marginTop: 12 }}>
               Mantén la racha y la planta crece. Si la rompes se marchita, pero revive
               en cuanto retomes el hábito.
             </p>

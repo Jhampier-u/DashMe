@@ -32,27 +32,28 @@ export function PageHeader({ title, subtitle, action }: Props) {
       }}
     >
       <div>
+        {/*
+          El color se hereda, no se fija. Es lo que permite que la cabecera
+          funcione en las dos pieles mientras dure la transición: sobre papel
+          hereda tinta de la página, y dentro de un `.m-root` hereda la tinta
+          clara del lenguaje oscuro.
+
+          Fijarlo en tinta dejó los títulos de tareas, proyectos y jardín a
+          1,84:1 sobre su fondo oscuro, que es ilegible. Un componente
+          compartido no puede dar por hecho el fondo sobre el que cae.
+        */}
         <h1
           style={{
             fontFamily: "var(--font-pixel)",
             fontSize: 16,
             lineHeight: 1.5,
-            color: "var(--color-tinta)",
             overflowWrap: "anywhere",
           }}
         >
           {title}
         </h1>
         {subtitle ? (
-          <p
-            style={{
-              fontSize: 13.5,
-              color: "var(--color-tinta)",
-              marginTop: 8,
-            }}
-          >
-            {subtitle}
-          </p>
+          <p style={{ fontSize: 13.5, marginTop: 8 }}>{subtitle}</p>
         ) : null}
       </div>
       {action}
