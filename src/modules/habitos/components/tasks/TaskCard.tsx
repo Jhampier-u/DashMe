@@ -17,20 +17,23 @@ const PREV: Record<TaskStatus, TaskStatus | null> = {
   DONE: "IN_PROGRESS",
 };
 
-const MOVE_BUTTON = {
-  width: 26,
-  height: 26,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 6,
-  border: "1px solid var(--m-line)",
-  background: "var(--m-elevated)",
-  color: "var(--m-ink-2)",
-  fontSize: 11,
-  cursor: "pointer",
-  fontFamily: "inherit",
-} as const;
+/*
+  Los tres botones son teclas del sistema. Van en clases y no en un objeto de
+  estilo porque llevan `:active`, `:focus-visible` y `:disabled`, y nada de eso
+  se puede escribir en línea.
+
+  `disabled:opacity-40` sustituye al `opacity` que se calculaba a mano en cada
+  uno, y de paso cubre el caso de `pending`, que antes se quedaba fuera.
+*/
+const MOVE_BUTTON =
+  "w-[28px] h-[28px] shrink-0 inline-flex items-center justify-center " +
+  "rounded-control border-3 border-line text-tinta text-xs leading-none " +
+  "cursor-pointer shadow-hard font-cuerpo " +
+  "transition-[transform,box-shadow] duration-75 ease-out " +
+  "active:translate-x-0.5 active:translate-y-0.5 " +
+  "active:shadow-[2px_2px_0_var(--color-line)] " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+  "disabled:opacity-40 disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0";
 
 export function TaskCard({ task }: { task: TaskRow }) {
   const [pending, startTransition] = useTransition();
@@ -61,34 +64,37 @@ export function TaskCard({ task }: { task: TaskRow }) {
   return (
     <div
       style={{
-        background: "var(--m-surface)",
-        border: "1px solid var(--m-line)",
-        borderRadius: 9,
-        padding: 12,
+        background: "var(--color-paper)",
+        border: "3px solid var(--color-line)",
+        borderRadius: "var(--radius-card)",
+        boxShadow: "var(--shadow-hard)",
+        padding: 14,
+        color: "var(--color-tinta)",
+        fontFamily: "var(--font-cuerpo)",
         opacity: pending ? 0.5 : 1,
       }}
     >
+      {/* Lo hecho se tacha en vez de apagarse de color: sobre papel, bajar el
+          tono se come el contraste, y el tachado se ve sin distinguir tonos. */}
       <div
         style={{
           fontSize: 13.5,
-          color: done ? "var(--m-ink-2)" : "var(--m-ink)",
+          fontWeight: 700,
           textDecoration: done ? "line-through" : "none",
         }}
       >
         {task.title}
       </div>
       {task.description ? (
-        <div style={{ fontSize: 12, color: "var(--m-ink-3)", marginTop: 5 }}>
-          {task.description}
-        </div>
+        <div style={{ fontSize: 12, marginTop: 6 }}>{task.description}</div>
       ) : null}
 
-      <div style={{ display: "flex", gap: 5, marginTop: 10 }}>
+      <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
         <button
           type="button"
           onClick={() => move(prev)}
           disabled={!prev || pending}
-          style={{ ...MOVE_BUTTON, opacity: prev ? 1 : 0.3 }}
+          className={`${MOVE_BUTTON} bg-paper`}
           aria-label={`Mover ${task.title} hacia atrás`}
         >
           ←
@@ -97,17 +103,19 @@ export function TaskCard({ task }: { task: TaskRow }) {
           type="button"
           onClick={() => move(next)}
           disabled={!next || pending}
-          style={{ ...MOVE_BUTTON, opacity: next ? 1 : 0.3 }}
+          className={`${MOVE_BUTTON} bg-paper`}
           aria-label={`Mover ${task.title} hacia adelante`}
         >
           →
         </button>
         <span style={{ flex: 1 }} />
+        {/* Peach es el acento destructivo del armazón, el mismo que en la fila
+            de hábito y que la variante `danger` de <Button>. */}
         <button
           type="button"
           onClick={remove}
           disabled={pending}
-          style={{ ...MOVE_BUTTON, color: "var(--m-crit)" }}
+          className={`${MOVE_BUTTON} bg-peach`}
           aria-label={`Borrar ${task.title}`}
         >
           ✕
