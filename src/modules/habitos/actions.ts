@@ -16,6 +16,7 @@ import { refresh } from "next/cache";
 import { db } from "@/modules/core/db";
 import type { TaskStatus } from "./lib/tasks";
 import * as m from "./lib/mutations";
+import * as c from "./lib/categorias";
 
 export type {
   ToggleResult,
@@ -129,5 +130,29 @@ export async function deleteProjectItem(itemId: string) {
 
 export async function renameTask(taskId: string, newTitle: string) {
   await m.renameTask(db, taskId, newTitle);
+  refresh();
+}
+
+// ---------- CATEGORÍAS DE TAREA ----------
+
+export async function crearCategoria(name: string, color: string) {
+  const r = await c.createCategoria(db, name, color);
+  refresh();
+  return r;
+}
+
+export async function renombrarCategoria(id: string, name: string) {
+  const r = await c.renameCategoria(db, id, name);
+  refresh();
+  return r;
+}
+
+export async function cambiarColorCategoria(id: string, color: string) {
+  await c.setCategoriaColor(db, id, color);
+  refresh();
+}
+
+export async function borrarCategoria(id: string) {
+  await c.deleteCategoria(db, id);
   refresh();
 }

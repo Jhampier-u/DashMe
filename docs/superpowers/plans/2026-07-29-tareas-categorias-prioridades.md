@@ -1042,7 +1042,7 @@ git commit -m "feat(tareas): las cuatro prioridades, con el tamano como segunda 
 - Modify: `src/modules/habitos/actions.ts`
 - Modify: `src/modules/habitos/index.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/categorias.test.ts`:
 
@@ -1170,7 +1170,7 @@ describe("resolveCategoriaColor", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/categorias.test.ts
@@ -1178,7 +1178,7 @@ npx vitest run src/modules/habitos/lib/categorias.test.ts
 
 Esperado: **FAIL**, `Failed to resolve import "./categorias"`.
 
-- [ ] **Paso 3: Escribir el módulo**
+- [x] **Paso 3: Escribir el módulo**
 
 `src/modules/habitos/lib/categorias.ts`:
 
@@ -1298,7 +1298,7 @@ export async function deleteCategoria(db: Db, id: string) {
 }
 ```
 
-- [ ] **Paso 4: Ejecutar el test**
+- [x] **Paso 4: Ejecutar el test**
 
 ```bash
 npx vitest run src/modules/habitos/lib/categorias.test.ts
@@ -1310,7 +1310,7 @@ Esperado: **PASS**, 10 afirmaciones.
 > es que la base de test no tiene `foreign_keys` activo. `createTestDb` lo
 > activa; no lo arregles en el test.
 
-- [ ] **Paso 5: Los server actions**
+- [x] **Paso 5: Los server actions**
 
 En `src/modules/habitos/actions.ts`, al final, junto al resto:
 
@@ -1354,13 +1354,13 @@ export { listCategorias, type Categoria } from "./lib/categorias";
 export { PRIORIDADES, PRIORIDAD_DEFS, resolvePrioridad, prioridadColorVar, type Prioridad } from "./lib/prioridad";
 ```
 
-- [ ] **Paso 6: Verificar**
+- [x] **Paso 6: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run
 ```
 
-- [ ] **Paso 7: Commit**
+- [x] **Paso 7: Commit**
 
 ```bash
 git add -A src
