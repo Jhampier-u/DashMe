@@ -17,12 +17,31 @@ export const dynamic = "force-dynamic";
 const ANCHO = 1080;
 const ALTO = 1920;
 
-const INK = "#0c0a09";
-const CREAM = "#f4ede4";
-const CREAM_DIM = "#c4bdb2";
-const MUTE = "#6b6358";
-const RULE = "#2a2521";
-const ACID = "#d2ff3a";
+/*
+  La paleta del sistema pixel, escrita a mano.
+
+  Aquí no valen las variables CSS: `ImageResponse` renderiza con satori fuera
+  del navegador, así que no hay `:root` del que leer. Es una copia y hay que
+  saberlo: si la paleta cambia, este archivo no se entera solo.
+
+  Los nombres son los del sistema, no los del mundo editorial anterior.
+*/
+const PAPEL = "#fff5fb";
+const TINTA = "#4a3a52";
+const ROSA = "#ff9ec7";
+
+/*
+  `ACID` servía dos papeles: relleno una vez y color de texto cinco. Sobre
+  papel, el rosa como texto da 1,42:1 —invisible— así que solo se queda donde
+  rellena. Lo que era acento de texto pasa a tinta con más grosor, igual que en
+  el resto del dashboard.
+*/
+const INK = PAPEL;
+const CREAM = TINTA;
+const CREAM_DIM = TINTA;
+const MUTE = TINTA;
+const RULE = TINTA;
+const ACID = ROSA;
 
 const TIPOS = ["resumen", "top-artistas", "racha"] as const;
 type Tipo = (typeof TIPOS)[number];
@@ -84,7 +103,7 @@ function Marco({
             fontFamily: "JetBrains",
             fontSize: 26,
             letterSpacing: 4,
-            color: ACID,
+            color: TINTA,
           }}
         >
           {etiqueta.toUpperCase()}
@@ -166,7 +185,7 @@ export async function GET(
       (
         <Marco etiqueta={range.label} pie={`${range.fromDate} — ${range.toDate}`}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 300, color: ACID, lineHeight: 1 }}>
+            <span style={{ fontSize: 300, color: TINTA, lineHeight: 1 }}>
               {horas.toLocaleString("es")}
             </span>
             <span style={{ fontSize: 58, color: CREAM_DIM, marginTop: 10 }}>
@@ -223,7 +242,10 @@ export async function GET(
                     style={{
                       fontFamily: "JetBrains",
                       fontSize: 40,
-                      color: i === 0 ? ACID : MUTE,
+                      // Tinta siempre: el rosa como texto sobre papel da
+                      // 1,42:1. Lo que marca al primero es el grosor.
+                      color: TINTA,
+                      fontWeight: i === 0 ? 700 : 400,
                       width: 90,
                     }}
                   >
@@ -232,7 +254,8 @@ export async function GET(
                   <span
                     style={{
                       fontSize: i === 0 ? 82 : 62,
-                      color: i === 0 ? ACID : CREAM,
+                      color: TINTA,
+                      fontWeight: i === 0 ? 700 : 400,
                     }}
                   >
                     {a.name}
@@ -275,7 +298,7 @@ export async function GET(
     (
       <Marco etiqueta="racha" pie={`máxima ${rachas.maxima} días`}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontSize: 340, color: ACID, lineHeight: 1 }}>
+          <span style={{ fontSize: 340, color: TINTA, lineHeight: 1 }}>
             {rachas.actual}
           </span>
           <span style={{ fontSize: 58, color: CREAM_DIM, marginTop: 10 }}>
