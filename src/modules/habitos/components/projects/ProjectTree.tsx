@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { createProjectItem } from "@/modules/habitos/actions";
 import type { ProjectItemNode } from "@/modules/habitos/lib/projects";
 import { Button } from "@/modules/core/ui/Button";
-import { ProjectTreeItem } from "./ProjectTreeItem";
+import { ProjectTreeItem, CAMPO_LINEA } from "./ProjectTreeItem";
 
 export function ProjectTree({
   projectId,
@@ -31,7 +31,7 @@ export function ProjectTree({
   return (
     <div>
       {roots.length === 0 && !adding ? (
-        <p style={{ fontSize: 13, color: "var(--m-ink-2)", padding: "12px 0" }}>
+        <p style={{ fontSize: 13, padding: "12px 0" }}>
           Sin subtareas todavía. Añade la primera y empieza a anidar.
         </p>
       ) : (
@@ -54,17 +54,7 @@ export function ProjectTree({
                 setTitle("");
               }
             }}
-            style={{
-              flex: 1,
-              background: "var(--m-page)",
-              border: "1px solid var(--m-line)",
-              borderRadius: 6,
-              padding: "7px 10px",
-              fontFamily: "inherit",
-              fontSize: 13.5,
-              color: "var(--m-ink)",
-              outline: "none",
-            }}
+            className={CAMPO_LINEA}
           />
           <Button type="submit" variant="primary" size="sm" disabled={pending || !title.trim()}>
             Añadir
