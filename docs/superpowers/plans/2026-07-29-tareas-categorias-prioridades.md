@@ -1376,7 +1376,7 @@ git commit -m "feat(tareas): categorias propias con color de la paleta compartid
 - Modify: `src/modules/habitos/lib/tasks.test.ts`
 - Modify: `src/modules/habitos/lib/projects.ts`
 
-- [ ] **Paso 1: Escribir los tests**
+- [x] **Paso 1: Escribir los tests**
 
 Añade a `src/modules/habitos/lib/tasks.test.ts`, conservando lo que ya hay:
 
@@ -1437,7 +1437,7 @@ describe("parseTaskFilter", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/tasks.test.ts
@@ -1445,7 +1445,7 @@ npx vitest run src/modules/habitos/lib/tasks.test.ts
 
 Esperado: **FAIL**, `buildTaskTree is not a function`.
 
-- [ ] **Paso 3: El árbol y el filtro**
+- [x] **Paso 3: El árbol y el filtro**
 
 Añade a `src/modules/habitos/lib/tasks.ts`:
 
@@ -1519,7 +1519,7 @@ export function parseTaskFilter(sp: {
 }
 ```
 
-- [ ] **Paso 4: `getTasksGrouped` devuelve solo raíces**
+- [x] **Paso 4: `getTasksGrouped` devuelve solo raíces**
 
 Sustituye `getTasksGrouped` y amplía `TaskRow` en el mismo archivo:
 
@@ -1595,7 +1595,7 @@ export async function getTasksGrouped(
 }
 ```
 
-- [ ] **Paso 5: `projects.ts` usa el árbol compartido**
+- [x] **Paso 5: `projects.ts` usa el árbol compartido**
 
 En `getProjectWithTree`, sustituye el montaje a mano del árbol (el bloque
 `// build tree` con su `map`, sus `roots` y su bucle) por:
@@ -1650,7 +1650,7 @@ Importando también `type TaskTreeNode` de `./tasks`. `ProjectTree.tsx` y
 
 La función `counts` recursiva se queda: cuenta, no monta.
 
-- [ ] **Paso 6: Verificar**
+- [x] **Paso 6: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
@@ -1659,7 +1659,7 @@ npx vitest run && npx tsc --noEmit && npm run lint
 Esperado: verde. `projects.test.ts` no debería necesitar ni un cambio: el árbol
 que devuelve tiene la misma forma.
 
-- [ ] **Paso 7: Commit**
+- [x] **Paso 7: Commit**
 
 ```bash
 git add -A src

@@ -2,7 +2,7 @@ import { and, asc, eq, isNotNull } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import { projects, tasks } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
-import type { TaskStatus } from "./tasks";
+import { buildTaskTree, type TaskStatus, type TaskTreeNode } from "./tasks";
 import {
   daysSince,
   periodChange,
@@ -19,7 +19,13 @@ import {
 export type { TaskStatus as ProjectItemStatus } from "./tasks";
 export { TASK_STATUSES as PROJECT_ITEM_STATUSES } from "./tasks";
 
-export type ProjectItemNode = {
+/**
+ * Un nodo del árbol de un proyecto. Es una tarea con hijos: desde la
+ * unificación no hay un tipo aparte para «elemento de proyecto», solo este
+ * alias, que fija `projectId` como `string` porque dentro de un proyecto
+ * siempre lo hay.
+ */
+export type ProjectItemNode = TaskTreeNode<{
   id: string;
   projectId: string;
   parentId: string | null;
@@ -28,8 +34,7 @@ export type ProjectItemNode = {
   order: number;
   createdAt: Date;
   completedAt: Date | null;
-  children: ProjectItemNode[];
-};
+}>;
 
 export type ProjectSummary = {
   id: string;
@@ -122,15 +127,14 @@ export async function getProjectWithTree(db: Db, id: string) {
     .where(eq(tasks.projectId, id))
     .orderBy(asc(tasks.order), asc(tasks.createdAt));
 
-  // build tree
-  const map = new Map<string, ProjectItemNode>();
-  for (const it of items) {
-    map.set(it.id, {
+  const roots = buildTaskTree(
+    items.map((it) => ({
       id: it.id,
       // `?? id` no es defensa por si acaso: la consulta filtra por
       // `projectId = id`, así que solo le dice a TypeScript lo que el SQL ya
-      // garantiza. `ProjectTreeItem` se lo pasa a `createProjectTask`, que
-      // exige un string.
+      // garantiza, y de paso el nodo sale con `projectId: string` en vez de
+      // `string | null`. `ProjectTreeItem` se lo pasa a `createProjectTask`,
+      // que exige un string.
       projectId: it.projectId ?? id,
       parentId: it.parentId,
       title: it.title,
@@ -138,17 +142,8 @@ export async function getProjectWithTree(db: Db, id: string) {
       order: it.order,
       createdAt: it.createdAt,
       completedAt: it.completedAt,
-      children: [],
-    });
-  }
-  const roots: ProjectItemNode[] = [];
-  for (const node of map.values()) {
-    if (node.parentId && map.has(node.parentId)) {
-      map.get(node.parentId)!.children.push(node);
-    } else {
-      roots.push(node);
-    }
-  }
+    })),
+  );
 
   // count totals (recursive)
   function counts(nodes: ProjectItemNode[]): { total: number; done: number } {
