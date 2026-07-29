@@ -120,32 +120,14 @@ body {
   --color-blood: var(--color-peach);
 
   /*
-    Paleta categórica de etiquetas. NO se remapea a los pasteles: son siete y no
-    caben en seis sin que dos dejen de distinguirse.
+    Aquí vivían los siete `--color-tag-*`, la paleta categórica propia de
+    música. Ahora son los ocho `--c-*` de `core/ui/tokens.css`, compartidos con
+    los hábitos: `TagBadge` era su único consumidor y resuelve la clave contra
+    la paleta común.
 
-    Se usan como cápsulas con tinta encima, así que cada una tiene que llegar a
-    4,5:1 contra `--color-tinta`. Medido:
-
-      acid   #d2ff3a  8,97:1      sky    #6ed3ff  6,16:1
-      amber  #f4b942  5,88:1      mint   #62e8aa  6,76:1
-      coral  #ff9980  5,01:1  (era #ff7a59, 4,05 — no llegaba)
-      violet #c2a5ff  5,01:1  (era #b18cff, 4,00 — no llegaba)
-      rose   #ff93b5  5,00:1  (era #ff6c9a, 3,90 — no llegaba)
-
-    Los tres se ACLARAN, no se oscurecen: la tinta es oscura, así que el
-    contraste sube alejando el fondo hacia el blanco. Se apunta a 5:1 y no al
-    4,5 justo para que un retoque futuro no lo rompa en silencio.
-
-    Siguen siendo siete distinguibles: el peor par es coral~rose con ΔE 30,6,
-    muy por encima del umbral de 20 que se exigió a los acentos de hábito.
+    Dos cambian de tono al unificar: `violet` pasa a lavanda `--c-lav` y `rose`
+    a rosa `--c-pink`. Las filas de la base no se tocan; se traducen en lectura.
   */
-  --color-tag-acid: #d2ff3a;
-  --color-tag-amber: #f4b942;
-  --color-tag-coral: #ff9980;
-  --color-tag-sky: #6ed3ff;
-  --color-tag-violet: #c2a5ff;
-  --color-tag-rose: #ff93b5;
-  --color-tag-mint: #62e8aa;
 
   /*
     A Quicksand y no a la pixelada, aunque `font-serif` fuera la fuente de los

@@ -26,8 +26,17 @@ describe("la paleta cumple las reglas del sistema", () => {
 });
 
 describe("los acentos de hábito se distinguen entre sí", () => {
-  it("son exactamente tres", () => {
-    expect(Object.keys(ACENTOS_HABITO)).toHaveLength(3);
+  it("son siete", () => {
+    // Fueron tres, y el comentario que había aquí decía que tres era «el máximo
+    // que pasa la separación bajo daltonismo». Era falso: el límite estaba en
+    // el inventario, no en el método. Con los trece colores disponibles, el
+    // conjunto más grande que pasa los tres umbrales es de ocho; se ofrecen
+    // siete porque el octavo se descartó por gusto.
+    //
+    // Lo que de verdad protege este bloque son las tres afirmaciones de abajo,
+    // que miden. Esta solo fija el número para que ampliarlo sea una decisión
+    // consciente y no un descuido.
+    expect(Object.keys(ACENTOS_HABITO)).toHaveLength(7);
   });
 
   it("ningún par se confunde con visión normal", () => {
