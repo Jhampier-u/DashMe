@@ -48,21 +48,35 @@ describe("copiarTablas", () => {
     const insertar = o.prepare(
       "insert into streams (ts, ms_played, track_uri, track_name, artist_name, track_key, artist_key, local_date, local_hour, source, dedup_key) values (?,?,?,?,?,?,?,?,?,?,?)",
     );
-    for (let i = 0; i < 500; i++) {
-      insertar.run(
-        1600000000000 + i,
-        1000,
-        `spotify:track:${i}`,
-        `Canción ${i}`,
-        "Artista",
-        `cancion-${i}`,
-        "artista",
-        "2020-09-13",
-        12,
-        "import",
-        `k${i}`,
-      );
-    }
+    /*
+      Las 500 inserciones van dentro de una transacción.
+
+      Sueltas, cada `run()` confirma por su cuenta y sincroniza a disco: 500
+      fsync que tardaban unos cinco segundos y hacían que este test rozara el
+      límite por defecto de vitest. Fallaba de forma intermitente según lo
+      ocupado que estuviera el disco, y no por nada que tuviera que ver con lo
+      que comprueba.
+
+      Se siguen insertando las mismas 500 filas y se sigue afirmando lo mismo;
+      solo se confirman de una vez.
+    */
+    o.transaction(() => {
+      for (let i = 0; i < 500; i++) {
+        insertar.run(
+          1600000000000 + i,
+          1000,
+          `spotify:track:${i}`,
+          `Canción ${i}`,
+          "Artista",
+          `cancion-${i}`,
+          "artista",
+          "2020-09-13",
+          12,
+          "import",
+          `k${i}`,
+        );
+      }
+    })();
     o.close();
 
     const resultado = conteos(copiarTablas(origen, destino));
