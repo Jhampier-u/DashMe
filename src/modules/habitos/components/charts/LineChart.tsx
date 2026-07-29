@@ -6,6 +6,7 @@
 
 import { useState, type ReactNode } from "react";
 import { areaPath, invertLinear, linePath, scaleLinear, segments, type Point } from "@/modules/habitos/lib/chart";
+import { ChartTooltip } from "./ChartTooltip";
 
 export type LineChartProps = {
   /** Serie principal (la que se dibuja como línea y área). `null` = hueco. */
@@ -71,13 +72,9 @@ export function LineChart({
   // Índice activo ya acotado: evita la aserción no nula `hover!` más abajo.
   const activeIndex = hover === null ? null : Math.min(line.length - 1, Math.max(0, hover));
 
+  // Misma escala X que la cruceta del SVG: si difiriera, la cruceta y el
+  // tooltip señalarían días distintos al pasar el ratón.
   const tooltipLeft = activeIndex === null ? 0 : (x(activeIndex) / W) * 100;
-  const tooltipAnchor =
-    tooltipLeft < 15
-      ? "translateX(0)"
-      : tooltipLeft > 85
-        ? "translateX(-100%)"
-        : "translateX(-50%)";
 
   return (
     <div style={{ position: "relative" }}>
@@ -91,30 +88,43 @@ export function LineChart({
       >
         {ticks.map((value) => (
           <g key={value}>
+            {/* Discontinua: es guía, no dato. */}
             <line
               x1={PAD.left}
               x2={W - PAD.right}
               y1={y(value)}
               y2={y(value)}
-              stroke="var(--m-line)"
-              strokeWidth={1}
+              stroke="var(--color-line)"
+              strokeWidth={2}
+              strokeDasharray="4 4"
             />
-            <text x={PAD.left - 8} y={y(value) + 4} textAnchor="end" fontSize={10} fill="var(--m-ink-3)">
+            {/* Quicksand y no VT323: a 11px la pixelada está bajo su suelo. */}
+            <text
+              x={PAD.left - 8}
+              y={y(value) + 4}
+              textAnchor="end"
+              fontSize={11}
+              fontFamily="var(--font-cuerpo)"
+              fill="var(--color-tinta)"
+            >
               {formatTick(value)}
             </text>
           </g>
         ))}
 
+        {/* El área es superficie, así que va en pastel macizo. */}
         {lineSegments.map((seg, i) => (
-          <path key={`area-${i}`} d={areaPath(seg, y(0))} fill="var(--m-series)" fillOpacity={0.1} />
+          <path key={`area-${i}`} d={areaPath(seg, y(0))} fill="var(--color-sky)" />
         ))}
+        {/* La línea ES el dato, así que va en tinta: un trazo fino en pastel
+            sobre papel no se sostiene, y oscurecerlo lo sacaría de la paleta. */}
         {lineSegments.map((seg, i) => (
           <path
             key={`line-${i}`}
             d={linePath(seg)}
             fill="none"
-            stroke="var(--m-series)"
-            strokeWidth={2}
+            stroke="var(--color-tinta)"
+            strokeWidth={3}
             strokeLinejoin="round"
             strokeLinecap="round"
           />
@@ -122,9 +132,19 @@ export function LineChart({
 
         {dots?.map((value, i) =>
           value === null ? null : highlighted?.[i] ? (
-            <circle key={i} cx={x(i)} cy={y(value)} r={3.5} fill="none" stroke="var(--m-warn)" strokeWidth={1.6} />
+            // El día con escudo sigue siendo un ANILLO y no un disco: es lo que
+            // lo distingue sin depender del color. Solo cambia el tono.
+            <circle
+              key={i}
+              cx={x(i)}
+              cy={y(value)}
+              r={4}
+              fill="var(--color-peach)"
+              stroke="var(--color-tinta)"
+              strokeWidth={2}
+            />
           ) : (
-            <circle key={i} cx={x(i)} cy={y(value)} r={2.5} fill="var(--m-series)" fillOpacity={0.45} />
+            <circle key={i} cx={x(i)} cy={y(value)} r={2.5} fill="var(--color-tinta)" />
           ),
         )}
 
@@ -135,53 +155,46 @@ export function LineChart({
               x2={x(activeIndex)}
               y1={PAD.top}
               y2={H - PAD.bottom}
-              stroke="var(--m-ink-3)"
-              strokeWidth={1}
+              stroke="var(--color-line)"
+              strokeWidth={2}
+              strokeDasharray="4 4"
             />
             {line[activeIndex] === null ? null : (
               <circle
                 cx={x(activeIndex)}
                 cy={y(line[activeIndex] as number)}
-                r={4}
-                fill="var(--m-series)"
-                stroke="var(--m-surface)"
+                r={5}
+                fill="var(--color-tinta)"
+                stroke="var(--color-paper)"
                 strokeWidth={2}
               />
             )}
           </g>
         ) : null}
 
-        <text x={PAD.left} y={H - 6} fontSize={10} fill="var(--m-ink-3)">
+        <text
+          x={PAD.left}
+          y={H - 6}
+          fontSize={11}
+          fontFamily="var(--font-cuerpo)"
+          fill="var(--color-tinta)"
+        >
           {startLabel}
         </text>
-        <text x={W - PAD.right} y={H - 6} fontSize={10} fill="var(--m-ink-3)" textAnchor="end">
+        <text
+          x={W - PAD.right}
+          y={H - 6}
+          fontSize={11}
+          fontFamily="var(--font-cuerpo)"
+          fill="var(--color-tinta)"
+          textAnchor="end"
+        >
           {endLabel}
         </text>
       </svg>
 
       {activeIndex !== null ? (
-        <div
-          style={{
-            position: "absolute",
-            // Misma escala X que la cruceta del SVG: si difiriera, la cruceta
-            // y el tooltip señalarían días distintos al pasar el mouse.
-            left: `${tooltipLeft}%`,
-            top: 0,
-            // Cerca de los bordes el tooltip se ancla por su lado en vez de
-            // centrarse, para no desbordar la tarjeta.
-            transform: tooltipAnchor,
-            pointerEvents: "none",
-            background: "var(--m-elevated)",
-            border: "1px solid var(--m-line)",
-            borderRadius: 7,
-            padding: "7px 10px",
-            fontSize: 11.5,
-            lineHeight: 1.5,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {renderTooltip(activeIndex)}
-        </div>
+        <ChartTooltip left={tooltipLeft}>{renderTooltip(activeIndex)}</ChartTooltip>
       ) : null}
     </div>
   );

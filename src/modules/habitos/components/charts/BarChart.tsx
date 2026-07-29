@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { ChartTooltip } from "./ChartTooltip";
 
 export type BarChartProps = {
   /** Una barra por elemento. */
@@ -41,7 +42,7 @@ export function BarChart({
           alignItems: "flex-end",
           gap: 3,
           height,
-          borderBottom: "1px solid var(--m-line)",
+          borderBottom: "3px solid var(--color-line)",
         }}
         onMouseLeave={() => setHover(null)}
       >
@@ -62,9 +63,13 @@ export function BarChart({
                 width: "100%",
                 height: max === 0 ? 0 : `${(value / max) * 100}%`,
                 minHeight: value > 0 ? 2 : 0,
-                background:
-                  hover === i ? "var(--m-series)" : "rgba(57, 135, 229, 0.55)",
-                borderRadius: "3px 3px 0 0",
+                // Relleno en pastel, contorno en tinta: la barra es superficie
+                // y el borde es lo que la hace del sistema. Bajo el ratón se
+                // invierte a tinta maciza, que no deja duda de cuál señalas.
+                background: hover === i ? "var(--color-tinta)" : "var(--color-sky)",
+                border: value > 0 ? "2px solid var(--color-line)" : "none",
+                borderBottom: "none",
+                borderRadius: "6px 6px 0 0",
               }}
             />
           </div>
@@ -75,9 +80,10 @@ export function BarChart({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 10,
-          color: "var(--m-ink-3)",
-          marginTop: 6,
+          fontFamily: "var(--font-cuerpo)",
+          fontSize: 11,
+          color: "var(--color-tinta)",
+          marginTop: 8,
         }}
       >
         <span>{startLabel}</span>
@@ -85,29 +91,9 @@ export function BarChart({
       </div>
 
       {hover !== null ? (
-        <div
-          style={{
-            position: "absolute",
-            left: `${((hover + 0.5) / values.length) * 100}%`,
-            top: 0,
-            transform:
-              hover < values.length * 0.15
-                ? "translateX(0)"
-                : hover > values.length * 0.85
-                  ? "translateX(-100%)"
-                  : "translateX(-50%)",
-            pointerEvents: "none",
-            background: "var(--m-elevated)",
-            border: "1px solid var(--m-line)",
-            borderRadius: 7,
-            padding: "6px 9px",
-            fontSize: 11.5,
-            lineHeight: 1.5,
-            whiteSpace: "nowrap",
-          }}
-        >
+        <ChartTooltip left={((hover + 0.5) / values.length) * 100}>
           {renderTooltip(hover)}
-        </div>
+        </ChartTooltip>
       ) : null}
     </div>
   );
