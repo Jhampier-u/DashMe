@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Card } from "@/modules/core/ui/Card";
 import { ComplianceChart, type ChartPoint } from "@/modules/habitos/components/charts/ComplianceChart";
 import type { PeriodDelta } from "@/modules/habitos/lib/metrics";
 
@@ -27,79 +28,80 @@ export function TrendCard({ points, delta }: Props) {
   const up = changed && deltaPoints > 0;
 
   return (
-    <div className="m-card">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div className="m-label" style={{ marginBottom: 9 }}>
-            Cumplimiento
-          </div>
-          {delta === null ? (
-            <div style={{ fontSize: 13, color: "var(--m-ink-2)" }}>
-              Aún no hay datos suficientes.
-            </div>
-          ) : (
-            <>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
-                <span className="m-num" style={{ fontSize: 30, fontWeight: 650, letterSpacing: "-0.02em", lineHeight: 1 }}>
-                  {Math.round(delta.current * 100)}%
-                </span>
-                {delta.deltaPoints === null ? null : (
-                  <span
-                    style={{
-                      fontSize: 12.5,
-                      fontWeight: 550,
-                      color: changed ? (up ? "var(--m-good)" : "var(--m-crit)") : "var(--m-ink-2)",
-                    }}
-                  >
-                    {changed ? `${up ? "▲" : "▼"} ${Math.abs(delta.deltaPoints)} pts` : "sin cambio"}
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: 11.5, color: "var(--m-ink-3)", marginTop: 5 }}>
-                {delta.previous === null
-                  ? "sin periodo anterior suficiente para comparar"
-                  : `frente a ${Math.round(delta.previous * 100)}% del periodo anterior · ${delta.previousDays} días medidos`}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: 2,
-            background: "var(--m-elevated)",
-            border: "1px solid var(--m-line)",
-            borderRadius: 7,
-            padding: 2,
-          }}
-        >
-          {RANGES.map((r) => (
-            <button
-              key={r.key}
-              type="button"
-              onClick={() => setRange(r)}
-              aria-pressed={range.key === r.key}
+    // El rótulo y el selector vivían en un `flex` con `space-between` montado a
+    // mano. `Card` ya resuelve eso con `title` y `action`.
+    <Card
+      title="Cumplimiento"
+      action={<SelectorDeRango range={range} onChange={setRange} />}
+    >
+      {delta === null ? (
+        <div style={{ fontSize: 13 }}>Aún no hay datos suficientes.</div>
+      ) : (
+        <>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
+            <span
               style={{
-                fontFamily: "inherit",
-                fontSize: 11.5,
-                color: range.key === r.key ? "var(--m-ink)" : "var(--m-ink-2)",
-                background: range.key === r.key ? "rgba(255,255,255,0.09)" : "none",
-                border: 0,
-                padding: "4px 10px",
-                borderRadius: 5,
-                cursor: "pointer",
+                fontFamily: "var(--font-vt)",
+                fontSize: 34,
+                lineHeight: 1,
+                fontVariantNumeric: "tabular-nums",
               }}
             >
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
+              {Math.round(delta.current * 100)}%
+            </span>
+            {delta.deltaPoints === null ? null : (
+              // Iba en verde o rojo según subiera o bajara. Ahora lo dicen la
+              // flecha y el grosor, que se leen sin distinguir tonos.
+              <span style={{ fontSize: 12.5, fontWeight: changed ? 700 : 500 }}>
+                {changed ? `${up ? "▲" : "▼"} ${Math.abs(delta.deltaPoints)} pts` : "sin cambio"}
+              </span>
+            )}
+          </div>
+          <div style={{ fontSize: 11.5, marginTop: 6 }}>
+            {delta.previous === null
+              ? "sin periodo anterior suficiente para comparar"
+              : `frente a ${Math.round(delta.previous * 100)}% del periodo anterior · ${delta.previousDays} días medidos`}
+          </div>
+        </>
+      )}
 
       <div style={{ marginTop: 14 }}>
         <ComplianceChart points={visible} />
       </div>
+    </Card>
+  );
+}
+
+/**
+ * Lo elegido se marca con la variante `aria-pressed:` de Tailwind, que lee el
+ * atributo que ya estaba puesto: así el estado visual y el accesible no pueden
+ * separarse. Antes eran dos cosas distintas, y la elegida quedaba a 1,12:1.
+ */
+function SelectorDeRango({
+  range,
+  onChange,
+}: {
+  range: (typeof RANGES)[number];
+  onChange: (r: (typeof RANGES)[number]) => void;
+}) {
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      {RANGES.map((r) => (
+        <button
+          key={r.key}
+          type="button"
+          onClick={() => onChange(r)}
+          aria-pressed={range.key === r.key}
+          className={
+            "px-2.5 py-1 rounded-control border-3 border-line " +
+            "bg-paper text-tinta font-cuerpo text-[11.5px] cursor-pointer " +
+            "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line " +
+            "aria-pressed:bg-sky aria-pressed:font-bold"
+          }
+        >
+          {r.label}
+        </button>
+      ))}
     </div>
   );
 }
