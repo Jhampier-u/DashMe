@@ -99,20 +99,6 @@ export const dailyQuests = sqliteTable(
 
 export type DailyQuestRow = typeof dailyQuests.$inferSelect;
 
-export const tasks = sqliteTable("tasks", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description"),
-  /** TODO | IN_PROGRESS | DONE */
-  status: text("status").notNull().default("TODO"),
-  order: integer("order").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
-  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
-});
-
-export type TaskRow = typeof tasks.$inferSelect;
-
 export const projects = sqliteTable("projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -124,31 +110,56 @@ export const projects = sqliteTable("projects", {
 
 export type ProjectRow = typeof projects.$inferSelect;
 
-export const projectItems = sqliteTable(
-  "project_items",
+export const taskCategories = sqliteTable("task_categories", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  /** Clave de la paleta categórica —`pink`, `lav`…—, no un hexadecimal. */
+  color: text("color").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type TaskCategoryRow = typeof taskCategories.$inferSelect;
+
+/**
+ * La única tabla de tareas del dashboard.
+ *
+ * Absorbió a `project_items`, que guardaba casi lo mismo y no se conocían. Una
+ * tarea es una tarea tenga proyecto o no; `/proyectos` es esta misma tabla
+ * filtrada por `project_id`.
+ */
+export const tasks = sqliteTable(
+  "tasks",
   {
     id: text("id").primaryKey(),
-    projectId: text("project_id")
-      .notNull()
-      .references(() => projects.id, { onDelete: "cascade" }),
-    /**
-     * Autorreferencial: el árbol de subtareas. La clave foránea se declara en
-     * SCHEMA_SQL y no aquí, porque una referencia a la propia tabla dentro del
-     * objeto de columnas provoca una inicialización circular.
-     */
-    parentId: text("parent_id"),
     title: text("title").notNull(),
+    description: text("description"),
     /** TODO | IN_PROGRESS | DONE */
     status: text("status").notNull().default("TODO"),
     order: integer("order").notNull().default(0),
+    /**
+     * Autorreferencial: el árbol de subtareas. La clave foránea se declara en
+     * SCHEMA_SQL y no aquí, porque una referencia a la propia tabla dentro del
+     * objeto de columnas provoca una inicialización circular. Es el mismo
+     * motivo por el que lo hacía así `project_items`, de quien hereda el árbol.
+     */
+    parentId: text("parent_id"),
+    projectId: text("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    categoryId: text("category_id").references(() => taskCategories.id, {
+      onDelete: "set null",
+    }),
+    /** URGENT | HIGH | MEDIUM | LOW, o nada. Se resuelve en `lib/prioridad.ts`. */
+    priority: text("priority"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
     completedAt: integer("completed_at", { mode: "timestamp_ms" }),
   },
   (t) => ({
-    byProject: index("project_items_project_idx").on(t.projectId),
-    byParent: index("project_items_parent_idx").on(t.parentId),
+    byParent: index("tasks_parent_idx").on(t.parentId),
+    byProject: index("tasks_project_idx").on(t.projectId),
+    byCategory: index("tasks_category_idx").on(t.categoryId),
   }),
 );
 
-export type ProjectItemRow = typeof projectItems.$inferSelect;
+export type TaskRow = typeof tasks.$inferSelect;

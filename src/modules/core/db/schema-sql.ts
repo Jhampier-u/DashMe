@@ -54,17 +54,6 @@ CREATE TABLE IF NOT EXISTS daily_quests (
 CREATE UNIQUE INDEX IF NOT EXISTS daily_quests_date_kind_unq ON daily_quests(date, kind);
 CREATE INDEX IF NOT EXISTS daily_quests_date_idx ON daily_quests(date);
 
-CREATE TABLE IF NOT EXISTS tasks (
-  id           TEXT PRIMARY KEY,
-  title        TEXT NOT NULL,
-  description  TEXT,
-  status       TEXT NOT NULL DEFAULT 'TODO',
-  "order"      INTEGER NOT NULL DEFAULT 0,
-  created_at   INTEGER NOT NULL,
-  updated_at   INTEGER NOT NULL,
-  completed_at INTEGER
-);
-
 CREATE TABLE IF NOT EXISTS projects (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
@@ -74,19 +63,54 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at  INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS project_items (
+CREATE TABLE IF NOT EXISTS task_categories (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  color      TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+-- NOCASE para que «Casa» y «casa» no sean dos categorías. El código comprueba
+-- lo mismo antes de insertar, para dar un mensaje en vez de una excepción.
+CREATE UNIQUE INDEX IF NOT EXISTS task_categories_name_unq
+  ON task_categories(name COLLATE NOCASE);
+
+-- tasks absorbió a project_items: una tarea es una tarea, tenga proyecto o no.
+-- Va DESPUÉS de las dos tablas a las que apunta; SQLite resuelve las foráneas
+-- al usarlas y no al crearlas, así que el orden no es obligatorio, se pone así
+-- para que se lea de arriba abajo.
+--
+-- Sin acentos graves en estos comentarios: SCHEMA_SQL es una plantilla literal
+-- y cualquiera de ellos la cerraría a media cadena.
+--
+-- Las tres foráneas borran de tres maneras y cada una es una decisión:
+--   parent_id  CASCADE  — una subtarea sin padre no significa nada
+--   project_id SET NULL — borrar el contenedor no se lleva el trabajo
+--   category_id SET NULL — borrar una etiqueta tampoco
+CREATE TABLE IF NOT EXISTS tasks (
   id           TEXT PRIMARY KEY,
-  project_id   TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  parent_id    TEXT REFERENCES project_items(id) ON DELETE CASCADE,
   title        TEXT NOT NULL,
+  description  TEXT,
   status       TEXT NOT NULL DEFAULT 'TODO',
   "order"      INTEGER NOT NULL DEFAULT 0,
+  parent_id    TEXT REFERENCES tasks(id)           ON DELETE CASCADE,
+  project_id   TEXT REFERENCES projects(id)        ON DELETE SET NULL,
+  category_id  TEXT REFERENCES task_categories(id) ON DELETE SET NULL,
+  priority     TEXT,
   created_at   INTEGER NOT NULL,
   updated_at   INTEGER NOT NULL,
   completed_at INTEGER
 );
-CREATE INDEX IF NOT EXISTS project_items_project_idx ON project_items(project_id);
-CREATE INDEX IF NOT EXISTS project_items_parent_idx ON project_items(parent_id);
+-- Los índices de parent_id, project_id y category_id NO van aquí: los crea
+-- ponerAlDia(), que corre justo después.
+--
+-- El motivo es de orden. Sobre una base que ya existía, la sentencia de arriba
+-- no hace nada porque la tabla ya está, pero un índice sí se crearía, y
+-- apuntaría a columnas que todavía no se han añadido. Reventaba con "no such
+-- column: parent_id" en el primer arranque.
+--
+-- (Y sin escribir aquí las dos palabras del DDL: tests/schema-parity.test.ts
+-- cuenta tablas con una expresión regular sobre este texto, comentarios
+-- incluidos.)
 
 -- ─── música (Voidtify) ────────────────────────────────────────────────────
 

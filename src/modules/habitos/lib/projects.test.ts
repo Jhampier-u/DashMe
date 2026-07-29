@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createTestDb } from "@/modules/core/db/testing";
-import { projects, projectItems } from "@/modules/habitos/schema";
+import { projects, tasks } from "@/modules/habitos/schema";
 import {
   listProjects,
   getProjectWithTree,
@@ -36,7 +36,7 @@ async function seedArbol(db: Db) {
   await db
     .insert(projects)
     .values({ id: "p1", name: "Proyecto", createdAt: T0, updatedAt: T0 });
-  await db.insert(projectItems).values([
+  await db.insert(tasks).values([
     item("raiz", null),
     item("hijo", "raiz", "DONE", 0, T0),
     item("nieto", "hijo", "DONE", 0, T0),
@@ -73,7 +73,7 @@ describe("getProjectWithTree", () => {
       .insert(projects)
       .values({ id: "p1", name: "P", createdAt: T0, updatedAt: T0 });
     await db
-      .insert(projectItems)
+      .insert(tasks)
       .values([item("b", null, "TODO", 1), item("a", null, "TODO", 0)]);
 
     const r = (await getProjectWithTree(db, "p1"))!;
@@ -129,7 +129,7 @@ describe("getProjectMetrics", () => {
     await db
       .insert(projects)
       .values({ id: "p1", name: "P", createdAt: T0, updatedAt: T0 });
-    await db.insert(projectItems).values([
+    await db.insert(tasks).values([
       // DONE sin completedAt: no puede entrar en ningún bucket semanal.
       item("sin-fecha", null, "DONE", 0, null),
       item("abierta", null, "TODO", 1, null),

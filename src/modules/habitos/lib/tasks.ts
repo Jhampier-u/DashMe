@@ -2,6 +2,7 @@ import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import { tasks } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
+import { resolvePrioridad, type Prioridad } from "./prioridad";
 import {
   lifetimeDays,
   median,
@@ -22,6 +23,72 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
   DONE: "Completadas",
 };
 
+/** Lo único que `buildTaskTree` necesita saber de una fila. */
+export type TaskTreeInput = {
+  id: string;
+  parentId: string | null;
+};
+
+/** El nodo que devuelve: la fila que le diste, con sus hijos colgando. */
+export type TaskTreeNode<T> = T & { children: TaskTreeNode<T>[] };
+
+/**
+ * Monta el árbol a partir de una lista plana.
+ *
+ * Vivía dentro de `getProjectWithTree`. Sube aquí porque desde la unificación
+ * lo necesitan las dos pantallas, y porque un árbol mal montado es un fallo que
+ * merece su propio test en vez de esconderse dentro de una consulta.
+ *
+ * Es GENÉRICA en la fila y no fija una forma concreta. Así `/proyectos` puede
+ * meter nodos con `projectId: string` y recuperarlos con ese mismo tipo, en vez
+ * de con un `string | null` que obligaría a comprobar por todas partes algo que
+ * la consulta ya garantiza.
+ *
+ * Un hijo cuyo padre no está en la lista sale como RAÍZ. No es un caso
+ * hipotético: en la base que se pone al día `parent_id` no tiene foránea, así
+ * que nada impide que quede colgando. Perderlo en silencio sería peor.
+ */
+export function buildTaskTree<T extends TaskTreeInput>(
+  filas: T[],
+): TaskTreeNode<T>[] {
+  const map = new Map<string, TaskTreeNode<T>>();
+  for (const f of filas) map.set(f.id, { ...f, children: [] });
+
+  const raices: TaskTreeNode<T>[] = [];
+  for (const nodo of map.values()) {
+    const padre = nodo.parentId ? map.get(nodo.parentId) : undefined;
+    if (padre) padre.children.push(nodo);
+    else raices.push(nodo);
+  }
+  return raices;
+}
+
+export type TaskFilter = {
+  categoriaId: string | null;
+  prioridad: Prioridad | null;
+};
+
+/** Un parámetro repetido en la URL llega como lista; vale el primero. */
+function primero(v: string | string[] | undefined): string | null {
+  if (Array.isArray(v)) return v[0] ?? null;
+  return v ?? null;
+}
+
+/**
+ * Lee el filtro de los parámetros de la URL.
+ *
+ * Que el filtro viva en la URL y no en el estado del cliente es lo que hace que
+ * recargar no lo pierda y que «atrás» funcione.
+ */
+export function parseTaskFilter(sp: {
+  [k: string]: string | string[] | undefined;
+}): TaskFilter {
+  return {
+    categoriaId: primero(sp.cat),
+    prioridad: resolvePrioridad(primero(sp.pri)),
+  };
+}
+
 export type TaskRow = {
   id: string;
   title: string;
@@ -30,25 +97,66 @@ export type TaskRow = {
   order: number;
   createdAt: Date;
   completedAt: Date | null;
+  categoryId: string | null;
+  priority: Prioridad | null;
+  /** Cuántas subtareas cuelgan de ella y cuántas están hechas. */
+  hijos: { total: number; hechos: number };
 };
 
+const SIN_FILTRO: TaskFilter = { categoriaId: null, prioridad: null };
+
+/**
+ * Las tareas del tablero, agrupadas por estado.
+ *
+ * Devuelve SOLO LAS RAÍCES. Si devolviera todo, al unificar habrían aparecido
+ * de golpe como tarjetas sueltas los elementos anidados de los proyectos,
+ * descolgados de su contexto. Las subtareas se cuentan en `hijos` para que el
+ * trabajo anidado no desaparezca de la vista sin decir nada.
+ */
 export async function getTasksGrouped(
   db: Db,
+  filtro: TaskFilter = SIN_FILTRO,
 ): Promise<Record<TaskStatus, TaskRow[]>> {
   const all = await db
     .select()
     .from(tasks)
     .orderBy(asc(tasks.order), asc(tasks.createdAt));
+
+  // Los hijos se cuentan sobre TODAS las filas, filtre lo que filtre la vista:
+  // «3 subtareas» es una propiedad de la tarea, no del filtro que tengas puesto.
+  const hijosDe = new Map<string, { total: number; hechos: number }>();
+  for (const t of all) {
+    if (!t.parentId) continue;
+    const c = hijosDe.get(t.parentId) ?? { total: 0, hechos: 0 };
+    c.total += 1;
+    if (t.status === "DONE") c.hechos += 1;
+    hijosDe.set(t.parentId, c);
+  }
+
   const grouped: Record<TaskStatus, TaskRow[]> = {
     TODO: [],
     IN_PROGRESS: [],
     DONE: [],
   };
   for (const t of all) {
+    if (t.parentId) continue;
     const s = (t.status as TaskStatus) ?? "TODO";
-    if (s in grouped) {
-      grouped[s].push({ ...t, status: s });
-    }
+    if (!(s in grouped)) continue;
+    if (filtro.categoriaId && t.categoryId !== filtro.categoriaId) continue;
+    const prioridad = resolvePrioridad(t.priority);
+    if (filtro.prioridad && prioridad !== filtro.prioridad) continue;
+    grouped[s].push({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      status: s,
+      order: t.order,
+      createdAt: t.createdAt,
+      completedAt: t.completedAt,
+      categoryId: t.categoryId,
+      priority: prioridad,
+      hijos: hijosDe.get(t.id) ?? { total: 0, hechos: 0 },
+    });
   }
   return grouped;
 }

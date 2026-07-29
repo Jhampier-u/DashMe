@@ -36,6 +36,14 @@ export {
   type GlobalStats,
 } from "./lib/stats";
 export { getTasksGrouped, getTaskMetrics, STATUS_LABEL } from "./lib/tasks";
+export { listCategorias, type Categoria } from "./lib/categorias";
+export {
+  PRIORIDADES,
+  PRIORIDAD_DEFS,
+  prioridadColorVar,
+  resolvePrioridad,
+  type Prioridad,
+} from "./lib/prioridad";
 
 // Constantes de gamificación que las vistas necesitan para etiquetar.
 export { MAX_SHIELDS, XP_PER_HABIT, XP_PER_TASK } from "./lib/level";

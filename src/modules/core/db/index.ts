@@ -5,6 +5,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 import { SCHEMA_SQL } from "./schema-sql";
+import { ponerAlDia } from "./migrar";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "juampi.db");
@@ -20,6 +21,9 @@ function createDb() {
   sqlite.pragma("foreign_keys = ON");
   sqlite.pragma("busy_timeout = 5000");
   sqlite.exec(SCHEMA_SQL);
+  // `SCHEMA_SQL` crea lo que falta; esto pone al día lo que ya estaba. Hasta
+  // ahora el esquema solo crecía con tablas nuevas y no hacía falta.
+  ponerAlDia(sqlite);
 
   return drizzle(sqlite, { schema });
 }

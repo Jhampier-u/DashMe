@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/modules/core/ui/PageHeader";
 import { Button } from "@/modules/core/ui/Button";
+import type { Categoria } from "@/modules/habitos/lib/categorias";
 import { NewTaskForm } from "./NewTaskForm";
 
 /**
@@ -10,7 +11,13 @@ import { NewTaskForm } from "./NewTaskForm";
  * de abierto: el botón va en la cabecera y el formulario debajo, a todo el
  * ancho de la pantalla.
  */
-export function TasksHeader({ total }: { total: number }) {
+export function TasksHeader({
+  total,
+  categorias,
+}: {
+  total: number;
+  categorias: Categoria[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -30,7 +37,9 @@ export function TasksHeader({ total }: { total: number }) {
           )
         }
       />
-      {open ? <NewTaskForm onDone={() => setOpen(false)} /> : null}
+      {open ? (
+        <NewTaskForm onDone={() => setOpen(false)} categorias={categorias} />
+      ) : null}
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createProjectItem } from "@/modules/habitos/actions";
+import { createProjectTask } from "@/modules/habitos/actions";
 import type { ProjectItemNode } from "@/modules/habitos/lib/projects";
 import { Button } from "@/modules/core/ui/Button";
 import { ProjectTreeItem, CAMPO_LINEA } from "./ProjectTreeItem";
@@ -22,7 +22,7 @@ export function ProjectTree({
     const t = title.trim();
     if (!t) return;
     startTransition(async () => {
-      await createProjectItem(projectId, null, t);
+      await createProjectTask(projectId, null, t);
       setTitle("");
       setAdding(false);
     });

@@ -1,10 +1,9 @@
-import { and, asc, count, eq, gte, lt } from "drizzle-orm";
+import { and, asc, count, eq, gte, isNotNull, isNull, lt } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import {
   dailyQuests,
   habits as habitsTable,
   habitLogs,
-  projectItems,
   tasks,
 } from "@/modules/habitos/schema";
 import { dayKey, localDayRange } from "./day";
@@ -138,24 +137,32 @@ async function computeProgress(
     db
       .select({ id: habitsTable.id, schedule: habitsTable.schedule })
       .from(habitsTable),
+    /*
+      Dos misiones distintas, no una: «Dos tareas» y «Una subtarea de proyecto».
+      Antes las separaba la tabla; ahora las separa `project_id`, y el conjunto
+      que cuenta cada una es exactamente el mismo de antes, fila por fila:
+      ninguna tarea tenía proyecto y todo elemento de proyecto lo tenía.
+    */
     db
       .select({ n: count() })
       .from(tasks)
       .where(
         and(
           eq(tasks.status, "DONE"),
+          isNull(tasks.projectId),
           gte(tasks.completedAt, start),
           lt(tasks.completedAt, end),
         ),
       ),
     db
       .select({ n: count() })
-      .from(projectItems)
+      .from(tasks)
       .where(
         and(
-          eq(projectItems.status, "DONE"),
-          gte(projectItems.completedAt, start),
-          lt(projectItems.completedAt, end),
+          eq(tasks.status, "DONE"),
+          isNotNull(tasks.projectId),
+          gte(tasks.completedAt, start),
+          lt(tasks.completedAt, end),
         ),
       ),
   ]);

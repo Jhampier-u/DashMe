@@ -15,8 +15,8 @@
 import { refresh } from "next/cache";
 import { db } from "@/modules/core/db";
 import type { TaskStatus } from "./lib/tasks";
-import type { ProjectItemStatus } from "./lib/projects";
 import * as m from "./lib/mutations";
+import * as c from "./lib/categorias";
 
 export type {
   ToggleResult,
@@ -108,30 +108,51 @@ export async function deleteProject(formData: FormData) {
   refresh();
 }
 
-export async function createProjectItem(
+export async function createProjectTask(
   projectId: string,
   parentId: string | null,
   title: string,
 ) {
-  await m.createProjectItem(db, projectId, parentId, title);
+  await m.createProjectTask(db, projectId, parentId, title);
   refresh();
 }
 
-export async function updateProjectItemStatus(
-  itemId: string,
-  newStatus: ProjectItemStatus,
-) {
-  const r = await m.updateProjectItemStatus(db, itemId, newStatus);
+/*
+  `updateProjectItemStatus` ya no existe: mover un elemento de proyecto y mover
+  una tarea son la misma operación sobre la misma tabla. El árbol usa
+  `updateTaskStatus`.
+*/
+
+export async function deleteProjectItem(itemId: string) {
+  await m.deleteTaskById(db, itemId);
+  refresh();
+}
+
+export async function renameTask(taskId: string, newTitle: string) {
+  await m.renameTask(db, taskId, newTitle);
+  refresh();
+}
+
+// ---------- CATEGORÍAS DE TAREA ----------
+
+export async function crearCategoria(name: string, color: string) {
+  const r = await c.createCategoria(db, name, color);
   refresh();
   return r;
 }
 
-export async function deleteProjectItem(itemId: string) {
-  await m.deleteProjectItem(db, itemId);
+export async function renombrarCategoria(id: string, name: string) {
+  const r = await c.renameCategoria(db, id, name);
+  refresh();
+  return r;
+}
+
+export async function cambiarColorCategoria(id: string, color: string) {
+  await c.setCategoriaColor(db, id, color);
   refresh();
 }
 
-export async function renameProjectItem(itemId: string, newTitle: string) {
-  await m.renameProjectItem(db, itemId, newTitle);
+export async function borrarCategoria(id: string) {
+  await c.deleteCategoria(db, id);
   refresh();
 }
