@@ -863,7 +863,7 @@ Borrar un proyecto ya no borra su trabajo."
 - Create: `src/modules/habitos/lib/prioridad.ts`
 - Create: `src/modules/habitos/lib/prioridad.test.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/prioridad.test.ts`:
 
@@ -945,7 +945,7 @@ describe("prioridadColorVar", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/prioridad.test.ts
@@ -953,7 +953,7 @@ npx vitest run src/modules/habitos/lib/prioridad.test.ts
 
 Esperado: **FAIL**, `Failed to resolve import "./prioridad"`.
 
-- [ ] **Paso 3: Escribir el módulo**
+- [x] **Paso 3: Escribir el módulo**
 
 `src/modules/habitos/lib/prioridad.ts`:
 
@@ -1017,7 +1017,7 @@ export function prioridadColorVar(p: Prioridad): string {
 }
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/prioridad.test.ts && npx tsc --noEmit
@@ -1025,7 +1025,7 @@ npx vitest run src/modules/habitos/lib/prioridad.test.ts && npx tsc --noEmit
 
 Esperado: **PASS**, 10 afirmaciones.
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add src/modules/habitos/lib/prioridad.ts src/modules/habitos/lib/prioridad.test.ts
