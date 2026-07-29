@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { Fraunces, JetBrains_Mono } from "next/font/google";
 import { auth } from "@/modules/core/auth";
 
 /*
@@ -11,26 +10,10 @@ import { auth } from "@/modules/core/auth";
   exportada es un endpoint HTTP invocable directamente, y un layout no la cubre.
   Por eso cada action conserva su propio requireSession().
 
-  Las fuentes y las clases de fondo viven aquí y no en el layout raíz porque
-  música y hábitos tienen sistemas visuales distintos. Unificarlos es otro
-  sub-proyecto; mientras tanto conviven sin pisarse.
+  Las fuentes ya no viven aquí. Música tenía las suyas —Fraunces y JetBrains
+  Mono— porque era un sistema visual aparte; ahora usa las tres del sistema, que
+  carga el layout raíz.
 */
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  // La estética depende de la itálica real de Fraunces; sin `style` next/font
-  // solo trae la romana y el navegador sintetiza una itálica falsa.
-  style: ["normal", "italic"],
-  axes: ["SOFT", "WONK", "opsz"],
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export default async function MusicaLayout({
   children,
@@ -43,9 +26,9 @@ export default async function MusicaLayout({
   }
 
   return (
-    <div
-      className={`${fraunces.variable} ${mono.variable} musica-root min-h-full flex flex-col antialiased bg-ink text-cream font-serif selection:bg-acid selection:text-ink`}
-    >
+    // `selection:text-tinta` y no `text-ink`: `ink` es ahora el papel, así que
+    // sobre una selección amarilla quedaría claro sobre claro.
+    <div className="musica-root min-h-full flex flex-col antialiased bg-ink text-cream font-serif selection:bg-acid selection:text-tinta">
       {children}
     </div>
   );

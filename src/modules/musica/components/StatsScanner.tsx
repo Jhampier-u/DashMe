@@ -192,7 +192,7 @@ export default function StatsScanner({ total }: { total: number }) {
       <section className="px-8 py-10 hairline-b">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="min-w-0">
-            <h2 className="label-mono text-acid mb-2">Control</h2>
+            <h2 className="label-mono text-tinta mb-2">Control</h2>
             <p className="font-serif text-cream-dim italic max-w-xl">
               {loadingCache
                 ? "Cargando cache local…"
@@ -215,7 +215,7 @@ export default function StatsScanner({ total }: { total: number }) {
             {tracks.length > 0 && !scanning && (
               <button
                 onClick={wipeCache}
-                className="label-mono text-mute hover:text-blood transition-colors px-2"
+                className="label-mono text-mute hover:underline transition-colors px-2"
                 title="Borrar cache local"
               >
                 Borrar cache
@@ -224,7 +224,7 @@ export default function StatsScanner({ total }: { total: number }) {
             {scanning ? (
               <button
                 onClick={cancel}
-                className="ring-1 ring-blood/60 text-blood px-5 py-2.5 label-mono hover:bg-blood/10 transition-colors"
+                className="ring-1 ring-blood/60 text-tinta px-5 py-2.5 label-mono hover:bg-blood/10 transition-colors"
               >
                 Detener
               </button>
@@ -232,7 +232,7 @@ export default function StatsScanner({ total }: { total: number }) {
               <button
                 onClick={startScan}
                 disabled={total === 0}
-                className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="label-mono">
                   {tracks.length > 0
@@ -274,7 +274,7 @@ export default function StatsScanner({ total }: { total: number }) {
         )}
 
         {error && (
-          <p className="mt-6 label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
+          <p className="mt-6 label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
             {error}
           </p>
         )}
@@ -310,13 +310,13 @@ export default function StatsScanner({ total }: { total: number }) {
         <section className="px-8 py-12 hairline-b">
           <div className="flex items-baseline justify-between mb-6 flex-wrap gap-2">
             <div>
-              <p className="label-mono text-acid mb-2">Top géneros</p>
+              <p className="label-mono text-tinta mb-2">Top géneros</p>
               <h3 className="display-italic text-3xl">El sonido dominante.</h3>
             </div>
             {!genreMap && !analyzingGenres && (
               <button
                 onClick={analyzeGenres}
-                className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors"
+                className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors"
               >
                 <span className="label-mono">Analizar géneros</span>
                 <span className="font-mono text-sm group-hover:rotate-180 transition-transform duration-500">
@@ -348,7 +348,7 @@ export default function StatsScanner({ total }: { total: number }) {
       {tracks.length > 0 && stats.byYear.length > 0 && (
         <section className="px-8 py-12 hairline-b">
           <div className="mb-6">
-            <p className="label-mono text-acid mb-2">Evolución temporal</p>
+            <p className="label-mono text-tinta mb-2">Evolución temporal</p>
             <h3 className="display-italic text-3xl">
               Cuándo guardas más música.
             </h3>
@@ -432,7 +432,7 @@ function RankList({
   return (
     <section className="px-8 py-12 hairline-b">
       <div className="mb-6">
-        <p className="label-mono text-acid mb-2">{label}</p>
+        <p className="label-mono text-tinta mb-2">{label}</p>
         <h3 className="display-italic text-3xl">{subtitle}.</h3>
       </div>
       <ol className="space-y-3">

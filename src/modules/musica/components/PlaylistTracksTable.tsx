@@ -445,7 +445,7 @@ export default function PlaylistTracksTable({
       {tagFilterChips.length > 0 && (
         <section className="ring-1 ring-rule px-4 py-3 mb-4">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
-            <p className="label-mono text-acid">
+            <p className="label-mono text-tinta">
               Tags
               {selectedTagIds.size > 0 && (
                 <span className="text-cream"> · {selectedTagIds.size} activo{selectedTagIds.size === 1 ? "" : "s"}</span>
@@ -503,7 +503,7 @@ export default function PlaylistTracksTable({
       {hasActiveFilters && visibleUris.length > 0 && (
         <div className="ring-1 ring-acid bg-acid/[0.06] px-4 py-3 mb-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <p className="label-mono text-acid">
+            <p className="label-mono text-tinta">
               Filtro activo · {visibleUris.length.toLocaleString("es")}{" "}
               canci{visibleUris.length === 1 ? "ón" : "ones"} coinciden
             </p>
@@ -524,7 +524,7 @@ export default function PlaylistTracksTable({
       {dupAnalysis.dupGroups > 0 && (
         <div className="ring-1 ring-acid/40 bg-acid/[0.04] px-4 py-3 mb-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <p className="label-mono text-acid num-tabular">
+            <p className="label-mono text-tinta num-tabular">
               {dupAnalysis.dupGroups} canci
               {dupAnalysis.dupGroups === 1 ? "ón duplicada" : "ones duplicadas"}{" "}
               <span className="text-cream-dim">·</span>{" "}
@@ -545,7 +545,7 @@ export default function PlaylistTracksTable({
               onClick={() => setShowOnlyDups((v) => !v)}
               className={`label-mono px-3 py-1.5 ring-1 transition-all ${
                 showOnlyDups
-                  ? "bg-cream text-ink ring-cream"
+                  ? "bg-cream text-paper ring-cream"
                   : "ring-rule text-cream hover:ring-cream"
               }`}
             >
@@ -559,7 +559,7 @@ export default function PlaylistTracksTable({
                 title={
                   !fullyLoaded ? "Carga todas las canciones primero" : undefined
                 }
-                className="label-mono px-3 py-1.5 bg-acid text-ink hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="label-mono px-3 py-1.5 bg-acid text-tinta hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Limpiar →
               </button>
@@ -572,7 +572,7 @@ export default function PlaylistTracksTable({
         <button
           type="button"
           onClick={toggleAll}
-          className="label-mono text-mute hover:text-acid transition-colors"
+          className="label-mono text-mute hover:underline transition-colors"
         >
           {allSelected ? "Deseleccionar todo" : "Seleccionar todo"}
           <span className="ml-2 num-tabular text-cream-dim">
@@ -580,7 +580,7 @@ export default function PlaylistTracksTable({
           </span>
         </button>
         {selected.size > 0 && (
-          <span className="label-mono text-acid num-tabular">
+          <span className="label-mono text-tinta num-tabular">
             {selected.size} seleccionadas
           </span>
         )}
@@ -669,7 +669,7 @@ export default function PlaylistTracksTable({
               type="button"
               onClick={() => loadMore(true)}
               disabled={loadingMore || loadingAll}
-              className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span className="label-mono">
                 {loadingAll ? "Cargando todo…" : `Cargar todas (${remaining})`}
@@ -682,7 +682,7 @@ export default function PlaylistTracksTable({
       {/* Floating action bar */}
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-ink-2/95 backdrop-blur-md ring-1 ring-cream/20 px-4 py-3 shadow-2xl rise">
-          <span className="label-mono text-acid num-tabular pr-3 hairline-b border-r border-rule">
+          <span className="label-mono text-tinta num-tabular pr-3 hairline-b border-r border-rule">
             {selected.size}{" "}
             <span className="text-cream-dim">
               {selected.size === 1 ? "selec." : "selec."}
@@ -797,7 +797,7 @@ function GenreFilter({
     <section className="ring-1 ring-rule px-4 py-4 mb-6">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
         <div>
-          <p className="label-mono text-acid">
+          <p className="label-mono text-tinta">
             Filtrar por género
             {selected.size > 0 && (
               <span className="text-cream"> · {selected.size} activo{selected.size === 1 ? "" : "s"}</span>
@@ -833,7 +833,7 @@ function GenreFilter({
               type="button"
               onClick={onAnalyze}
               disabled={analyzing || artistCount === 0}
-              className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group inline-flex items-center gap-2 bg-acid text-tinta px-3 py-1.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span className="label-mono">
                 {analyzing ? "Analizando…" : "Analizar géneros"}
@@ -901,7 +901,7 @@ function GenreFilter({
                   onClick={() => onToggle(genre)}
                   className={`label-mono inline-flex items-center gap-1.5 px-2.5 py-1 ring-1 transition-all normal-case tracking-normal ${
                     active
-                      ? "bg-acid text-ink ring-acid"
+                      ? "bg-acid text-tinta ring-acid"
                       : "ring-rule text-cream hover:ring-cream-dim"
                   }`}
                 >
@@ -918,7 +918,7 @@ function GenreFilter({
               <button
                 type="button"
                 onClick={() => setExpanded(true)}
-                className="label-mono text-acid hover:text-cream px-2.5 py-1 transition-colors"
+                className="label-mono text-tinta hover:text-cream px-2.5 py-1 transition-colors"
               >
                 +{(genreCounts?.length ?? 0) - showCount} más
               </button>
@@ -961,7 +961,7 @@ function ActionButton({
       disabled={disabled}
       className={`label-mono px-3 py-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
         highlight
-          ? "bg-acid text-ink hover:bg-cream"
+          ? "bg-acid text-tinta hover:bg-tinta hover:text-paper"
           : "ring-1 ring-rule text-cream hover:ring-cream"
       }`}
     >
@@ -1053,10 +1053,10 @@ function TrackRow({
         }`}
       >
         {selected && (
-          <span className="text-ink text-[10px] leading-none font-bold">✓</span>
+          <span className="text-tinta text-[10px] leading-none font-bold">✓</span>
         )}
       </button>
-      <span className="label-mono num-tabular text-mute group-hover:text-acid transition-colors">
+      <span className="label-mono num-tabular text-mute group-hover:underline transition-colors">
         {pad(index)}
       </span>
       <div className="hidden md:block w-10 h-10 bg-ink-3 ring-1 ring-rule overflow-hidden">
@@ -1080,7 +1080,7 @@ function TrackRow({
           )}
           {dupCount > 1 && (
             <span
-              className="label-mono text-[9px] text-acid ring-1 ring-acid/50 px-1 py-0 leading-4 shrink-0"
+              className="label-mono text-[9px] text-tinta ring-1 ring-acid/50 px-1 py-0 leading-4 shrink-0"
               title={`Aparece ${dupCount} veces en esta playlist`}
             >
               ×{dupCount}
@@ -1139,7 +1139,7 @@ function PlaylistPicker({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 hairline-b">
-          <p className="label-mono text-acid mb-2">
+          <p className="label-mono text-tinta mb-2">
             {mode === "copy" ? "Copiar" : "Mover"} · {selectedCount}{" "}
             {selectedCount === 1 ? "canción" : "canciones"}
           </p>
@@ -1179,14 +1179,14 @@ function PlaylistPicker({
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-serif text-base text-cream group-hover:text-acid transition-colors truncate">
+                    <p className="font-serif text-base text-cream group-hover:underline transition-colors truncate">
                       {p.name}
                     </p>
                     <p className="label-mono text-mute mt-0.5">
                       {playlistTrackTotal(p).toLocaleString("es")} canciones
                     </p>
                   </div>
-                  <span className="label-mono text-mute group-hover:text-acid transition-colors">
+                  <span className="label-mono text-mute group-hover:underline transition-colors">
                     →
                   </span>
                 </button>

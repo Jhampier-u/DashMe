@@ -43,7 +43,7 @@ function Header({
     <section className="px-8 py-16 lg:py-20 hairline-b">
       <div className="grid grid-cols-12 gap-6 items-end">
         <div className="col-span-12 lg:col-span-8 fade-in">
-          <p className="label-mono text-acid mb-6">
+          <p className="label-mono text-tinta mb-6">
             Volumen 05 — Tu vocabulario
           </p>
           <h1 className="display-italic text-[clamp(3.5rem,10vw,10rem)] leading-[0.9]">
@@ -60,7 +60,7 @@ function Header({
             Total · {totalApplications.toLocaleString("es")} aplicaciones
           </p>
           <p
-            className="display num-tabular text-[clamp(5rem,16vw,13rem)] text-acid leading-none"
+            className="display num-tabular text-[clamp(5rem,16vw,13rem)] text-tinta leading-none"
             style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
           >
             {total}

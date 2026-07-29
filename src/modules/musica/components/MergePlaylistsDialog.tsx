@@ -130,7 +130,7 @@ function Dialog({
         }}
       >
         <div className="px-7 py-6 hairline-b">
-          <p className="label-mono text-acid mb-2">
+          <p className="label-mono text-tinta mb-2">
             Operación · {selected.size} fuente{selected.size === 1 ? "" : "s"}
             {totalTracks > 0 && (
               <span className="text-cream-dim">
@@ -172,7 +172,7 @@ function Dialog({
                       }`}
                     >
                       {isSel && (
-                        <span className="text-ink text-[10px] leading-none font-bold">
+                        <span className="text-tinta text-[10px] leading-none font-bold">
                           ✓
                         </span>
                       )}
@@ -206,7 +206,7 @@ function Dialog({
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="label-mono text-cream block mb-1.5">
-                Nombre <span className="text-acid">*</span>
+                Nombre <span className="text-tinta">*</span>
               </label>
               <input
                 value={name}
@@ -243,7 +243,7 @@ function Dialog({
           </label>
 
           {error && (
-            <p className="label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
+            <p className="label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
               {error}
             </p>
           )}
@@ -261,7 +261,7 @@ function Dialog({
           <button
             type="submit"
             disabled={pending || selected.size < 2 || !name.trim()}
-            className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="label-mono">
               {pending

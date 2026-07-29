@@ -40,7 +40,7 @@ export default function ShareCards({ range }: { range: StatsRange }) {
               className="flex flex-col gap-2 px-5 py-6 hover:bg-ink-2 transition-colors fade-in"
               style={{ animationDelay: `${i * 60}ms` }}
             >
-              <span className="label-mono text-acid">{t.label} ↓</span>
+              <span className="label-mono text-tinta">{t.label} ↓</span>
               <span className="font-serif italic text-cream-dim">{t.nota}</span>
             </a>
           </li>

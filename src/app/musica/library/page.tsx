@@ -80,7 +80,7 @@ function Header({ total }: { total: number }) {
     <section className="px-8 py-16 lg:py-20 hairline-b">
       <div className="grid grid-cols-12 gap-6 items-end">
         <div className="col-span-12 lg:col-span-8 fade-in">
-          <p className="label-mono text-acid mb-6">
+          <p className="label-mono text-tinta mb-6">
             Volumen 02 — Tu biblioteca personal
           </p>
           <h1 className="display-italic text-[clamp(3.5rem,10vw,10rem)] leading-[0.9]">
@@ -97,7 +97,7 @@ function Header({ total }: { total: number }) {
         <div className="col-span-12 lg:col-span-4 flex flex-col items-end justify-end fade-in">
           <p className="label-mono text-mute mb-2">Canciones guardadas</p>
           <p
-            className="display num-tabular text-[clamp(5rem,16vw,13rem)] text-acid leading-none"
+            className="display num-tabular text-[clamp(5rem,16vw,13rem)] text-tinta leading-none"
             style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
           >
             {total.toLocaleString("es")}
@@ -125,7 +125,7 @@ function TrackRow({
 
   return (
     <li className="group grid grid-cols-[40px_40px_1fr_72px] md:grid-cols-[60px_56px_1fr_240px_80px_120px] gap-3 md:gap-6 py-3 hairline-b items-center hover:bg-ink-2/40 transition-colors">
-      <span className="label-mono num-tabular text-mute group-hover:text-acid transition-colors">
+      <span className="label-mono num-tabular text-mute group-hover:underline transition-colors">
         {pad(index, 4)}
       </span>
       <div className="w-10 h-10 bg-ink-3 ring-1 ring-rule overflow-hidden">
@@ -193,7 +193,7 @@ function Pagination({
         {prev ? (
           <Link
             href={prev}
-            className="label-mono text-cream hover:text-acid transition-colors"
+            className="label-mono text-cream hover:underline transition-colors"
           >
             ← Anterior
           </Link>
@@ -208,7 +208,7 @@ function Pagination({
         {next ? (
           <Link
             href={next}
-            className="label-mono text-cream hover:text-acid transition-colors"
+            className="label-mono text-cream hover:underline transition-colors"
           >
             Siguiente →
           </Link>

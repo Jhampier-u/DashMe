@@ -58,7 +58,7 @@ function Columna({
                 <span className="label-mono text-mute num-tabular">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className={`truncate ${soloAqui ? "text-acid" : ""}`}>
+                <span className={`truncate ${soloAqui ? "text-tinta" : ""}`}>
                   {x.name}
                 </span>
               </span>
@@ -139,7 +139,7 @@ export default async function Contraste({
           <Link
             href="/musica/escucha/contraste"
             className={`label-mono transition-colors ${
-              entidad === "artists" ? "text-acid" : "text-mute hover:text-cream"
+              entidad === "artists" ? "text-tinta" : "text-mute hover:text-cream"
             }`}
           >
             Artistas
@@ -147,19 +147,19 @@ export default async function Contraste({
           <Link
             href="/musica/escucha/contraste?e=tracks"
             className={`label-mono transition-colors ${
-              entidad === "tracks" ? "text-acid" : "text-mute hover:text-cream"
+              entidad === "tracks" ? "text-tinta" : "text-mute hover:text-cream"
             }`}
           >
             Canciones
           </Link>
         </nav>
-        <Link href="/musica" className="label-mono text-mute hover:text-acid transition-colors">
+        <Link href="/musica" className="label-mono text-mute hover:underline transition-colors">
           ← Portada
         </Link>
       </section>
 
       <section className="px-8 pt-16 pb-12 hairline-b">
-        <p className="label-mono text-acid mb-6">Contraste</p>
+        <p className="label-mono text-tinta mb-6">Contraste</p>
         <h1
           className="display-italic text-[clamp(2.4rem,8vw,6rem)] leading-[0.9]"
           style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
@@ -172,7 +172,7 @@ export default async function Contraste({
           Sus rankings se calculan con criterios que no publica, y la recencia
           pesa mucho. Los tuyos son un recuento literal. Que discrepen no es un
           error de nadie — es la diferencia entre lo que un algoritmo cree de ti
-          y lo que hiciste. En <span className="text-acid not-italic">acento</span>{" "}
+          y lo que hiciste. En <span className="text-tinta not-italic">acento</span>{" "}
           lo que aparece en una lista y no en la otra.
         </p>
       </section>

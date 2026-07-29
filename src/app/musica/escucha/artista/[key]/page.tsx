@@ -57,13 +57,13 @@ export default async function FichaArtista({
 
       <section className="px-8 py-5 hairline-b flex items-center justify-between gap-4 flex-wrap">
         <RangePicker range={range} base={`/musica/escucha/artista/${key}`} />
-        <Link href="/musica" className="label-mono text-mute hover:text-acid transition-colors">
+        <Link href="/musica" className="label-mono text-mute hover:underline transition-colors">
           ← Portada
         </Link>
       </section>
 
       <section className="px-8 pt-16 pb-12 hairline-b">
-        <p className="label-mono text-acid mb-6">
+        <p className="label-mono text-tinta mb-6">
           {posicion} en tu ranking · {range.label}
         </p>
         <h1
@@ -119,7 +119,7 @@ export default async function FichaArtista({
               <span className="relative flex items-baseline gap-3 min-w-0">
                 <span
                   className={`label-mono num-tabular ${
-                    i === 0 ? "text-acid" : "text-mute"
+                    i === 0 ? "text-tinta font-bold" : "text-mute"
                   }`}
                 >
                   {String(i + 1).padStart(2, "0")}

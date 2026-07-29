@@ -105,16 +105,16 @@ export default async function Portada({
       <TopBar me={me} active="portada" />
 
       <section className="px-8 py-5 hairline-b">
-        <RangePicker range={range} />
+        <RangePicker range={range} base="/musica" />
       </section>
 
       {/* ---------------- Cifra protagonista ---------------- */}
       <section className="px-8 pt-16 pb-12 hairline-b">
         <div className="grid grid-cols-12 gap-6 items-end">
           <div className="col-span-12 lg:col-span-7 fade-in">
-            <p className="label-mono text-acid mb-6">{range.label}</p>
+            <p className="label-mono text-tinta mb-6">{range.label}</p>
             <p
-              className="display num-tabular text-[clamp(4rem,15vw,12rem)] text-acid leading-[0.82]"
+              className="display num-tabular text-[clamp(4rem,15vw,12rem)] text-tinta leading-[0.82]"
               style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
             >
               {minutos.toLocaleString("es")}
@@ -186,7 +186,7 @@ export default async function Portada({
           <section className="px-8 pt-12 pb-4 flex justify-end">
             <Link
               href="/musica/escucha/contraste"
-              className="label-mono text-mute hover:text-acid transition-colors"
+              className="label-mono text-mute hover:underline transition-colors"
             >
               ¿Y qué cree Spotify? →
             </Link>

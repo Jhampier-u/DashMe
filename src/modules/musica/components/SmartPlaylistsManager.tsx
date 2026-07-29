@@ -68,7 +68,7 @@ export default function SmartPlaylistsManager({
   return (
     <section className="px-8 py-12">
       <div className="hairline-b pb-4 mb-8 flex items-center justify-between flex-wrap gap-3">
-        <h2 className="label-mono text-acid">
+        <h2 className="label-mono text-tinta">
           Catálogo <span className="text-mute">/ {items.length}</span>
         </h2>
         <button
@@ -76,7 +76,7 @@ export default function SmartPlaylistsManager({
             setCreating(true);
             setEditing(null);
           }}
-          className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors"
+          className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors"
         >
           <span className="label-mono">Nueva regla</span>
           <span className="font-mono text-sm group-hover:rotate-90 transition-transform duration-300">
@@ -86,12 +86,12 @@ export default function SmartPlaylistsManager({
       </div>
 
       {toast && (
-        <p className="label-mono text-acid ring-1 ring-acid/40 bg-acid/10 px-3 py-2 mb-4">
+        <p className="label-mono text-tinta ring-1 ring-acid/40 bg-acid/10 px-3 py-2 mb-4">
           {toast}
         </p>
       )}
       {error && (
-        <p className="label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2 mb-4">
+        <p className="label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2 mb-4">
           {error}
         </p>
       )}
@@ -151,7 +151,7 @@ export default function SmartPlaylistsManager({
                 <button
                   onClick={() => handleMaterialize(sp)}
                   disabled={pending}
-                  className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40"
+                  className="group inline-flex items-center gap-2 bg-acid text-tinta px-3 py-1.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40"
                   title="Sincronizar con Spotify ahora"
                 >
                   <span className="label-mono">
@@ -173,7 +173,7 @@ export default function SmartPlaylistsManager({
                 </button>
                 <button
                   onClick={() => handleDelete(sp)}
-                  className="label-mono text-mute hover:text-blood transition-colors px-2"
+                  className="label-mono text-mute hover:underline transition-colors px-2"
                   title="Eliminar"
                 >
                   ×
@@ -308,7 +308,7 @@ function Editor({
 
   return (
     <div className="ring-1 ring-acid bg-acid/[0.04] p-6 mb-8">
-      <p className="label-mono text-acid mb-2">
+      <p className="label-mono text-tinta mb-2">
         {initial ? "Editar regla" : "Nueva regla"}
       </p>
       <h3 className="display-italic text-3xl mb-6">
@@ -447,7 +447,7 @@ function Editor({
       </div>
 
       {error && (
-        <p className="label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2 mt-4">
+        <p className="label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2 mt-4">
           {error}
         </p>
       )}
@@ -465,7 +465,7 @@ function Editor({
           type="button"
           onClick={submit}
           disabled={pending || !name.trim()}
-          className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40"
+          className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40"
         >
           <span className="label-mono">
             {pending ? "Guardando…" : initial ? "Guardar cambios" : "Crear regla"}
@@ -497,7 +497,7 @@ function Field({
       <div className="flex items-baseline justify-between mb-1.5">
         <label className="label-mono text-cream">
           {label}
-          {required && <span className="text-acid"> *</span>}
+          {required && <span className="text-tinta"> *</span>}
         </label>
         {hint && <span className="label-mono text-mute">{hint}</span>}
       </div>

@@ -35,7 +35,7 @@ export default async function Home({
               await signOut({ redirectTo: "/" });
             }}
           >
-            <button className="label-mono text-acid hover:text-cream transition">
+            <button className="label-mono text-tinta hover:text-cream transition">
               Cerrar sesión —&gt;
             </button>
           </form>
@@ -70,7 +70,7 @@ function LoginScreen() {
 
       <section className="flex-1 grid lg:grid-cols-12 gap-12 px-8 py-16 lg:py-24">
         <div className="lg:col-span-7 lg:col-start-2 flex flex-col justify-center fade-in">
-          <p className="label-mono text-acid mb-8">
+          <p className="label-mono text-tinta mb-8">
             № 01 — Una nueva forma de mirar tu música
           </p>
           <h1 className="display-italic text-[clamp(3.5rem,9vw,9rem)] mb-8">
@@ -92,7 +92,7 @@ function LoginScreen() {
           >
             <button
               type="submit"
-              className="group inline-flex items-center gap-4 bg-acid text-ink px-7 py-4 hover:bg-cream transition-colors duration-300"
+              className="group inline-flex items-center gap-4 bg-acid text-tinta px-7 py-4 hover:bg-tinta hover:text-paper transition-colors duration-300"
             >
               <span className="label-mono">Entrar con Spotify</span>
               <span className="font-mono text-sm transition-transform duration-300 group-hover:translate-x-1">
@@ -175,7 +175,7 @@ function Library({
       <section className="px-8 pt-16 pb-24">
         <div className="hairline-b pb-4 mb-10">
           <div className="flex items-baseline justify-between mb-5 flex-wrap gap-y-3">
-            <h2 className="label-mono text-acid">
+            <h2 className="label-mono text-tinta">
               Índice <span className="text-mute">/ 001 — {pad(total)}</span>
             </h2>
             <p className="label-mono text-mute hidden md:block">
@@ -292,14 +292,14 @@ function Featured({ playlist }: { playlist: SpotifyPlaylist }) {
         </Link>
 
         <div className="col-span-12 md:col-span-7 lg:col-span-8">
-          <p className="label-mono text-acid mb-4">
+          <p className="label-mono text-tinta mb-4">
             Pieza destacada — más extensa de tu colección
           </p>
           <Link
             href={`/musica/playlist/${playlist.id}`}
             className="group inline-block"
           >
-            <h2 className="display-italic text-[clamp(2.75rem,6vw,6rem)] leading-[0.95] [text-wrap:balance] group-hover:text-acid transition-colors duration-500">
+            <h2 className="display-italic text-[clamp(2.75rem,6vw,6rem)] leading-[0.95] [text-wrap:balance] group-hover:underline transition-colors duration-500">
               {playlist.name}
             </h2>
           </Link>
@@ -319,7 +319,7 @@ function Featured({ playlist }: { playlist: SpotifyPlaylist }) {
           <div className="mt-8 flex gap-3 flex-wrap">
             <Link
               href={`/musica/playlist/${playlist.id}`}
-              className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-3 hover:bg-cream transition-colors"
+              className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-3 hover:bg-tinta hover:text-paper transition-colors"
             >
               <span className="label-mono">Abrir índice</span>
               <span className="font-mono text-sm group-hover:translate-x-1 transition-transform">
@@ -383,7 +383,7 @@ function FilterChips({
             href={href}
             className={`label-mono inline-flex items-center gap-2 px-3 py-1.5 ring-1 transition-all ${
               active
-                ? "bg-acid text-ink ring-acid"
+                ? "bg-acid text-tinta ring-acid"
                 : "ring-rule text-mute hover:ring-cream hover:text-cream"
             }`}
           >
@@ -405,7 +405,7 @@ function EditorialHeader({ total }: { total: number }) {
     <section className="px-8 py-16 lg:py-24 hairline-b">
       <div className="grid grid-cols-12 gap-6 items-end">
         <div className="col-span-12 lg:col-span-8 fade-in">
-          <p className="label-mono text-acid mb-6">
+          <p className="label-mono text-tinta mb-6">
             Volumen 01 — Índice de la biblioteca
           </p>
           <h1 className="display-italic text-[clamp(4rem,12vw,12rem)]">
@@ -422,7 +422,7 @@ function EditorialHeader({ total }: { total: number }) {
         <div className="col-span-12 lg:col-span-4 flex flex-col items-end justify-end fade-in">
           <p className="label-mono text-mute mb-2">Entradas totales</p>
           <p
-            className="display num-tabular text-[clamp(6rem,18vw,15rem)] text-acid leading-none"
+            className="display num-tabular text-[clamp(6rem,18vw,15rem)] text-tinta leading-none"
             style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 1' }}
           >
             {pad(total)}
@@ -492,9 +492,9 @@ function PlaylistCard({
   const owner = playlist.owner.display_name || playlist.owner.id;
 
   const status = playlist.collaborative
-    ? { label: "COLAB", classes: "text-acid ring-acid/40" }
+    ? { label: "COLAB", classes: "text-tinta ring-acid/40" }
     : ownedByMe
-      ? { label: "TUYA", classes: "text-acid ring-acid/40" }
+      ? { label: "TUYA", classes: "text-tinta ring-acid/40" }
       : { label: "SEGUIDA", classes: "text-mute ring-rule" };
 
   return (
@@ -504,7 +504,7 @@ function PlaylistCard({
     >
       {/* Index above the cover, magazine-style */}
       <div className="flex items-baseline justify-between mb-2 hairline-b pb-1">
-        <span className="label-mono num-tabular text-mute group-hover:text-acid transition-colors text-[11px]">
+        <span className="label-mono num-tabular text-mute group-hover:underline transition-colors text-[11px]">
           № {pad(index)}
         </span>
         <span
@@ -539,7 +539,7 @@ function PlaylistCard({
           {/* Hover overlay with meta */}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-            <span className="label-mono text-acid num-tabular">
+            <span className="label-mono text-tinta num-tabular">
               {tracks.toLocaleString("es")} TR
             </span>
             <span className="label-mono text-cream">ABRIR ↗</span>
@@ -548,7 +548,7 @@ function PlaylistCard({
 
         <div className="mt-3 flex flex-col">
           <h3 className="relative inline-block font-serif text-lg leading-tight tracking-tight text-cream line-clamp-2 [text-wrap:balance]">
-            <span className="bg-[linear-gradient(to_right,var(--color-acid),var(--color-acid))] bg-no-repeat bg-[length:0%_1px] bg-[position:0_100%] group-hover:bg-[length:100%_1px] transition-[background-size] duration-500 group-hover:text-acid transition-colors">
+            <span className="bg-[linear-gradient(to_right,var(--color-acid),var(--color-acid))] bg-no-repeat bg-[length:0%_1px] bg-[position:0_100%] group-hover:bg-[length:100%_1px] transition-[background-size] duration-500 group-hover:underline transition-colors">
               {playlist.name || "Sin título"}
             </span>
           </h3>

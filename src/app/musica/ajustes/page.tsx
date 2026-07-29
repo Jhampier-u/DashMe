@@ -26,7 +26,7 @@ export default async function AjustesPage() {
       <TopBar me={me} active="ajustes" />
 
       <section className="px-8 py-16 hairline-b">
-        <p className="label-mono text-acid mb-6">Ajustes</p>
+        <p className="label-mono text-tinta mb-6">Ajustes</p>
         <h1 className="display-italic text-[clamp(3rem,8vw,7rem)] leading-[0.9]">
           El taller.
         </h1>

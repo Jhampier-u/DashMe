@@ -20,7 +20,7 @@ export default function WeekdayBars({ buckets }: { buckets: Bucket[] }) {
         <p className="label-mono text-mute">Por día de la semana</p>
         {total > 0 && (
           <p className="label-mono text-mute">
-            tu día · <span className="text-acid">{DIAS[pico.weekday]}</span>
+            tu día · <span className="text-tinta">{DIAS[pico.weekday]}</span>
           </p>
         )}
       </div>

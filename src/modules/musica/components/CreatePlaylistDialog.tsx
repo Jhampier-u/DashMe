@@ -35,7 +35,7 @@ export default function CreatePlaylistButton({
         onClick={() => setOpen(true)}
         className={
           variant === "primary"
-            ? "group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors"
+            ? "group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors"
             : "group inline-flex items-center gap-2 ring-1 ring-rule px-4 py-2 hover:ring-cream transition-colors"
         }
       >
@@ -131,7 +131,7 @@ function Dialog({
           className="bg-ink-2 ring-1 ring-acid w-full max-w-xl rise px-7 py-8"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="label-mono text-acid mb-2">✓ Creada</p>
+          <p className="label-mono text-tinta mb-2">✓ Creada</p>
           <h3 className="display-italic text-4xl mb-3 [text-wrap:balance]">
             {success.name}
           </h3>
@@ -143,7 +143,7 @@ function Dialog({
             <button
               type="button"
               onClick={onClose}
-              className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors"
+              className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors"
             >
               <span className="label-mono">Seguir aquí</span>
               <span className="font-mono text-sm group-hover:translate-x-1 transition-transform">
@@ -183,7 +183,7 @@ function Dialog({
         }}
       >
         <div className="px-7 py-6 hairline-b">
-          <p className="label-mono text-acid mb-2">
+          <p className="label-mono text-tinta mb-2">
             {hasTracks ? `Nueva colección · ${tracks!.length} canciones` : "Nueva entrada"}
           </p>
           <h3 className="display-italic text-4xl">Crear playlist</h3>
@@ -247,7 +247,7 @@ function Dialog({
           </Field>
 
           {error && (
-            <p className="label-mono text-blood py-2 px-3 ring-1 ring-blood/40 bg-blood/10">
+            <p className="label-mono text-tinta py-2 px-3 ring-1 ring-blood/40 bg-blood/10">
               {error}
             </p>
           )}
@@ -265,7 +265,7 @@ function Dialog({
           <button
             type="submit"
             disabled={pending || !name.trim()}
-            className="group inline-flex items-center gap-3 bg-acid text-ink px-5 py-2.5 hover:bg-cream transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="group inline-flex items-center gap-3 bg-acid text-tinta px-5 py-2.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className="label-mono">
               {pending
@@ -304,7 +304,7 @@ function Field({
       <div className="flex items-baseline justify-between mb-2">
         <label className="label-mono text-cream">
           {label}
-          {required && <span className="text-acid"> *</span>}
+          {required && <span className="text-tinta"> *</span>}
         </label>
         {hint && <span className="label-mono text-mute">{hint}</span>}
       </div>
@@ -335,7 +335,7 @@ function RadioCard({
       }`}
     >
       <p
-        className={`label-mono ${active ? "text-acid" : "text-cream"} mb-0.5`}
+        className={`label-mono ${active ? "text-tinta font-bold" : "text-cream"} mb-0.5`}
       >
         {label}
       </p>

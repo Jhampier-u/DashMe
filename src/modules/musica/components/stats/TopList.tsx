@@ -56,7 +56,7 @@ export default function TopList({
               <span className="relative flex items-baseline gap-3 min-w-0">
                 <span
                   className={`label-mono num-tabular ${
-                    i === 0 ? "text-acid" : "text-mute"
+                    i === 0 ? "text-tinta font-bold" : "text-mute"
                   }`}
                 >
                   {String(i + 1).padStart(2, "0")}
@@ -65,7 +65,7 @@ export default function TopList({
                   {hrefBase ? (
                     <Link
                       href={`${hrefBase}/${encodeURIComponent(e.key)}`}
-                      className="hover:text-acid transition-colors"
+                      className="hover:underline transition-colors"
                     >
                       {e.name}
                     </Link>

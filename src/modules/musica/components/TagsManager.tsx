@@ -85,13 +85,13 @@ export default function TagsManager({ initial }: { initial: Tag[] }) {
   return (
     <section className="px-8 py-12">
       <div className="hairline-b pb-4 mb-8 flex items-center justify-between flex-wrap gap-3">
-        <h2 className="label-mono text-acid">
+        <h2 className="label-mono text-tinta">
           Catálogo <span className="text-mute">/ {tags.length}</span>
         </h2>
         {!creating ? (
           <button
             onClick={() => setCreating(true)}
-            className="group inline-flex items-center gap-2 bg-acid text-ink px-4 py-2 hover:bg-cream transition-colors"
+            className="group inline-flex items-center gap-2 bg-acid text-tinta px-4 py-2 hover:bg-tinta hover:text-paper transition-colors"
           >
             <span className="label-mono">Nuevo tag</span>
             <span className="font-mono text-sm group-hover:rotate-90 transition-transform duration-300">
@@ -134,7 +134,7 @@ export default function TagsManager({ initial }: { initial: Tag[] }) {
             <button
               onClick={handleCreate}
               disabled={pending || !newName.trim()}
-              className="label-mono text-acid disabled:opacity-40 px-2"
+              className="label-mono text-tinta disabled:opacity-40 px-2"
             >
               ✓
             </button>
@@ -152,7 +152,7 @@ export default function TagsManager({ initial }: { initial: Tag[] }) {
       </div>
 
       {error && (
-        <p className="label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2 mb-4">
+        <p className="label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2 mb-4">
           {error}
         </p>
       )}
@@ -209,7 +209,7 @@ export default function TagsManager({ initial }: { initial: Tag[] }) {
                   </button>
                   <button
                     onClick={() => handleDelete(tag)}
-                    className="label-mono text-mute hover:text-blood transition-colors px-2"
+                    className="label-mono text-mute hover:underline transition-colors px-2"
                     title="Eliminar"
                   >
                     ×

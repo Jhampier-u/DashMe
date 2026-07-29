@@ -52,7 +52,7 @@ export default async function FichaCancion({
 
       <section className="px-8 py-5 hairline-b flex items-center justify-between gap-4 flex-wrap">
         <RangePicker range={range} base={`/musica/escucha/cancion/${key}`} />
-        <Link href="/musica" className="label-mono text-mute hover:text-acid transition-colors">
+        <Link href="/musica" className="label-mono text-mute hover:underline transition-colors">
           ← Portada
         </Link>
       </section>

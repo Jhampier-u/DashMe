@@ -101,7 +101,7 @@ export default function ImportPanel({
                     <span className="font-mono text-xs truncate">{r.nombre}</span>
                     <span
                       className={`label-mono num-tabular whitespace-nowrap ${
-                        r.error ? "text-blood" : "text-mute"
+                        r.error ? "text-tinta" : "text-mute"
                       }`}
                     >
                       {r.error ?? `+${r.insertados.toLocaleString("es")}`}
@@ -111,13 +111,13 @@ export default function ImportPanel({
               </ul>
 
               {conError.length > 0 && (
-                <p className="label-mono text-blood mt-4">
+                <p className="label-mono text-tinta mt-4">
                   {conError.length} archivos fallaron.
                 </p>
               )}
 
               {cierre && (
-                <p className="label-mono text-acid mt-4">{cierre}</p>
+                <p className="label-mono text-tinta mt-4">{cierre}</p>
               )}
             </div>
           )}

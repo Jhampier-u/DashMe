@@ -143,7 +143,7 @@ export default function TagPicker({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-5 hairline-b">
-          <p className="label-mono text-acid mb-2">
+          <p className="label-mono text-tinta mb-2">
             Tags · {uris.length} canci{uris.length === 1 ? "ón" : "ones"}
           </p>
           <h3 className="display-italic text-3xl mb-4">Aplicar tags</h3>
@@ -179,7 +179,7 @@ export default function TagPicker({
                 type="button"
                 onClick={handleCreate}
                 disabled={pending}
-                className="group inline-flex items-center gap-2 bg-acid text-ink px-3 py-1.5 hover:bg-cream transition-colors disabled:opacity-40"
+                className="group inline-flex items-center gap-2 bg-acid text-tinta px-3 py-1.5 hover:bg-tinta hover:text-paper transition-colors disabled:opacity-40"
               >
                 <span className="label-mono">Crear &quot;{search.trim()}&quot;</span>
                 <span className="font-mono text-sm">+</span>
@@ -228,7 +228,7 @@ export default function TagPicker({
                     }}
                   >
                     {state === "all" && (
-                      <span className="text-ink text-[10px] leading-none font-bold">
+                      <span className="text-tinta text-[10px] leading-none font-bold">
                         ✓
                       </span>
                     )}
@@ -248,7 +248,7 @@ export default function TagPicker({
                   type="button"
                   onClick={() => handleDelete(tag)}
                   disabled={pending}
-                  className="opacity-0 group-hover:opacity-100 label-mono text-blood hover:text-cream transition-all px-2"
+                  className="opacity-0 group-hover:opacity-100 label-mono text-tinta hover:text-cream transition-all px-2"
                   title="Eliminar tag"
                 >
                   ×
@@ -259,7 +259,7 @@ export default function TagPicker({
         </ul>
 
         {error && (
-          <p className="mx-6 mb-4 label-mono text-blood ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
+          <p className="mx-6 mb-4 label-mono text-tinta ring-1 ring-blood/40 bg-blood/10 px-3 py-2">
             {error}
           </p>
         )}
@@ -270,7 +270,7 @@ export default function TagPicker({
           </span>
           <button
             onClick={onClose}
-            className="label-mono text-cream hover:text-acid transition-colors"
+            className="label-mono text-cream hover:underline transition-colors"
           >
             Listo
           </button>

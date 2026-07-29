@@ -23,7 +23,7 @@ export default function TopBar({
       <div className="flex items-center gap-6">
         <Link
           href="/musica"
-          className="label-mono text-cream hover:text-acid transition-colors"
+          className="label-mono text-cream hover:underline transition-colors"
         >
           LEDGER
         </Link>
@@ -76,7 +76,7 @@ export default function TopBar({
             await signOut({ redirectTo: "/" });
           }}
         >
-          <button className="label-mono text-mute hover:text-acid transition-colors">
+          <button className="label-mono text-mute hover:underline transition-colors">
             Salir →
           </button>
         </form>
@@ -98,7 +98,7 @@ function NavLink({
     <Link
       href={href}
       className={`label-mono transition-colors ${
-        active ? "text-acid" : "text-mute hover:text-cream"
+        active ? "text-tinta" : "text-mute hover:text-cream"
       }`}
     >
       {children}
