@@ -29,6 +29,8 @@ export const habits = sqliteTable("habits", {
   schedule: text("schedule").notNull().default("1111111"),
   /** "Cuando X entonces Y" */
   intention: text("intention"),
+  /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
+  targetCount: integer("target_count"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
@@ -49,6 +51,8 @@ export const habitLogs = sqliteTable(
      * devuelve exactamente esto, así marcar/desmarcar siempre suma cero.
      */
     xpAwarded: integer("xp_awarded").notNull().default(0),
+    /** Lo apuntado ese día. Nulo = no se apuntó cantidad. */
+    count: integer("count"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
   (t) => ({

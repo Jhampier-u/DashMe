@@ -259,7 +259,7 @@ git commit -m "feat(habitos): la regla de que dia cuenta, en un solo sitio"
 - Modify: `src/modules/core/db/schema-sql.ts`
 - Modify: `src/modules/habitos/schema.ts`
 
-- [ ] **Paso 1: El test de la migración**
+- [x] **Paso 1: El test de la migración**
 
 En `src/modules/core/db/migrar.test.ts`, dentro del bloque de la base vieja:
 
@@ -277,13 +277,13 @@ En `src/modules/core/db/migrar.test.ts`, dentro del bloque de la base vieja:
 > su forma actual —sin las columnas nuevas—, o el test pasará por vacío. Cópialas
 > del `SCHEMA_SQL` de hoy quitando `target_count` y `count`.
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/core/db/migrar.test.ts
 ```
 
-- [ ] **Paso 3: La migración**
+- [x] **Paso 3: La migración**
 
 `migrar.ts` hoy solo sabe añadir columnas a `tasks`. Generalízalo:
 
@@ -326,7 +326,7 @@ export function ponerAlDia(sqlite: Sqlite): void {
 }
 ```
 
-- [ ] **Paso 4: El DDL y Drizzle**
+- [x] **Paso 4: El DDL y Drizzle**
 
 En `schema-sql.ts`, dentro de `habits`, tras `intention`:
 
@@ -352,7 +352,7 @@ En `schema.ts`:
   count: integer("count"),
 ```
 
-- [ ] **Paso 5: Verificar**
+- [x] **Paso 5: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
@@ -361,7 +361,7 @@ npx vitest run && npx tsc --noEmit && npm run lint
 `schema-parity.test.ts` compara el DDL con Drizzle: si falla, es que una de las
 dos columnas está solo en un lado.
 
-- [ ] **Paso 6: Poner al día la base real**
+- [x] **Paso 6: Poner al día la base real**
 
 ```bash
 npx vite-node --version >/dev/null 2>&1 || echo "vite-node se instalará al usarlo"
@@ -380,7 +380,7 @@ for (const t of ['habits','habit_logs']) {
 
 Esperado: `target_count` en `habits` y `count` en `habit_logs`.
 
-- [ ] **Paso 7: Commit**
+- [x] **Paso 7: Commit**
 
 ```bash
 git add -A src

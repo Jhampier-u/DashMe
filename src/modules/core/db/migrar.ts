@@ -17,22 +17,28 @@ type Sqlite = Database.Database;
 */
 
 /**
- * Las columnas que `tasks` ganó al unificarse con `project_items`.
+ * Las columnas que cada tabla fue ganando después de su creación.
  *
- * Van SIN clave foránea a propósito. SQLite no admite `ADD COLUMN` con
- * referencia; declararlas obligaría a recrear la tabla entera y a copiar sus
- * filas, y eso es mucho riesgo para una base con una tarea dentro. En las bases
- * NUEVAS sí llevan su foránea, porque `SCHEMA_SQL` las crea de golpe.
+ * Van SIN clave foránea y anulables a propósito. SQLite no admite `ADD COLUMN`
+ * con referencia, ni con NOT NULL sin valor por defecto; declararlas obligaría a
+ * recrear la tabla entera y copiar sus filas, y eso es mucho riesgo. En las
+ * bases NUEVAS sí llevan su foránea, porque `SCHEMA_SQL` las crea de golpe.
  *
  * Consecuencia real y consciente: en la base que se pone al día, la integridad
- * de estas tres referencias la sostiene el código y no el motor.
+ * de las referencias de `tasks` la sostiene el código y no el motor.
  */
-const COLUMNAS_NUEVAS: [string, string][] = [
-  ["parent_id", "TEXT"],
-  ["project_id", "TEXT"],
-  ["category_id", "TEXT"],
-  ["priority", "TEXT"],
-];
+const COLUMNAS_NUEVAS: Record<string, [string, string][]> = {
+  tasks: [
+    ["parent_id", "TEXT"],
+    ["project_id", "TEXT"],
+    ["category_id", "TEXT"],
+    ["priority", "TEXT"],
+  ],
+  /** El objetivo numérico del día. Nulo = este hábito no se cuenta. */
+  habits: [["target_count", "INTEGER"]],
+  /** Lo apuntado ese día. Nulo = no se apuntó cantidad. */
+  habit_logs: [["count", "INTEGER"]],
+};
 
 function columnasDe(sqlite: Sqlite, tabla: string): Set<string> {
   const filas = sqlite.prepare(`pragma table_info(${tabla})`).all() as {
@@ -67,10 +73,15 @@ const INDICES_NUEVOS = [
 ];
 
 export function ponerAlDia(sqlite: Sqlite): void {
-  const tiene = columnasDe(sqlite, "tasks");
-  for (const [nombre, tipo] of COLUMNAS_NUEVAS) {
-    if (!tiene.has(nombre)) {
-      sqlite.exec(`ALTER TABLE tasks ADD COLUMN ${nombre} ${tipo}`);
+  for (const [tabla, columnas] of Object.entries(COLUMNAS_NUEVAS)) {
+    const tiene = columnasDe(sqlite, tabla);
+    // `pragma table_info` de una tabla que no existe devuelve vacío: si la tabla
+    // no está, no hay nada que poner al día.
+    if (tiene.size === 0) continue;
+    for (const [nombre, tipo] of columnas) {
+      if (!tiene.has(nombre)) {
+        sqlite.exec(`ALTER TABLE ${tabla} ADD COLUMN ${nombre} ${tipo}`);
+      }
     }
   }
   for (const sql of INDICES_NUEVOS) sqlite.exec(sql);

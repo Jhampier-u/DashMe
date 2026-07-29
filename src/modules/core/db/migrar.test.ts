@@ -20,6 +20,27 @@ CREATE TABLE tasks (
   updated_at   INTEGER NOT NULL,
   completed_at INTEGER
 );
+CREATE TABLE habits (
+  id            TEXT PRIMARY KEY,
+  name          TEXT NOT NULL,
+  icon          TEXT NOT NULL DEFAULT 'star',
+  color         TEXT NOT NULL DEFAULT 'aqua',
+  plant_species TEXT NOT NULL DEFAULT 'flower',
+  minimal_goal  TEXT,
+  is_anchor     INTEGER NOT NULL DEFAULT 0,
+  schedule      TEXT NOT NULL DEFAULT '1111111',
+  intention     TEXT,
+  created_at    INTEGER NOT NULL
+);
+CREATE TABLE habit_logs (
+  id         TEXT PRIMARY KEY,
+  habit_id   TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date       INTEGER NOT NULL,
+  partial    INTEGER NOT NULL DEFAULT 0,
+  shielded   INTEGER NOT NULL DEFAULT 0,
+  xp_awarded INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
 CREATE TABLE projects (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
@@ -133,6 +154,14 @@ describe("ponerAlDia sobre una base con la forma vieja", () => {
       completed_at: number;
     };
     expect(t.completed_at).toBe(2000);
+    s.close();
+  });
+
+  it("añade también las columnas de cantidad", () => {
+    const s = baseVieja();
+    ponerAlDia(s);
+    expect(columnas(s, "habits")).toContain("target_count");
+    expect(columnas(s, "habit_logs")).toContain("count");
     s.close();
   });
 
