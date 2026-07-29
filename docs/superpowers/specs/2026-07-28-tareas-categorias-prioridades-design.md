@@ -293,6 +293,15 @@ ejecución en la base real, se copia `data/juampi.db` a un `.bak`.
 **Las foráneas nuevas no las vigila el motor en la base existente.** Explicado
 en el punto 4. El código es responsable de no dejar un `parent_id` colgando.
 
+*Resuelto en la ejecución*, y era más grave de lo que este spec suponía: al
+llegar a la verificación, el código NO lo sostenía —confiaba en el esquema, que
+en esa base no existe—. Borrar una tarea con subtareas dejaba a los hijos con el
+`parent_id` colgando, y como el tablero se salta toda tarea con padre, no salían
+ni en el tablero ni debajo de nadie: desaparecían de la vista sin que nadie los
+hubiera borrado. `deleteTaskById`, `deleteProject` y `deleteCategoria` lo hacen
+ahora explícitamente, con `integridad.test.ts` corriendo contra una base con la
+forma de la real.
+
 **`/proyectos` se repunta entero.** Cinco archivos usan `projectItems`. Es la
 parte más aburrida y la más fácil de romper en silencio: `projects.test.ts` ya
 cubre el árbol y los conteos, y esos tests deben seguir pasando con cambios

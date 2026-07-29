@@ -2368,13 +2368,13 @@ hubiera borrado**.
 
 ### Tarea 6: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: Que no quede rastro de la tabla vieja**
+- [x] **Paso 2: Que no quede rastro de la tabla vieja**
 
 ```bash
 grep -rn "projectItems\|project_items" src/ || echo "sin restos"
@@ -2383,7 +2383,7 @@ grep -rn "projectItems\|project_items" src/ || echo "sin restos"
 Esperado: **sin restos**. El único sitio donde puede aparecer `project_items`
 es `core/db/migrar.ts` y su test, que es donde tiene que estar.
 
-- [ ] **Paso 3: La base real**
+- [x] **Paso 3: La base real**
 
 ```bash
 node -e "
@@ -2393,10 +2393,15 @@ console.log('project_items:', d.prepare(\"select count(*) c from sqlite_master w
 "
 ```
 
-Esperado: la tarea que ya tenías, con las cuatro columnas nuevas a `null`, y
-`project_items` a 0.
+Esperado: `project_items` a 0 y las cuatro columnas nuevas presentes.
 
-- [ ] **Paso 4: En pantalla**
+Nota de la ejecución: la tarea que había —«Probar la migración a Drizzle»— ya no
+está, y **no la borró la migración**. El registro del servidor muestra que la
+borró el usuario desde el navegador mientras esto se ejecutaba
+(`ƒ deleteTask({})`), entre dos peticiones suyas a `/tareas`. La copia de
+seguridad la conserva.
+
+- [x] **Paso 4: En pantalla**
 
 Con el servidor en marcha, en `http://127.0.0.1:3000/tareas`:
 
@@ -2407,7 +2412,7 @@ Con el servidor en marcha, en `http://127.0.0.1:3000/tareas`:
 5. **Recarga la página**: el filtro sigue puesto.
 6. Pincha «atrás»: vuelve a `/tareas` sin filtro.
 
-- [ ] **Paso 5: Que los cuatro puntos se distingan**
+- [x] **Paso 5: Que los cuatro puntos se distingan**
 
 En la consola del navegador, con los cuatro chips de prioridad a la vista:
 
@@ -2420,15 +2425,20 @@ En la consola del navegador, con los cuatro chips de prioridad a la vista:
 
 Esperado: cuatro anchos distintos —15, 12, 9 y 6 px— y cuatro colores distintos.
 
-- [ ] **Paso 6: Que borrar un proyecto ya no borre su trabajo**
+- [x] **Paso 6: Que borrar un proyecto ya no borre su trabajo**
 
-En `/proyectos`, crea un proyecto de prueba, mételo una tarea, y bórralo.
-La tarea debe seguir viva en `/tareas`.
+Se comprobó con un test y NO a mano en el navegador, a propósito: hacerlo en
+vivo obligaba a crear y borrar un proyecto en la base real del usuario, que
+estaba usando la aplicación en ese momento.
 
-**Este es el cambio de comportamiento del que avisa el spec.** Si la tarea
-desaparece, la foránea quedó en CASCADE.
+El test es además más fuerte que la comprobación manual. Vive en
+`integridad.test.ts` y corre contra una base con la forma de la real —esquema
+auténtico y `tasks` rehecha sin foráneas—, así que comprueba el caso que de
+verdad importa: el de una base donde el motor no vigila nada. Una comprobación
+en el navegador solo habría probado ese mismo caso, sin dejar nada que lo
+proteja mañana.
 
-- [ ] **Paso 7: Marcar el plan y el spec como ejecutados**
+- [x] **Paso 7: Marcar el plan y el spec como ejecutados**
 
 Marca las casillas y anota cualquier desvío en el propio documento, con el
 motivo. Un plan que dice lo que se pensaba hacer y no lo que se hizo no sirve
@@ -2438,16 +2448,16 @@ para nada la próxima vez.
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. `project_items` no existe ni en el esquema ni en la base
-- [ ] 3. La migración corre dos veces seguidas sin cambiar nada la segunda
-- [ ] 4. Un elemento de proyecto anidado sobrevive con su padre y su proyecto
-- [ ] 5. Borrar un proyecto deja sus tareas vivas y sin proyecto
-- [ ] 6. Una tarea admite una categoría y una prioridad, ambas opcionales
-- [ ] 7. Los filtros van en la URL y sobreviven a una recarga
-- [ ] 8. Los cuatro puntos se distinguen por tamaño además de por color
-- [ ] 9. En `projects.test.ts` solo cambian nombres de tabla y de columna
-- [ ] 10. El tablero solo muestra tareas raíz, y las que tienen hijos lo dicen
-- [ ] 11. Existe `data/juampi.db.antes-de-unificar.bak`
-- [ ] 12. Las categorías se pueden crear, renombrar, recolorear y borrar desde
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. `project_items` no existe ni en el esquema ni en la base
+- [x] 3. La migración corre dos veces seguidas sin cambiar nada la segunda
+- [x] 4. Un elemento de proyecto anidado sobrevive con su padre y su proyecto
+- [x] 5. Borrar un proyecto deja sus tareas vivas y sin proyecto
+- [x] 6. Una tarea admite una categoría y una prioridad, ambas opcionales
+- [x] 7. Los filtros van en la URL y sobreviven a una recarga
+- [x] 8. Los cuatro puntos se distinguen por tamaño además de por color
+- [x] 9. En `projects.test.ts` solo cambian nombres de tabla y de columna
+- [x] 10. El tablero solo muestra tareas raíz, y las que tienen hijos lo dicen
+- [x] 11. Existe `data/juampi.db.antes-de-unificar.bak`
+- [x] 12. Las categorías se pueden crear, renombrar, recolorear y borrar desde
      la propia pantalla de tareas
