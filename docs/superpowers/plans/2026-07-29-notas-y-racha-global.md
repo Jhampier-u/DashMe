@@ -56,7 +56,7 @@ plantilla literal. Ha pasado dos veces.
 - Create: `src/modules/habitos/lib/racha-global.ts`
 - Create: `src/modules/habitos/lib/racha-global.test.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/racha-global.test.ts`:
 
@@ -166,14 +166,14 @@ describe("rachaGlobal", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
 npx vitest run src/modules/habitos/lib/racha-global.test.ts
 ```
 
-- [ ] **Paso 3: Escribirlo**
+- [x] **Paso 3: Escribirlo**
 
 `src/modules/habitos/lib/racha-global.ts`:
 
@@ -261,13 +261,13 @@ function diaCompleto(
 }
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/racha-global.test.ts && npx tsc --noEmit
 ```
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add src/modules/habitos/lib/racha-global.ts src/modules/habitos/lib/racha-global.test.ts
