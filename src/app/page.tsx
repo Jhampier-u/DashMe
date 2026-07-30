@@ -153,6 +153,7 @@ export default async function DashboardPage() {
 
               <MetricTiles
                 streak={metrics.longestStreak}
+                globalStreak={metrics.globalStreak}
                 best={metrics.best}
                 level={player.level}
                 xp={player.xp}

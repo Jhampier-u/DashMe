@@ -4,6 +4,7 @@ import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { addDays, dayKey, normalizeDayKey } from "./day";
 import { computeStreak, isCriticalDay, isScheduledOn } from "./streak";
 import { diasQueCuentan, type LogParaRacha } from "./cantidad";
+import { rachaGlobal } from "./racha-global";
 import {
   bestWeekday,
   buildHabitSpecs,
@@ -39,6 +40,8 @@ export type HomeMetrics = {
   };
   /** La racha viva más larga, si hay alguna. */
   longestStreak: { days: number; habitName: string } | null;
+  /** Días seguidos cumpliendo TODO lo programado. */
+  globalStreak: number;
   series: DayCompliance[];
   mean: (number | null)[];
   delta: PeriodDelta | null;
@@ -86,6 +89,21 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
     habits.map((h) => ({ id: h.id, schedule: h.schedule, createdKey: dayKey(h.createdAt) })),
     entries,
   );
+
+  /*
+    Solo los NO parciales: un día a medias no es un día completo, y es la misma
+    definición que usa la misión «día completo». `specs` trae el `since` de cada
+    hábito, así que uno recién creado no arrastra la racha global a cero.
+  */
+  const plenosPorDia = new Map<number, Set<string>>();
+  for (const entry of entries) {
+    if (entry.partial) continue;
+    const t = entry.day.getTime();
+    const set = plenosPorDia.get(t);
+    if (set) set.add(entry.habitId);
+    else plenosPorDia.set(t, new Set([entry.habitId]));
+  }
+  const globalStreak = rachaGlobal(specs, plenosPorDia, today);
 
   const series = complianceSeries(specs, entries, from, today);
   const mean = rollingMean(series.map((d) => d.rate), MEAN_WINDOW);
@@ -155,6 +173,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
         }),
     },
     longestStreak,
+    globalStreak,
     series,
     mean,
     delta: periodDelta(series, COMPARISON_DAYS),

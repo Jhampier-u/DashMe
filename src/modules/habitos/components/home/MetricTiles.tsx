@@ -5,6 +5,8 @@ import type { WeekdayRate } from "@/modules/habitos/lib/metrics";
 
 type Props = {
   streak: { days: number; habitName: string } | null;
+  /** Días seguidos cumpliendo TODO lo programado. */
+  globalStreak: number;
   best: WeekdayRate | null;
   level: number;
   xp: number;
@@ -20,6 +22,20 @@ export function MetricTiles(p: Props) {
         label="Racha activa"
         value={p.streak ? formatDays(p.streak.days) : "—"}
         meta={p.streak ? p.streak.habitName : "sin rachas abiertas"}
+      />
+      {/*
+        El rótulo y el `meta` importan: esta cifra va a salir «—» a menudo, basta
+        que falte un hábito hoy. Sin decir qué mide, «es exigente» y «está roto»
+        se ven igual.
+      */}
+      <Stat
+        label="Sin fallar"
+        value={p.globalStreak > 0 ? formatDays(p.globalStreak) : "—"}
+        meta={
+          p.globalStreak > 0
+            ? "días seguidos cumpliendo todo"
+            : "cumple todo hoy y empieza"
+        }
       />
       <Stat
         label="Mejor día"

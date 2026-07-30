@@ -18,6 +18,8 @@ import type { TaskStatus } from "./lib/tasks";
 import * as m from "./lib/mutations";
 import * as c from "./lib/categorias";
 import * as adj from "./lib/adjuntos";
+import * as n from "./lib/notas";
+import { dayKeyFromISO } from "./lib/day";
 
 export type {
   ToggleResult,
@@ -150,6 +152,20 @@ export async function cambiarObjetivoHabito(
   targetCount: number | null,
 ) {
   await m.updateHabitTarget(db, habitId, targetCount);
+  refresh();
+}
+
+/**
+ * Guarda la nota de un día. Cadena vacía la borra.
+ *
+ * La fecha llega como `"YYYY-MM-DD"` y no como `Date`: `dayKeyFromISO` rechaza
+ * lo que no sea una fecha válida, y así el navegador no puede colar una hora que
+ * caiga en otro día.
+ */
+export async function guardarNota(habitId: string, iso: string, text: string) {
+  const dia = dayKeyFromISO(iso);
+  if (!dia) return;
+  await n.setNota(db, habitId, dia, text);
   refresh();
 }
 

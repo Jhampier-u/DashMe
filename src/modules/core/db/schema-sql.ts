@@ -34,6 +34,23 @@ CREATE TABLE IF NOT EXISTS habit_logs (
 CREATE UNIQUE INDEX IF NOT EXISTS habit_logs_habit_date_unq ON habit_logs(habit_id, date);
 CREATE INDEX IF NOT EXISTS habit_logs_date_idx ON habit_logs(date);
 
+CREATE TABLE IF NOT EXISTS habit_notes (
+  id         TEXT PRIMARY KEY,
+  habit_id   TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date       INTEGER NOT NULL,
+  text       TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+-- Una nota por habito y dia, mismo patron que habit_logs.
+--
+-- Tabla aparte y NO una columna de habit_logs a proposito: si fuera una columna,
+-- escribir una nota en un dia que no cumpliste obligaria a crear el registro de
+-- ese dia, o sea a marcar el habito como hecho para poder decir que no lo
+-- hiciste. Y ese es justo el dia en que mas quieres escribir algo.
+CREATE UNIQUE INDEX IF NOT EXISTS habit_notes_habit_date_unq
+  ON habit_notes(habit_id, date);
+
 CREATE TABLE IF NOT EXISTS player (
   id              TEXT PRIMARY KEY,
   xp              INTEGER NOT NULL DEFAULT 0,
