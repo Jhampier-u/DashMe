@@ -571,7 +571,7 @@ git push
 - Create: `src/modules/habitos/components/home/MusicaPanel.tsx`
 - Modify: `src/app/page.tsx`
 
-- [ ] **Paso 1: El panel**
+- [x] **Paso 1: El panel**
 
 `src/modules/habitos/components/home/MusicaPanel.tsx`.
 
@@ -636,7 +636,7 @@ export function MusicaPanel({ c }: { c: Comparacion }) {
 > La última frase es el criterio nº 8. **No la quites ni la suavices**: en cuanto
 > se pinta un número, se lee como causa.
 
-- [ ] **Paso 2: La composición, en la página**
+- [x] **Paso 2: La composición, en la página**
 
 En `src/app/page.tsx`, junto a las lecturas que ya hace:
 
@@ -685,13 +685,13 @@ Y bajo la gráfica de cumplimiento, `<MusicaPanel c={cruce} />`.
 > `src/modules/musica/lib/stats/range.ts` y tiene `fromDate`, `toDate`, `label` y
 > `preset`. Si `preset` no admite `"custom"`, usa el valor que corresponda.
 
-- [ ] **Paso 3: Verificar**
+- [x] **Paso 3: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 4: Commit y push**
+- [x] **Paso 4: Commit y push**
 
 ```bash
 git add -A src
@@ -703,13 +703,13 @@ git push
 
 ### Tarea 4: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: Que los módulos sigan sin conocerse**
+- [x] **Paso 2: Que los módulos sigan sin conocerse**
 
 ```bash
 grep -rn "modules/musica" src/modules/habitos/ || echo "habitos no conoce musica"
@@ -719,7 +719,7 @@ grep -n "habitos\|musica" src/modules/core/analisis/comparar-dias.ts || echo "el
 
 Los tres tienen que salir limpios. Son los criterios 6 y 7.
 
-- [ ] **Paso 3: En pantalla**
+- [x] **Paso 3: En pantalla**
 
 La portada **no** está detrás de la sesión de Spotify y las escuchas ya están en
 la base local, así que esto se puede comprobar sin entrar en Spotify:
@@ -728,7 +728,7 @@ la base local, así que esto se puede comprobar sin entrar en Spotify:
 2. Con los datos de hoy tiene que decir **cuántos días faltan**, no un número.
 3. Comprueba en la consola que el texto no contiene «mejor», «peor» ni flechas.
 
-- [ ] **Paso 4: Que el suelo sea el que decide, y no un fallo**
+- [x] **Paso 4: Que el suelo sea el que decide, y no un fallo**
 
 Que el panel diga «faltan datos» podría deberse a que está roto. Lo que demuestra
 que la rama del «suficiente» es la que se toma es el test
@@ -736,17 +736,30 @@ que la rama del «suficiente» es la que se toma es el test
 compara. **Comprueba que ese test está en verde**, y con eso queda probado que el
 mensaje de la portada es una decisión y no una avería.
 
-- [ ] **Paso 5: Marcar el plan y el spec**
+- [x] **Paso 5: Marcar el plan y el spec**
+
+**Medido en la portada**, sin necesidad de sesión de Spotify:
+
+```
+"Todavia no hay bastante para comparar. Faltan 9 dias cumpliendo todo
+ y 8 dias sin cumplirlo todo."
+
+palabras prohibidas encontradas: ninguna
+ (mejor, peor, flechas, "deberias", "porque")
+```
+
+Los numeros cuadran con los datos reales: 1 dia cumplido y 2 fallados desde que
+existen los habitos.
 
 ---
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. Con menos de 10 días en un grupo, el panel dice cuántos faltan
-- [ ] 3. Con datos suficientes, muestra las dos medianas y los dos tamaños
-- [ ] 4. Los días en pausa no entran en ninguno de los dos grupos
-- [ ] 5. Los días sin nada programado no entran en ninguno de los dos grupos
-- [ ] 6. `compararGrupos` no importa nada de `habitos` ni de `musica`
-- [ ] 7. `habitos` no importa `musica`, ni al revés
-- [ ] 8. El texto no afirma causalidad
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. Con menos de 10 días en un grupo, el panel dice cuántos faltan
+- [x] 3. Con datos suficientes, muestra las dos medianas y los dos tamaños
+- [x] 4. Los días en pausa no entran en ninguno de los dos grupos
+- [x] 5. Los días sin nada programado no entran en ninguno de los dos grupos
+- [x] 6. `compararGrupos` no importa nada de `habitos` ni de `musica`
+- [x] 7. `habitos` no importa `musica`, ni al revés
+- [x] 8. El texto no afirma causalidad
