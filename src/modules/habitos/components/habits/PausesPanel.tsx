@@ -21,11 +21,17 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
  */
 export function PausesPanel({
   habitId,
-  pausas,
+  pausas: iniciales,
 }: {
   habitId: string;
   pausas: Pausa[];
 }) {
+  /*
+    La lista vive en el estado y no en las props porque el detalle del hábito se
+    trae sus datos una vez y solo los recarga cuando cambia el XP — y una pausa no
+    toca el XP. Las acciones devuelven la lista fresca y se guarda aquí.
+  */
+  const [pausas, setPausas] = useState<Pausa[]>(iniciales);
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -40,6 +46,7 @@ export function PausesPanel({
         setAviso("Esas fechas no valen.");
         return;
       }
+      setPausas(r.pausas);
       setDesde("");
       setHasta("");
       setMotivo("");
@@ -98,7 +105,12 @@ export function PausesPanel({
               {/* Peach es el acento destructivo del armazón. */}
               <button
                 type="button"
-                onClick={() => startTransition(() => quitarPausa(p.id))}
+                onClick={() =>
+                  startTransition(async () => {
+                    setPausas(await quitarPausa(habitId, p.id));
+                    setAviso(null);
+                  })
+                }
                 aria-label={`Quitar la pausa del ${iso(p.desde)}`}
                 className="px-2 py-0.5 rounded-control border-3 border-line bg-peach text-tinta font-cuerpo text-xs cursor-pointer shrink-0"
               >

@@ -188,12 +188,21 @@ export async function crearPausa(
   if (!a || !b) return { ok: false as const };
   await pa.addPausa(db, habitId, a, b, reason);
   refresh();
-  return { ok: true as const };
+  /*
+    Devuelve la lista fresca, y no solo `ok`.
+
+    `refresh()` repinta el servidor, pero el detalle del hábito es un componente
+    de cliente que se trae sus datos una vez y solo los recarga cuando cambia el
+    XP — y una pausa no toca el XP. Sin devolver la lista, guardabas una pausa y
+    la pantalla seguía diciendo «Sin pausas».
+  */
+  return { ok: true as const, pausas: await pa.pausasDeHabito(db, habitId) };
 }
 
-export async function quitarPausa(id: string) {
+export async function quitarPausa(habitId: string, id: string) {
   await pa.borrarPausa(db, id);
   refresh();
+  return await pa.pausasDeHabito(db, habitId);
 }
 
 // ---------- CATEGORÍAS DE TAREA ----------

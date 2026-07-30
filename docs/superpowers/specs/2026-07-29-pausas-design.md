@@ -157,6 +157,17 @@ querer parecerá que el hábito desapareció: la fila tiene que decir «en pausa
 8. Ninguna expectativa de `streak.test.ts` cambia de valor
 9. La fila dice «en pausa» cuando hoy lo está
 
+## 11.b Un riesgo que el spec no vio
+
+**El detalle del hábito no se refresca solo.** Es un componente de cliente que se
+trae sus datos una vez y solo los recarga cuando cambia el XP; una pausa no toca
+el XP, así que la lista se quedaba obsoleta al añadir o quitar. Resuelto en la
+ejecución: las acciones devuelven la lista fresca y el panel la guarda en su
+estado.
+
+Merece estar escrito porque **`refresh()` no basta** en esta pantalla, y el mismo
+error se repetirá con cualquier cosa que se añada al detalle y no mueva el XP.
+
 ## 12. Fuera de alcance
 
 - Pausas de tareas o de proyectos
