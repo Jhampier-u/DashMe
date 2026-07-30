@@ -51,6 +51,21 @@ CREATE TABLE IF NOT EXISTS habit_notes (
 CREATE UNIQUE INDEX IF NOT EXISTS habit_notes_habit_date_unq
   ON habit_notes(habit_id, date);
 
+CREATE TABLE IF NOT EXISTS habit_pauses (
+  id         TEXT PRIMARY KEY,
+  habit_id   TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  from_day   INTEGER NOT NULL,
+  to_day     INTEGER NOT NULL,
+  reason     TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS habit_pauses_habit_idx ON habit_pauses(habit_id);
+-- Los rangos PUEDEN solaparse y no se impide: la pregunta que se hace siempre es
+-- si un dia cae dentro de ALGUNA pausa, asi que solapar es inofensivo.
+-- Prohibirlo obligaria a validar contra todas las demas en cada guardado.
+--
+-- from_day y to_day son claves de dia normalizadas, y los dos extremos ENTRAN.
+
 CREATE TABLE IF NOT EXISTS player (
   id              TEXT PRIMARY KEY,
   xp              INTEGER NOT NULL DEFAULT 0,

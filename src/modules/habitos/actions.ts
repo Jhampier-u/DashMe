@@ -19,6 +19,7 @@ import * as m from "./lib/mutations";
 import * as c from "./lib/categorias";
 import * as adj from "./lib/adjuntos";
 import * as n from "./lib/notas";
+import * as pa from "./lib/pausas";
 import { dayKeyFromISO } from "./lib/day";
 
 export type {
@@ -166,6 +167,32 @@ export async function guardarNota(habitId: string, iso: string, text: string) {
   const dia = dayKeyFromISO(iso);
   if (!dia) return;
   await n.setNota(db, habitId, dia, text);
+  refresh();
+}
+
+/**
+ * Crea una pausa. Las fechas llegan como `"YYYY-MM-DD"`.
+ *
+ * Devuelve `ok` para que la pantalla pueda avisar de lo que el spec exige avisar:
+ * una pausa retroactiva RECALCULA la racha, así que el número puede subir de
+ * golpe y verlo sin explicación parece un fallo.
+ */
+export async function crearPausa(
+  habitId: string,
+  desdeISO: string,
+  hastaISO: string,
+  reason: string,
+) {
+  const a = dayKeyFromISO(desdeISO);
+  const b = dayKeyFromISO(hastaISO);
+  if (!a || !b) return { ok: false as const };
+  await pa.addPausa(db, habitId, a, b, reason);
+  refresh();
+  return { ok: true as const };
+}
+
+export async function quitarPausa(id: string) {
+  await pa.borrarPausa(db, id);
   refresh();
 }
 

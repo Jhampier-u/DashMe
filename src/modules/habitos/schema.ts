@@ -158,6 +158,31 @@ export const habitNotes = sqliteTable(
 
 export type HabitNoteRow = typeof habitNotes.$inferSelect;
 
+/**
+ * Pausas de un hábito: rangos de días que no cuentan para nada.
+ *
+ * Una pausa no es un estado nuevo, es otra razón para que un día no esté
+ * programado — ver `lib/calendario.ts`.
+ */
+export const habitPauses = sqliteTable(
+  "habit_pauses",
+  {
+    id: text("id").primaryKey(),
+    habitId: text("habit_id")
+      .notNull()
+      .references(() => habits.id, { onDelete: "cascade" }),
+    /** Clave de día, **inclusive**. */
+    fromDay: integer("from_day", { mode: "timestamp_ms" }).notNull(),
+    /** Clave de día, **inclusive**. */
+    toDay: integer("to_day", { mode: "timestamp_ms" }).notNull(),
+    reason: text("reason"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => ({ byHabit: index("habit_pauses_habit_idx").on(t.habitId) }),
+);
+
+export type HabitPauseRow = typeof habitPauses.$inferSelect;
+
 export const tasks = sqliteTable(
   "tasks",
   {
