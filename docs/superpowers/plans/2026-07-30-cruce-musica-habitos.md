@@ -316,7 +316,7 @@ git push
 - Create: `src/modules/habitos/lib/dias-cumplidos.test.ts`
 - Modify: `src/modules/habitos/index.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/habitos/lib/dias-cumplidos.test.ts`:
 
@@ -437,13 +437,13 @@ describe("getDiasCumplidos", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/dias-cumplidos.test.ts
 ```
 
-- [ ] **Paso 3: Escribirlo**
+- [x] **Paso 3: Escribirlo**
 
 `src/modules/habitos/lib/dias-cumplidos.ts`:
 
@@ -548,14 +548,14 @@ Y en `src/modules/habitos/index.ts`:
 export { getDiasCumplidos, type DiasCumplidos } from "./lib/dias-cumplidos";
 ```
 
-- [ ] **Paso 4: Verificar que no importa música**
+- [x] **Paso 4: Verificar que no importa música**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
 grep -rn "modules/musica" src/modules/habitos/ || echo "habitos no conoce musica: correcto"
 ```
 
-- [ ] **Paso 5: Commit y push**
+- [x] **Paso 5: Commit y push**
 
 ```bash
 git add -A src
