@@ -29,6 +29,7 @@ import {
 } from "./streak";
 import { daysSince } from "./flow";
 import { diasQueCuentan } from "./cantidad";
+import { cal, estaProgramado, type Rango } from "./calendario";
 import {
   averageRate,
   buildHabitSpecs,
@@ -121,10 +122,14 @@ export async function getHabitsWithTodayStatus(
         .where(and(inArray(habitNotes.habitId, ids), eq(habitNotes.date, today)))
     : [];
   const notaPorHabito = new Map(notasHoy.map((n) => [n.habitId, n.text]));
+  const pausasPorId = new Map<string, Rango[]>();
 
   return habits.map((h) => {
     const hLogs = logsPorHabito.get(h.id) ?? [];
     const schedule = sanitizeSchedule(h.schedule);
+    // Sin pausas todavía: las carga el paso siguiente. Con la lista vacía,
+    // `estaProgramado` es exactamente `isScheduledOn`, así que nada cambia.
+    const calendario = cal(schedule, pausasPorId.get(h.id) ?? []);
     const doneKeys = diasQueCuentan(
       hLogs.map((l) => ({
         date: l.date,
@@ -158,9 +163,9 @@ export async function getHabitsWithTodayStatus(
       targetCount: h.targetCount,
       notaHoy: notaPorHabito.get(h.id) ?? null,
       countToday: todayLog?.count ?? null,
-      scheduledToday: isScheduledOn(schedule, today),
-      criticalToday: isCriticalDay(schedule, doneKeys, today, hasEverBeenDone),
-      streak: computeStreak(schedule, doneKeys, today),
+      scheduledToday: estaProgramado(calendario, today),
+      criticalToday: isCriticalDay(calendario, doneKeys, today, hasEverBeenDone),
+      streak: computeStreak(calendario, doneKeys, today),
       hasEverBeenDone,
       last30,
     };
@@ -289,7 +294,10 @@ export async function getHabitMonth(
     const t = d.getTime();
     const meta = logByDate.get(t);
     const isFuture = t > today.getTime();
-    const scheduled = isScheduledOn(schedule, d);
+    // El calendario del mes pinta apagados los días no programados, y una pausa
+    // es exactamente eso: así los días en pausa se ven apagados sin tocar nada
+    // más.
+    const scheduled = estaProgramado(cal(schedule), d);
     return {
       date: isoFromDayKey(d),
       day: d.getUTCDate(),

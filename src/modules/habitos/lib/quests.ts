@@ -7,7 +7,7 @@ import {
   tasks,
 } from "@/modules/habitos/schema";
 import { dayKey, localDayRange } from "./day";
-import { isScheduledOn } from "./streak";
+import { cal, estaProgramado } from "./calendario";
 
 export type QuestKind =
   | "QUEST_3_HABITS"
@@ -170,7 +170,11 @@ async function computeProgress(
   const tasksDone = tasksDoneRows[0]?.n ?? 0;
   const itemsDone = itemsDoneRows[0]?.n ?? 0;
 
-  const scheduledToday = habits.filter((h) => isScheduledOn(h.schedule, today));
+  // Sin pausas todavía: las carga el paso siguiente. Un hábito en pausa no
+  // contará para el día perfecto, y eso es correcto: no lo has fallado.
+  const scheduledToday = habits.filter((h) =>
+    estaProgramado(cal(h.schedule), today),
+  );
   const fullyDone = new Set(
     todayLogs.filter((l) => !l.partial).map((l) => l.habitId),
   );

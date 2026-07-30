@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rachaGlobal, type EspecieDia } from "./racha-global";
+import { cal } from "./calendario";
 
 const DIA = 86_400_000;
 /** Días absolutos desde epoch. El 0 es jueves; el 4, lunes. */
@@ -10,7 +11,7 @@ const TODOS = "1111111";
 const LUNES = "0100000";
 
 function spec(id: string, schedule = TODOS, desde = 0): EspecieDia {
-  return { id, schedule, since: d(desde) };
+  return { id, calendario: cal(schedule), since: d(desde) };
 }
 
 /** Día absoluto -> ids cumplidos DEL TODO ese día. */

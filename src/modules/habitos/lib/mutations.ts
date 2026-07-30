@@ -25,7 +25,6 @@ import {
 } from "./color";
 import {
   computeStreak,
-  isScheduledOn,
   previousScheduledDay,
   sanitizeSchedule,
 } from "./streak";
@@ -42,6 +41,7 @@ import {
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
 import { planCascada } from "./cascada";
 import { diasQueCuentan } from "./cantidad";
+import { cal, estaProgramado } from "./calendario";
 import { borrarDeDisco, storedNamesOfTasks } from "./adjuntos";
 import { resolvePrioridad } from "./prioridad";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
@@ -161,10 +161,11 @@ async function trySpendShield(
   habit: { id: string; schedule: string | null },
   today: Date,
 ): Promise<boolean> {
-  const schedule = sanitizeSchedule(habit.schedule);
-  const gap = previousScheduledDay(schedule, today, 14);
+  // Sin pausas todavía: las carga el paso siguiente.
+  const calendario = cal(sanitizeSchedule(habit.schedule));
+  const gap = previousScheduledDay(calendario, today, 14);
   if (!gap) return false;
-  const before = previousScheduledDay(schedule, gap, 14);
+  const before = previousScheduledDay(calendario, gap, 14);
   if (!before) return false;
 
   const [gapLog, beforeLog] = await Promise.all([
@@ -273,7 +274,10 @@ export async function toggleHabitDay(
   }
 
   const schedule = sanitizeSchedule(habit.schedule);
-  if (!isScheduledOn(schedule, key)) return emptyToggle(db, "not-scheduled");
+  const calendario = cal(schedule);
+  if (!estaProgramado(calendario, key)) {
+    return emptyToggle(db, "not-scheduled");
+  }
 
   const isToday = key.getTime() === today.getTime();
   const [existing] = await db
@@ -387,7 +391,7 @@ async function currentStreakOf(
     logs.map((l) => ({ date: l.date, partial: !!l.partial, count: l.count })),
     targetCount,
   );
-  return computeStreak(schedule, keys, today);
+  return computeStreak(cal(schedule), keys, today);
 }
 
 /**

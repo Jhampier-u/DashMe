@@ -9,6 +9,7 @@ import {
   previousScheduledDay,
   sanitizeSchedule,
 } from "./streak";
+import { cal } from "./calendario";
 
 const key = (iso: string) => dayKeyFromISO(iso)!;
 const doneSet = (...isos: string[]) =>
@@ -46,25 +47,25 @@ describe("computeStreak · hábito diario", () => {
 
   it("cuenta los días consecutivos incluyendo hoy", () => {
     expect(
-      computeStreak(DAILY, doneSet("2026-07-25", "2026-07-26", "2026-07-27"), today),
+      computeStreak(cal(DAILY), doneSet("2026-07-25", "2026-07-26", "2026-07-27"), today),
     ).toBe(3);
   });
 
   it("no rompe la racha si hoy sigue pendiente", () => {
     // Tienes hasta medianoche: ayer y anteayer siguen contando.
     expect(
-      computeStreak(DAILY, doneSet("2026-07-25", "2026-07-26"), today),
+      computeStreak(cal(DAILY), doneSet("2026-07-25", "2026-07-26"), today),
     ).toBe(2);
   });
 
   it("se corta en el primer hueco", () => {
     expect(
-      computeStreak(DAILY, doneSet("2026-07-27", "2026-07-25", "2026-07-24"), today),
+      computeStreak(cal(DAILY), doneSet("2026-07-27", "2026-07-25", "2026-07-24"), today),
     ).toBe(1);
   });
 
   it("devuelve 0 sin historial", () => {
-    expect(computeStreak(DAILY, doneSet(), today)).toBe(0);
+    expect(computeStreak(cal(DAILY), doneSet(), today)).toBe(0);
   });
 });
 
@@ -72,24 +73,24 @@ describe("computeStreak · hábito L-M-V", () => {
   it("ignora los días que no tocan", () => {
     // Cumplido lun 20, mié 22, vie 24. El sábado la racha sigue viva en 3.
     const done = doneSet("2026-07-20", "2026-07-22", "2026-07-24");
-    expect(computeStreak(MWF, done, key("2026-07-25"))).toBe(3);
-    expect(computeStreak(MWF, done, key("2026-07-26"))).toBe(3);
+    expect(computeStreak(cal(MWF), done, key("2026-07-25"))).toBe(3);
+    expect(computeStreak(cal(MWF), done, key("2026-07-26"))).toBe(3);
   });
 
   it("solo se rompe cuando se falla un día programado", () => {
     // Falta el miércoles 22.
     const done = doneSet("2026-07-20", "2026-07-24");
-    expect(computeStreak(MWF, done, key("2026-07-25"))).toBe(1);
+    expect(computeStreak(cal(MWF), done, key("2026-07-25"))).toBe(1);
   });
 
   it("sigue viva el lunes siguiente mientras no acabe el día", () => {
     const done = doneSet("2026-07-20", "2026-07-22", "2026-07-24");
-    expect(computeStreak(MWF, done, key("2026-07-27"))).toBe(3);
+    expect(computeStreak(cal(MWF), done, key("2026-07-27"))).toBe(3);
   });
 
   it("suma el día en curso al cumplirlo", () => {
     const done = doneSet("2026-07-20", "2026-07-22", "2026-07-24", "2026-07-27");
-    expect(computeStreak(MWF, done, key("2026-07-27"))).toBe(4);
+    expect(computeStreak(cal(MWF), done, key("2026-07-27"))).toBe(4);
   });
 });
 
@@ -101,7 +102,7 @@ describe("computeBestStreak", () => {
       "2026-07-20",
     );
     expect(
-      computeBestStreak(DAILY, done, key("2026-07-01"), key("2026-07-27")),
+      computeBestStreak(cal(DAILY), done, key("2026-07-01"), key("2026-07-27")),
     ).toBe(4);
   });
 
@@ -109,13 +110,13 @@ describe("computeBestStreak", () => {
     // 4 sesiones L-M-V seguidas aunque haya fines de semana en medio.
     const done = doneSet("2026-07-20", "2026-07-22", "2026-07-24", "2026-07-27");
     expect(
-      computeBestStreak(MWF, done, key("2026-07-20"), key("2026-07-27")),
+      computeBestStreak(cal(MWF), done, key("2026-07-20"), key("2026-07-27")),
     ).toBe(4);
   });
 
   it("es 0 sin cumplimientos", () => {
     expect(
-      computeBestStreak(DAILY, doneSet(), key("2026-07-01"), key("2026-07-27")),
+      computeBestStreak(cal(DAILY), doneSet(), key("2026-07-01"), key("2026-07-27")),
     ).toBe(0);
   });
 });
@@ -124,50 +125,67 @@ describe("isCriticalDay", () => {
   it("avisa cuando fallaste el día programado anterior", () => {
     // Hoy lunes 27, el viernes 24 se falló.
     expect(
-      isCriticalDay(MWF, doneSet("2026-07-22"), key("2026-07-27"), true),
+      isCriticalDay(cal(MWF), doneSet("2026-07-22"), key("2026-07-27"), true),
     ).toBe(true);
   });
 
   it("no avisa si el día anterior programado se cumplió", () => {
     expect(
-      isCriticalDay(MWF, doneSet("2026-07-24"), key("2026-07-27"), true),
+      isCriticalDay(cal(MWF), doneSet("2026-07-24"), key("2026-07-27"), true),
     ).toBe(false);
   });
 
   it("no avisa si hoy no toca", () => {
     expect(
-      isCriticalDay(MWF, doneSet(), key("2026-07-25"), true),
+      isCriticalDay(cal(MWF), doneSet(), key("2026-07-25"), true),
     ).toBe(false);
   });
 
   it("no avisa si ya está hecho hoy", () => {
     expect(
-      isCriticalDay(MWF, doneSet("2026-07-27"), key("2026-07-27"), true),
+      isCriticalDay(cal(MWF), doneSet("2026-07-27"), key("2026-07-27"), true),
     ).toBe(false);
   });
 
   it("no avisa en hábitos recién creados", () => {
     expect(
-      isCriticalDay(MWF, doneSet(), key("2026-07-27"), false),
+      isCriticalDay(cal(MWF), doneSet(), key("2026-07-27"), false),
     ).toBe(false);
   });
 });
 
 describe("previousScheduledDay", () => {
   it("salta los días que no tocan", () => {
-    const prev = previousScheduledDay(MWF, key("2026-07-27"));
+    const prev = previousScheduledDay(cal(MWF), key("2026-07-27"));
     expect(prev?.getTime()).toBe(key("2026-07-24").getTime());
   });
 
   it("devuelve null si no hay ninguno en la ventana", () => {
     // Solo domingos; desde el miércoles 22 mirando 2 días atrás (mar, lun).
-    expect(previousScheduledDay("1000000", key("2026-07-22"), 2)).toBeNull();
+    expect(previousScheduledDay(cal("1000000"), key("2026-07-22"), 2)).toBeNull();
   });
 });
 
 describe("countScheduledDays", () => {
   it("cuenta los días activos de la ventana", () => {
-    expect(countScheduledDays(DAILY, key("2026-07-21"), key("2026-07-27"))).toBe(7);
-    expect(countScheduledDays(MWF, key("2026-07-21"), key("2026-07-27"))).toBe(3);
+    expect(countScheduledDays(cal(DAILY), key("2026-07-21"), key("2026-07-27"))).toBe(7);
+    expect(countScheduledDays(cal(MWF), key("2026-07-21"), key("2026-07-27"))).toBe(3);
+  });
+});
+
+describe("las pausas no rompen la racha", () => {
+  /*
+    Las dos juntas son la prueba de que la pausa hace algo: la segunda muestra que
+    sin ella el mismo hueco corta. Una sola no demostraría nada.
+  */
+  it("un hueco en pausa vuelve a unir los dos lados", () => {
+    const hechos = doneSet("2026-07-25", "2026-07-28");
+    const pausa = [{ desde: key("2026-07-26"), hasta: key("2026-07-27") }];
+    expect(computeStreak(cal(DAILY, pausa), hechos, key("2026-07-28"))).toBe(2);
+  });
+
+  it("sin la pausa, ese mismo hueco corta", () => {
+    const hechos = doneSet("2026-07-25", "2026-07-28");
+    expect(computeStreak(cal(DAILY), hechos, key("2026-07-28"))).toBe(1);
   });
 });
