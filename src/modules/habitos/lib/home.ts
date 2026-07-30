@@ -6,6 +6,7 @@ import { computeStreak, isCriticalDay } from "./streak";
 import { diasQueCuentan, type LogParaRacha } from "./cantidad";
 import { rachaGlobal } from "./racha-global";
 import { cal, estaProgramado, sanitizeSchedule, type Rango } from "./calendario";
+import { pausasPorHabito } from "./pausas";
 import {
   bestWeekday,
   buildHabitSpecs,
@@ -84,11 +85,16 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
     count: l.count,
   }));
 
+  const pausasPorId: Map<string, Rango[]> = await pausasPorHabito(db);
+
   // Un hábito cuenta desde su creación o desde su registro más antiguo, lo que
   // sea anterior: rellenar hacia atrás no debe dejar días fuera del denominador.
+  // Las gráficas también: un día en pausa sale del denominador, así que el
+  // porcentaje no baja por estar de vacaciones.
   const specs = buildHabitSpecs(
     habits.map((h) => ({ id: h.id, schedule: h.schedule, createdKey: dayKey(h.createdAt) })),
     entries,
+    pausasPorId,
   );
 
   /*
@@ -114,9 +120,6 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   // Pasa por `diasQueCuentan` y no se construye a mano: con un objetivo, un día
   // corto NO cuenta para la racha, y esta era una de las cinco copias de la
   // regla que había que unificar.
-  // Sin pausas todavía: las carga el paso siguiente. Con la lista vacía,
-  // `estaProgramado` es exactamente `isScheduledOn`, así que nada cambia.
-  const pausasPorId = new Map<string, Rango[]>();
   const calDe = (h: { id: string; schedule: string }) =>
     cal(sanitizeSchedule(h.schedule), pausasPorId.get(h.id) ?? []);
 

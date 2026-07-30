@@ -29,7 +29,8 @@ import {
 } from "./streak";
 import { daysSince } from "./flow";
 import { diasQueCuentan } from "./cantidad";
-import { cal, estaProgramado, type Rango } from "./calendario";
+import { cal, enPausa, estaProgramado, type Rango } from "./calendario";
+import { pausasDeHabito, pausasPorHabito } from "./pausas";
 import {
   averageRate,
   buildHabitSpecs,
@@ -58,6 +59,8 @@ export type HabitWithStatus = {
   targetCount: number | null;
   /** La nota de hoy, si la hay. */
   notaHoy: string | null;
+  /** Si hoy cae dentro de una pausa. */
+  enPausaHoy: boolean;
   /** Lo apuntado hoy. Nulo si no se apuntó. */
   countToday: number | null;
   scheduledToday: boolean;
@@ -122,13 +125,13 @@ export async function getHabitsWithTodayStatus(
         .where(and(inArray(habitNotes.habitId, ids), eq(habitNotes.date, today)))
     : [];
   const notaPorHabito = new Map(notasHoy.map((n) => [n.habitId, n.text]));
-  const pausasPorId = new Map<string, Rango[]>();
+  // Las pausas de verdad. Con ellas, `estaProgramado` deja de ser un alias de
+  // `isScheduledOn` y los días pausados salen del calendario.
+  const pausasPorId: Map<string, Rango[]> = await pausasPorHabito(db);
 
   return habits.map((h) => {
     const hLogs = logsPorHabito.get(h.id) ?? [];
     const schedule = sanitizeSchedule(h.schedule);
-    // Sin pausas todavía: las carga el paso siguiente. Con la lista vacía,
-    // `estaProgramado` es exactamente `isScheduledOn`, así que nada cambia.
     const calendario = cal(schedule, pausasPorId.get(h.id) ?? []);
     const doneKeys = diasQueCuentan(
       hLogs.map((l) => ({
@@ -162,6 +165,10 @@ export async function getHabitsWithTodayStatus(
       partialToday: !!todayLog?.partial,
       targetCount: h.targetCount,
       notaHoy: notaPorHabito.get(h.id) ?? null,
+      // Se expone aparte de `scheduledToday` a propósito: los dos serán falsos
+      // hoy, pero la fila tiene que poder decir POR QUÉ. Sin esto, un hábito
+      // pausado parece simplemente desaparecido.
+      enPausaHoy: enPausa(pausasPorId.get(h.id) ?? [], today),
       countToday: todayLog?.count ?? null,
       scheduledToday: estaProgramado(calendario, today),
       criticalToday: isCriticalDay(calendario, doneKeys, today, hasEverBeenDone),
@@ -279,6 +286,9 @@ export async function getHabitMonth(
     .where(eq(habitLogs.habitId, habitId));
 
   const schedule = sanitizeSchedule(habit.schedule);
+  // El calendario del mes pinta apagados los días no programados, y un día en
+  // pausa es exactamente eso: se ven apagados sin tocar nada más.
+  const calendarioMes = cal(schedule, await pausasDeHabito(db, habitId));
   const logByDate = new Map<number, { partial: boolean; shielded: boolean }>();
   for (const l of registros) {
     logByDate.set(normalizeDayKey(l.date).getTime(), {
@@ -297,7 +307,7 @@ export async function getHabitMonth(
     // El calendario del mes pinta apagados los días no programados, y una pausa
     // es exactamente eso: así los días en pausa se ven apagados sin tocar nada
     // más.
-    const scheduled = estaProgramado(cal(schedule), d);
+    const scheduled = estaProgramado(calendarioMes, d);
     return {
       date: isoFromDayKey(d),
       day: d.getUTCDate(),

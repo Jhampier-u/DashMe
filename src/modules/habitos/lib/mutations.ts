@@ -41,7 +41,8 @@ import {
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
 import { planCascada } from "./cascada";
 import { diasQueCuentan } from "./cantidad";
-import { cal, estaProgramado } from "./calendario";
+import { cal, estaProgramado, type Rango } from "./calendario";
+import { pausasDeHabito } from "./pausas";
 import { borrarDeDisco, storedNamesOfTasks } from "./adjuntos";
 import { resolvePrioridad } from "./prioridad";
 import { PLANT_SPECIES, type PlantSpecies } from "./garden";
@@ -161,8 +162,10 @@ async function trySpendShield(
   habit: { id: string; schedule: string | null },
   today: Date,
 ): Promise<boolean> {
-  // Sin pausas todavía: las carga el paso siguiente.
-  const calendario = cal(sanitizeSchedule(habit.schedule));
+  const calendario = cal(
+    sanitizeSchedule(habit.schedule),
+    await pausasDeHabito(db, habit.id),
+  );
   const gap = previousScheduledDay(calendario, today, 14);
   if (!gap) return false;
   const before = previousScheduledDay(calendario, gap, 14);
@@ -274,7 +277,7 @@ export async function toggleHabitDay(
   }
 
   const schedule = sanitizeSchedule(habit.schedule);
-  const calendario = cal(schedule);
+  const calendario = cal(schedule, await pausasDeHabito(db, habitId));
   if (!estaProgramado(calendario, key)) {
     return emptyToggle(db, "not-scheduled");
   }
@@ -391,7 +394,11 @@ async function currentStreakOf(
     logs.map((l) => ({ date: l.date, partial: !!l.partial, count: l.count })),
     targetCount,
   );
-  return computeStreak(cal(schedule), keys, today);
+  // Las pausas se consultan aquí y no se reciben: esta función la llaman los
+  // hitos, y pasarlas por la cadena obligaría a tocar tres firmas más para
+  // ahorrar una consulta que solo corre al marcar.
+  const pausas: Rango[] = await pausasDeHabito(db, habitId);
+  return computeStreak(cal(schedule, pausas), keys, today);
 }
 
 /**
