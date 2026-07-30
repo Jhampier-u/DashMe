@@ -23,6 +23,7 @@ export {
 export { getHomeMetrics, type HomeMetrics } from "./lib/home";
 export { getNota, notasDeHabito, LIMITE_NOTA, type Nota } from "./lib/notas";
 export { pausasDeHabito, pausasPorHabito, type Pausa } from "./lib/pausas";
+export { getDiasCumplidos, type DiasCumplidos } from "./lib/dias-cumplidos";
 export { dayKey } from "./lib/day";
 export {
   listProjects,

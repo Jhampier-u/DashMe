@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { db } from "@/modules/core/db";
 import {
+  getDiasCumplidos,
   getHomeMetrics,
   getPlayerLevelInfo,
   getTodayQuests,
   MAX_SHIELDS,
 } from "@/modules/habitos";
+import { getByDate } from "@/modules/musica";
+import { compararGrupos } from "@/modules/core/analisis/comparar-dias";
+import { MusicaPanel } from "@/modules/habitos/components/home/MusicaPanel";
 import { TodayCard } from "@/modules/habitos/components/home/TodayCard";
 import { TrendCard } from "@/modules/habitos/components/home/TrendCard";
 import { MetricTiles } from "@/modules/habitos/components/home/MetricTiles";
@@ -52,11 +56,39 @@ const tituloSeccion: React.CSSProperties = {
 };
 
 export default async function DashboardPage() {
-  const [metrics, player, quests] = await Promise.all([
+  /*
+    El cruce entre música y hábitos se compone AQUÍ y no dentro de un módulo.
+
+    La pregunta —«¿escucho distinto los días que cumplo?»— no es de hábitos ni de
+    música, y ponerla en uno obligaría a ese a importar el otro. Esta página es el
+    único sitio que conoce legítimamente las dos interfaces públicas.
+  */
+  const hoy = new Date();
+  const haceUnAno = new Date(hoy);
+  haceUnAno.setUTCDate(haceUnAno.getUTCDate() - 365);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+  const [metrics, player, quests, dias, porDia] = await Promise.all([
     getHomeMetrics(db),
     getPlayerLevelInfo(db),
     getTodayQuests(db),
+    getDiasCumplidos(db, haceUnAno, hoy),
+    getByDate(db, {
+      fromDate: iso(haceUnAno),
+      toDate: iso(hoy),
+      label: "último año",
+      preset: "custom",
+    }),
   ]);
+
+  // `getByDate` da la fecha como "YYYY-MM-DD" y los conjuntos de días son claves
+  // numéricas: hay que pasarlos a la misma moneda antes de comparar.
+  const msPorDia = new Map<number, number>();
+  for (const d of porDia) {
+    const [y, m, dd] = d.date.split("-").map(Number);
+    msPorDia.set(Date.UTC(y, m - 1, dd), d.ms);
+  }
+  const cruce = compararGrupos(msPorDia, dias.cumplidos, dias.fallados);
 
   const points: ChartPoint[] = metrics.series.map((day, i) => ({
     date: day.date,
@@ -161,6 +193,8 @@ export default async function DashboardPage() {
                 shields={player.shields}
                 maxShields={MAX_SHIELDS}
               />
+
+              <MusicaPanel c={cruce} />
 
               <QuestList quests={quests} />
             </>
