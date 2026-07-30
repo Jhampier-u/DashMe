@@ -571,7 +571,7 @@ git commit -m "feat(habitos): notas por habito y dia, en su propia tabla"
 - Modify: `src/modules/habitos/components/home/MetricTiles.tsx`
 - Modify: `src/app/page.tsx`
 
-- [ ] **Paso 1: `home.ts` la calcula**
+- [x] **Paso 1: `home.ts` la calcula**
 
 `HomeMetrics` gana el campo:
 
@@ -606,7 +606,7 @@ que devuelve.
 > TypeScript se queja, es que una de las dos ha cambiado: alinéalas en vez de
 > hacer un `as`.
 
-- [ ] **Paso 2: La pinta**
+- [x] **Paso 2: La pinta**
 
 En `MetricTiles.tsx`, las props ganan `globalStreak: number` y se añade una
 baldosa junto a la racha activa:
@@ -628,13 +628,13 @@ baldosa junto a la racha activa:
 
 En `src/app/page.tsx`, pásale `globalStreak={metrics.globalStreak}`.
 
-- [ ] **Paso 3: Verificar**
+- [x] **Paso 3: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 4: Commit**
+- [x] **Paso 4: Commit**
 
 ```bash
 git add -A src
