@@ -7,6 +7,7 @@ import { formatDays } from "@/modules/habitos/lib/day";
 import { Stat, StatGrid } from "@/modules/core/ui/Stat";
 import type { HabitDetailStats } from "@/modules/habitos/lib/stats";
 import { MonthCalendar } from "./MonthCalendar";
+import { PausesPanel } from "./PausesPanel";
 
 export function HabitDetail({
   habitId,
@@ -59,6 +60,17 @@ export function HabitDetail({
         <div style={{ fontSize: 12.5 }}>Cargando estadísticas…</div>
       )}
       <MonthCalendar habitId={habitId} habitName={habitName} />
+
+      {/* El panel espera a que lleguen las estadísticas: pintarlo con la lista
+          vacía diría «sin pausas» a alguien que sí las tiene. */}
+      {stats ? (
+        <div style={{ marginTop: 16 }}>
+          <span className="block text-xs font-semibold text-tinta font-cuerpo mb-1.5">
+            Pausas
+          </span>
+          <PausesPanel habitId={habitId} pausas={stats.pausas} />
+        </div>
+      ) : null}
     </div>
   );
 }

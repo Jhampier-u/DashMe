@@ -39,6 +39,8 @@ type Props = {
   notaHoy: string | null;
   /** El día de hoy en "YYYY-MM-DD", calculado en el SERVIDOR. */
   hoyISO: string;
+  /** Si hoy cae dentro de una pausa. */
+  enPausaHoy: boolean;
 };
 
 const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"];
@@ -184,6 +186,19 @@ export function HabitRow(p: Props) {
           sombra dura que se encoge al pulsar. Es una tecla dentro de una
           tarjeta, y esa acumulación de trazos es el estilo, no un descuido.
         */}
+        {/*
+          Un hábito en pausa no sale como pendiente ni cuenta para las misiones,
+          así que sin decirlo parecería simplemente desaparecido. El rótulo es lo
+          que separa «está pausado» de «se ha roto algo».
+        */}
+        {p.enPausaHoy ? (
+          <span
+            className="label-mono px-2 py-1 rounded-control border-3 border-line bg-paper-2 text-tinta"
+            title="Hoy está en pausa: no cuenta ni rompe la racha"
+          >
+            En pausa
+          </span>
+        ) : null}
         <button
           type="button"
           onClick={() => mark(false)}
