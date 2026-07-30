@@ -67,8 +67,19 @@ export function BarChart({
                 // y el borde es lo que la hace del sistema. Bajo el ratón se
                 // invierte a tinta maciza, que no deja duda de cuál señalas.
                 background: hover === i ? "var(--color-tinta)" : "var(--color-pink)",
-                border: value > 0 ? "2px solid var(--color-line)" : "none",
-                borderBottom: "none",
+                /*
+                  Los tres lados por separado y NO `border` con un `borderBottom:
+                  "none"` detrás. Mezclar la abreviada con una específica hacía
+                  que React avisara en cada repintado —«conflicting property»— y
+                  llenara la consola y el registro del servidor de trazas en
+                  cualquier pantalla con una gráfica.
+
+                  Lo que se ve es idéntico: la barra nunca tuvo borde inferior,
+                  porque se apoya en el eje.
+                */
+                borderTop: value > 0 ? "2px solid var(--color-line)" : "none",
+                borderLeft: value > 0 ? "2px solid var(--color-line)" : "none",
+                borderRight: value > 0 ? "2px solid var(--color-line)" : "none",
                 borderRadius: "6px 6px 0 0",
               }}
             />
