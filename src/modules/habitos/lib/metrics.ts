@@ -2,14 +2,21 @@
 // devuelve números. Las consultas viven en lib/home.ts.
 
 import { addDays, isoFromDayKey } from "./day";
-import { isScheduledOn, sanitizeSchedule } from "./streak";
+import {
+  cal,
+  estaProgramado,
+  sanitizeSchedule,
+  type Calendario,
+  type Rango,
+} from "./calendario";
 
 /** Cuánto suma un día marcado en modo mínimo. */
 export const PARTIAL_WEIGHT = 0.5;
 
 export type HabitSpec = {
   id: string;
-  schedule: string;
+  /** Su calendario, pausas incluidas. */
+  calendario: Calendario;
   /** Primer día en que el hábito cuenta: creación o su registro más antiguo. */
   since: Date;
 };
@@ -33,7 +40,16 @@ export type HabitRow = {
  * que sea anterior. Rellenar días hacia atrás no debe dejarlos fuera del
  * denominador.
  */
-export function buildHabitSpecs(habits: HabitRow[], logs: LogEntry[]): HabitSpec[] {
+/**
+ * El `pausas` con valor por defecto NO es pereza: esta función se llama también
+ * desde tests que no saben de pausas, y sin pausas el resultado es idéntico al de
+ * antes. Es lo que hace que sus expectativas no cambien.
+ */
+export function buildHabitSpecs(
+  habits: HabitRow[],
+  logs: LogEntry[],
+  pausas: Map<string, Rango[]> = new Map(),
+): HabitSpec[] {
   const earliest = new Map<string, number>();
   for (const entry of logs) {
     const t = entry.day.getTime();
@@ -46,7 +62,7 @@ export function buildHabitSpecs(habits: HabitRow[], logs: LogEntry[]): HabitSpec
     const created = h.createdKey.getTime();
     return {
       id: h.id,
-      schedule: sanitizeSchedule(h.schedule),
+      calendario: cal(sanitizeSchedule(h.schedule), pausas.get(h.id) ?? []),
       since: new Date(first === undefined ? created : Math.min(created, first)),
     };
   });
@@ -82,7 +98,7 @@ export function complianceSeries(
         .filter(
           (h) =>
             cursor.getTime() >= h.since.getTime() &&
-            isScheduledOn(h.schedule, cursor),
+            estaProgramado(h.calendario, cursor),
         )
         .map((h) => h.id),
     );

@@ -1,5 +1,5 @@
 import { addDays } from "./day";
-import { isScheduledOn } from "./streak";
+import { estaProgramado, type Calendario } from "./calendario";
 
 /**
  * Lo que la racha global necesita saber de un hábito. Coincide a propósito con
@@ -8,7 +8,8 @@ import { isScheduledOn } from "./streak";
  */
 export type EspecieDia = {
   id: string;
-  schedule: string;
+  /** Su calendario, pausas incluidas. */
+  calendario: Calendario;
   /** Primer día en que el hábito cuenta: su creación o su registro más antiguo. */
   since: Date;
 };
@@ -56,7 +57,7 @@ export function rachaGlobal(
 function specsVigentes(specs: EspecieDia[], dia: Date): EspecieDia[] {
   return specs.filter(
     (s) =>
-      s.since.getTime() <= dia.getTime() && isScheduledOn(s.schedule, dia),
+      s.since.getTime() <= dia.getTime() && estaProgramado(s.calendario, dia),
   );
 }
 

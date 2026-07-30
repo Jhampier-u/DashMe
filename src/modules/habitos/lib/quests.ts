@@ -7,7 +7,8 @@ import {
   tasks,
 } from "@/modules/habitos/schema";
 import { dayKey, localDayRange } from "./day";
-import { isScheduledOn } from "./streak";
+import { cal, estaProgramado } from "./calendario";
+import { pausasPorHabito } from "./pausas";
 
 export type QuestKind =
   | "QUEST_3_HABITS"
@@ -170,7 +171,14 @@ async function computeProgress(
   const tasksDone = tasksDoneRows[0]?.n ?? 0;
   const itemsDone = itemsDoneRows[0]?.n ?? 0;
 
-  const scheduledToday = habits.filter((h) => isScheduledOn(h.schedule, today));
+  /*
+    Un hábito en pausa NO cuenta para el día perfecto, y eso es correcto: no lo
+    has fallado. Si contara, una pausa haría imposible la misión.
+  */
+  const pausas = await pausasPorHabito(db);
+  const scheduledToday = habits.filter((h) =>
+    estaProgramado(cal(h.schedule, pausas.get(h.id) ?? []), today),
+  );
   const fullyDone = new Set(
     todayLogs.filter((l) => !l.partial).map((l) => l.habitId),
   );

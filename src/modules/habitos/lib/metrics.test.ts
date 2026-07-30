@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { dayKeyFromISO } from "./day";
+import { cal } from "./calendario";
 import {
   averageRate,
   bestWeekday,
@@ -19,7 +20,7 @@ const DAILY = "1111111";
 const MWF = "0101010"; // lun, mié, vie
 
 function habit(id: string, schedule = DAILY, since = "2026-07-01"): HabitSpec {
-  return { id, schedule, since: key(since) };
+  return { id, calendario: cal(schedule), since: key(since) };
 }
 
 function log(
@@ -253,7 +254,7 @@ describe("buildHabitSpecs", () => {
 
   it("normaliza el calendario", () => {
     const specs = buildHabitSpecs([{ id: "a", schedule: "", createdKey: created }], []);
-    expect(specs[0].schedule).toBe("1111111");
+    expect(specs[0].calendario.schedule).toBe("1111111");
   });
 });
 

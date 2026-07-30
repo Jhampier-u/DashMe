@@ -2,6 +2,8 @@ import { asc, count, eq, gte } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { diasQueCuentan } from "./cantidad";
+import { cal, estaProgramado } from "./calendario";
+import { pausasDeHabito, type Pausa } from "./pausas";
 import {
   addDays,
   dayKey,
@@ -13,7 +15,6 @@ import {
   computeBestStreak,
   computeStreak,
   countScheduledDays,
-  isScheduledOn,
   sanitizeSchedule,
 } from "./streak";
 
@@ -26,6 +27,8 @@ export type HabitDetailStats = {
   bestStreak: number;
   currentStreak: number;
   daysSinceCreated: number;
+  /** Sus pausas, para poder gestionarlas desde el detalle. */
+  pausas: Pausa[];
 };
 
 const EMPTY_HABIT_STATS: HabitDetailStats = {
@@ -36,6 +39,7 @@ const EMPTY_HABIT_STATS: HabitDetailStats = {
   bestStreak: 0,
   currentStreak: 0,
   daysSinceCreated: 0,
+  pausas: [],
 };
 
 export async function getHabitStats(
@@ -57,6 +61,10 @@ export async function getHabitStats(
 
   const today = dayKey();
   const schedule = sanitizeSchedule(habit.schedule);
+  // Se leen una vez y viajan también en el resultado: el detalle las necesita
+  // para pintar el panel, y pedirlas otra vez sería una consulta de más.
+  const pausas = await pausasDeHabito(db, habitId);
+  const calendario = cal(schedule, pausas);
   const doneKeys = diasQueCuentan(
     logs.map((l) => ({ date: l.date, partial: !!l.partial, count: l.count })),
     habit.targetCount,
@@ -74,10 +82,10 @@ export async function getHabitStats(
   const windowStart = new Date(
     Math.max(addDays(today, -29).getTime(), historyStart.getTime()),
   );
-  const scheduledIn30 = countScheduledDays(schedule, windowStart, today);
+  const scheduledIn30 = countScheduledDays(calendario, windowStart, today);
   let doneIn30 = 0;
   for (let cursor = windowStart; cursor <= today; cursor = addDays(cursor, 1)) {
-    if (isScheduledOn(schedule, cursor) && doneKeys.has(cursor.getTime())) {
+    if (estaProgramado(calendario, cursor) && doneKeys.has(cursor.getTime())) {
       doneIn30 += 1;
     }
   }
@@ -87,9 +95,10 @@ export async function getHabitStats(
     completionRate30: scheduledIn30 === 0 ? 0 : doneIn30 / scheduledIn30,
     doneIn30,
     scheduledIn30,
-    bestStreak: computeBestStreak(schedule, doneKeys, historyStart, today),
-    currentStreak: computeStreak(schedule, doneKeys, today),
+    bestStreak: computeBestStreak(calendario, doneKeys, historyStart, today),
+    currentStreak: computeStreak(calendario, doneKeys, today),
     daysSinceCreated: Math.max(1, daysBetween(today, createdKey) + 1),
+    pausas,
   };
 }
 

@@ -96,6 +96,7 @@ export default async function HabitsPage() {
                   countToday={habit.countToday}
                   notaHoy={habit.notaHoy}
                   hoyISO={hoyISO}
+                  enPausaHoy={habit.enPausaHoy}
                   scheduledToday={habit.scheduledToday}
                   criticalToday={habit.criticalToday}
                   isAnchor={habit.isAnchor}

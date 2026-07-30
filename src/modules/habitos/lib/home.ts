@@ -2,9 +2,11 @@ import { asc, gte } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
 import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { addDays, dayKey, normalizeDayKey } from "./day";
-import { computeStreak, isCriticalDay, isScheduledOn } from "./streak";
+import { computeStreak, isCriticalDay } from "./streak";
 import { diasQueCuentan, type LogParaRacha } from "./cantidad";
 import { rachaGlobal } from "./racha-global";
+import { cal, estaProgramado, sanitizeSchedule, type Rango } from "./calendario";
+import { pausasPorHabito } from "./pausas";
 import {
   bestWeekday,
   buildHabitSpecs,
@@ -83,11 +85,16 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
     count: l.count,
   }));
 
+  const pausasPorId: Map<string, Rango[]> = await pausasPorHabito(db);
+
   // Un hábito cuenta desde su creación o desde su registro más antiguo, lo que
   // sea anterior: rellenar hacia atrás no debe dejar días fuera del denominador.
+  // Las gráficas también: un día en pausa sale del denominador, así que el
+  // porcentaje no baja por estar de vacaciones.
   const specs = buildHabitSpecs(
     habits.map((h) => ({ id: h.id, schedule: h.schedule, createdKey: dayKey(h.createdAt) })),
     entries,
+    pausasPorId,
   );
 
   /*
@@ -113,6 +120,9 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   // Pasa por `diasQueCuentan` y no se construye a mano: con un objetivo, un día
   // corto NO cuenta para la racha, y esta era una de las cinco copias de la
   // regla que había que unificar.
+  const calDe = (h: { id: string; schedule: string }) =>
+    cal(sanitizeSchedule(h.schedule), pausasPorId.get(h.id) ?? []);
+
   const objetivoPorHabito = new Map(habits.map((h) => [h.id, h.targetCount]));
   const logsPorHabito = new Map<string, LogParaRacha[]>();
   for (const entry of entries) {
@@ -140,7 +150,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
     }
   }
   const doneToday = new Set(todayDoneMap.keys());
-  const scheduledToday = habits.filter((h) => isScheduledOn(h.schedule, today));
+  const scheduledToday = habits.filter((h) => estaProgramado(calDe(h), today));
 
   // Racha viva más larga entre todos los hábitos, reutilizando el mismo
   // calendario y las mismas claves que usa la tarjeta de hábito individual.
@@ -149,7 +159,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   let longestStreak: { days: number; habitName: string } | null = null;
   for (const h of habits) {
     const keys = keysByHabit.get(h.id) ?? new Set<number>();
-    const streak = computeStreak(h.schedule, keys, today);
+    const streak = computeStreak(calDe(h), keys, today);
     if (streak > 0 && (longestStreak === null || streak > longestStreak.days)) {
       longestStreak = { days: streak, habitName: h.name };
     }
@@ -168,7 +178,7 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
           return {
             id: h.id,
             name: h.name,
-            critical: isCriticalDay(h.schedule, keys, today, keys.size > 0),
+            critical: isCriticalDay(calDe(h), keys, today, keys.size > 0),
           };
         }),
     },

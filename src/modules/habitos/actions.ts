@@ -19,6 +19,7 @@ import * as m from "./lib/mutations";
 import * as c from "./lib/categorias";
 import * as adj from "./lib/adjuntos";
 import * as n from "./lib/notas";
+import * as pa from "./lib/pausas";
 import { dayKeyFromISO } from "./lib/day";
 
 export type {
@@ -167,6 +168,41 @@ export async function guardarNota(habitId: string, iso: string, text: string) {
   if (!dia) return;
   await n.setNota(db, habitId, dia, text);
   refresh();
+}
+
+/**
+ * Crea una pausa. Las fechas llegan como `"YYYY-MM-DD"`.
+ *
+ * Devuelve `ok` para que la pantalla pueda avisar de lo que el spec exige avisar:
+ * una pausa retroactiva RECALCULA la racha, así que el número puede subir de
+ * golpe y verlo sin explicación parece un fallo.
+ */
+export async function crearPausa(
+  habitId: string,
+  desdeISO: string,
+  hastaISO: string,
+  reason: string,
+) {
+  const a = dayKeyFromISO(desdeISO);
+  const b = dayKeyFromISO(hastaISO);
+  if (!a || !b) return { ok: false as const };
+  await pa.addPausa(db, habitId, a, b, reason);
+  refresh();
+  /*
+    Devuelve la lista fresca, y no solo `ok`.
+
+    `refresh()` repinta el servidor, pero el detalle del hábito es un componente
+    de cliente que se trae sus datos una vez y solo los recarga cuando cambia el
+    XP — y una pausa no toca el XP. Sin devolver la lista, guardabas una pausa y
+    la pantalla seguía diciendo «Sin pausas».
+  */
+  return { ok: true as const, pausas: await pa.pausasDeHabito(db, habitId) };
+}
+
+export async function quitarPausa(habitId: string, id: string) {
+  await pa.borrarPausa(db, id);
+  refresh();
+  return await pa.pausasDeHabito(db, habitId);
 }
 
 // ---------- CATEGORÍAS DE TAREA ----------
