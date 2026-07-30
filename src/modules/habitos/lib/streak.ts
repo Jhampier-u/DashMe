@@ -6,26 +6,18 @@
 // los hitos nunca disparaban en hábitos L-M-V y el detalle mostraba una racha
 // distinta a la de la tarjeta.
 
-import { addDays, weekdayOf } from "./day";
+import { addDays } from "./day";
+import { isScheduledOn, sanitizeSchedule } from "./calendario";
 
-export const DEFAULT_SCHEDULE = "1111111";
+/*
+  `sanitizeSchedule` e `isScheduledOn` se han mudado a `calendario.ts`, porque
+  `estaProgramado` las necesita y este archivo va a necesitar a `estaProgramado`:
+  dejarlas aquí montaba un ciclo de importación.
 
-/** Normaliza un schedule a 7 chars "1"/"0". Nunca devuelve todo apagado. */
-export function sanitizeSchedule(s: string | null | undefined): string {
-  const cleaned = (s ?? "")
-    .replace(/[^01]/g, "")
-    .padEnd(7, "0")
-    .slice(0, 7);
-  return cleaned === "0000000" ? DEFAULT_SCHEDULE : cleaned;
-}
-
-/** ¿Toca este hábito en esta clave de día? */
-export function isScheduledOn(
-  schedule: string | null | undefined,
-  key: Date,
-): boolean {
-  return sanitizeSchedule(schedule)[weekdayOf(key)] === "1";
-}
+  Se reexportan para no romper a quien las importaba de aquí, que son unos
+  cuantos.
+*/
+export { isScheduledOn, sanitizeSchedule, DEFAULT_SCHEDULE } from "./calendario";
 
 /** Día programado inmediatamente anterior a `from` (excluyente). */
 export function previousScheduledDay(
