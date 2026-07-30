@@ -3,6 +3,7 @@ import type { Db } from "@/modules/core/db";
 import {
   habits as habitsTable,
   habitLogs,
+  habitNotes,
   player as playerTable,
 } from "@/modules/habitos/schema";
 import {
@@ -54,6 +55,8 @@ export type HabitWithStatus = {
   partialToday: boolean;
   /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
   targetCount: number | null;
+  /** La nota de hoy, si la hay. */
+  notaHoy: string | null;
   /** Lo apuntado hoy. Nulo si no se apuntó. */
   countToday: number | null;
   scheduledToday: boolean;
@@ -109,6 +112,16 @@ export async function getHabitsWithTodayStatus(
 
   const totalPorHabito = new Map(totales.map((t) => [t.habitId, t.n]));
 
+  // Las notas de hoy, en una consulta aparte: viven en su propia tabla porque una
+  // nota no depende de que el día esté marcado.
+  const notasHoy = ids.length
+    ? await db
+        .select({ habitId: habitNotes.habitId, text: habitNotes.text })
+        .from(habitNotes)
+        .where(and(inArray(habitNotes.habitId, ids), eq(habitNotes.date, today)))
+    : [];
+  const notaPorHabito = new Map(notasHoy.map((n) => [n.habitId, n.text]));
+
   return habits.map((h) => {
     const hLogs = logsPorHabito.get(h.id) ?? [];
     const schedule = sanitizeSchedule(h.schedule);
@@ -143,6 +156,7 @@ export async function getHabitsWithTodayStatus(
       doneToday: !!todayLog,
       partialToday: !!todayLog?.partial,
       targetCount: h.targetCount,
+      notaHoy: notaPorHabito.get(h.id) ?? null,
       countToday: todayLog?.count ?? null,
       scheduledToday: isScheduledOn(schedule, today),
       criticalToday: isCriticalDay(schedule, doneKeys, today, hasEverBeenDone),

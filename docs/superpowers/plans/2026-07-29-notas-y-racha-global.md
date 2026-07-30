@@ -650,7 +650,7 @@ git commit -m "feat(habitos): la racha global en la portada"
 - Modify: `src/modules/habitos/components/habits/HabitRow.tsx`
 - Modify: `src/app/habitos/page.tsx`
 
-- [ ] **Paso 1: Traerla**
+- [x] **Paso 1: Traerla**
 
 `getHabitsWithTodayStatus` ya consulta los registros; añade una consulta a
 `habitNotes` del día de hoy y mete `notaHoy: string | null` en
@@ -668,7 +668,7 @@ git commit -m "feat(habitos): la racha global en la portada"
 
 Y en el objeto devuelto, `notaHoy: notaPorHabito.get(h.id) ?? null`.
 
-- [ ] **Paso 2: El campo**
+- [x] **Paso 2: El campo**
 
 En `HabitRow.tsx`, las props ganan `notaHoy: string | null`, y bajo la fila:
 
@@ -697,7 +697,7 @@ En `HabitRow.tsx`, las props ganan `notaHoy: string | null`, y bajo la fila:
 clave del día. **No lo calcules en el cliente**: la fecha del navegador puede
 diferir de la del servidor y la nota acabaría en otro día.
 
-- [ ] **Paso 3: La página la pasa**
+- [x] **Paso 3: La página la pasa**
 
 En `src/app/habitos/page.tsx`, `notaHoy={habit.notaHoy}` y
 `hoyISO={dayKey().toISOString().slice(0, 10)}`.
@@ -710,13 +710,13 @@ y la página la necesita— en vez de reimplementar el cálculo del día allí:
 export { dayKey } from "./lib/day";
 ```
 
-- [ ] **Paso 4: Verificar**
+- [x] **Paso 4: Verificar**
 
 ```bash
 npx tsc --noEmit && npm run lint && npx vitest run && npm run build
 ```
 
-- [ ] **Paso 5: Commit**
+- [x] **Paso 5: Commit**
 
 ```bash
 git add -A src
@@ -727,13 +727,13 @@ git commit -m "feat(habitos): la nota de hoy en la fila del habito"
 
 ### Tarea 5: Verificación final
 
-- [ ] **Paso 1: Los cuatro comandos**
+- [x] **Paso 1: Los cuatro comandos**
 
 ```bash
 npm run lint && npx tsc --noEmit && npm run test && npm run build
 ```
 
-- [ ] **Paso 2: `streak.ts` intacto**
+- [x] **Paso 2: `streak.ts` intacto**
 
 ```bash
 git diff main --stat -- '*streak*'
@@ -741,7 +741,7 @@ git diff main --stat -- '*streak*'
 
 Esperado: **nada**.
 
-- [ ] **Paso 3: La base real**
+- [x] **Paso 3: La base real**
 
 ```bash
 node -e "
@@ -751,7 +751,7 @@ console.log('notas:', d.prepare('select count(*) c from habit_notes').get());
 "
 ```
 
-- [ ] **Paso 4: En pantalla**
+- [x] **Paso 4: En pantalla**
 
 1. Escribe una nota en un hábito **sin marcarlo** y comprueba que sigue sin marcar.
 2. Recarga: la nota está.
@@ -763,18 +763,38 @@ console.log('notas:', d.prepare('select count(*) c from habit_notes').get());
 > basta comprobar 1 a 3 y fiarse de los tests de la racha global, que cubren los
 > casos con más detalle que una prueba a mano.
 
-- [ ] **Paso 5: Marcar el plan y el spec**
+- [x] **Paso 5: Marcar el plan y el spec**
+
+**Medido en la ejecución**, sobre un hábito real del usuario que hoy estaba sin
+marcar:
+
+```
+nota escrita   la fila existe · el habito SIGUE sin marcar
+               registros 2 (eran 2) · XP 165 (era 165)
+nota vaciada   cero filas
+```
+
+**Dos avisos para quien verifique así:**
+
+Un `blur` sintético NO dispara el `onBlur` de React: hay que mover el foco de
+verdad y dejar que salga el `focusout`. Dos intentos se perdieron por esto y
+parecía que la acción estaba rota.
+
+Y si editas la página en dos pasos —primero la prop, después la constante—, el
+servidor de desarrollo compila el estado intermedio y lanza
+`ReferenceError` en cada visita. Los errores del registro son de ESE compilado,
+no del código actual: comprueba el número de línea antes de perseguirlo.
 
 ---
 
 ## Criterios de aceptación
 
-- [ ] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
-- [ ] 2. Se puede escribir, editar y borrar la nota de un hábito en un día
-- [ ] 3. Se puede escribir una nota en un día **sin** marcar el hábito
-- [ ] 4. Guardar una nota vacía borra la fila
-- [ ] 5. La racha global cuenta solo días con **todo** lo programado hecho
-- [ ] 6. Un día a medias no cuenta como día completo
-- [ ] 7. Los días sin nada programado no suman ni rompen
-- [ ] 8. Un hábito no cuenta antes de existir
-- [ ] 9. `streak.ts` y sus tests siguen intactos
+- [x] 1. `build`, `test`, `lint` y `tsc --noEmit` en verde
+- [x] 2. Se puede escribir, editar y borrar la nota de un hábito en un día
+- [x] 3. Se puede escribir una nota en un día **sin** marcar el hábito
+- [x] 4. Guardar una nota vacía borra la fila
+- [x] 5. La racha global cuenta solo días con **todo** lo programado hecho
+- [x] 6. Un día a medias no cuenta como día completo
+- [x] 7. Los días sin nada programado no suman ni rompen
+- [x] 8. Un hábito no cuenta antes de existir
+- [x] 9. `streak.ts` y sus tests siguen intactos

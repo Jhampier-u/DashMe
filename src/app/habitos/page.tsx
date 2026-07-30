@@ -4,6 +4,7 @@ import {
   getPlayerLevelInfo,
   getHabitDiagnosis,
   getTodayQuests,
+  dayKey,
 } from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
 import { QuestList } from "@/modules/habitos/components/home/QuestList";
@@ -22,6 +23,10 @@ export default async function HabitsPage() {
     getTodayQuests(db),
     getHabitDiagnosis(db),
   ]);
+
+  // El día se calcula AQUÍ, en el servidor, y viaja a las filas. La fecha del
+  // navegador puede diferir y la nota acabaría guardada en otro día.
+  const hoyISO = dayKey().toISOString().slice(0, 10);
 
   const scheduled = habits.filter((h) => h.scheduledToday);
   const done = scheduled.filter((h) => h.doneToday).length;
@@ -89,6 +94,8 @@ export default async function HabitsPage() {
                   partialToday={habit.partialToday}
                   targetCount={habit.targetCount}
                   countToday={habit.countToday}
+                  notaHoy={habit.notaHoy}
+                  hoyISO={hoyISO}
                   scheduledToday={habit.scheduledToday}
                   criticalToday={habit.criticalToday}
                   isAnchor={habit.isAnchor}

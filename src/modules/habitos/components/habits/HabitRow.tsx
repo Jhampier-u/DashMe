@@ -6,6 +6,7 @@ import {
   deleteHabit,
   setHabitAnchor,
   apuntarCantidad,
+  guardarNota,
 } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
@@ -34,6 +35,10 @@ type Props = {
   targetCount: number | null;
   /** Lo apuntado hoy. Nulo si no se apuntó. */
   countToday: number | null;
+  /** La nota de hoy, si la hay. */
+  notaHoy: string | null;
+  /** El día de hoy en "YYYY-MM-DD", calculado en el SERVIDOR. */
+  hoyISO: string;
 };
 
 const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"];
@@ -326,6 +331,28 @@ export function HabitRow(p: Props) {
           {p.intention}
         </div>
       ) : null}
+
+      {/*
+        Se guarda al SALIR del campo, como el título de la tarea: escribir una
+        nota no debería pedir un botón, y guardar por tecla mandaría una petición
+        por letra.
+
+        `hoyISO` viene del servidor y no del navegador: la fecha del cliente
+        puede diferir y la nota acabaría en otro día.
+      */}
+      <textarea
+        defaultValue={p.notaHoy ?? ""}
+        rows={1}
+        maxLength={500}
+        placeholder="Nota de hoy…"
+        onBlur={(e) => {
+          const v = e.target.value;
+          if (v.trim() === (p.notaHoy ?? "")) return;
+          startTransition(() => guardarNota(p.id, p.hoyISO, v));
+        }}
+        aria-label={`Nota de hoy para ${p.name}`}
+        className="w-full mt-2 bg-paper-2 text-tinta font-cuerpo text-[12.5px] border-3 border-line rounded-control px-2 py-1 placeholder:text-tinta-2 outline-none focus:outline-3 focus:outline-offset-2 focus:outline-line resize-y"
+      />
 
       {rachaEnRiesgo ? (
         <div style={{ fontSize: 11.5, marginTop: 6 }}>
