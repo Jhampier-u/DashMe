@@ -53,7 +53,7 @@ consejos. Solo lo que mide.
 - Create: `src/modules/core/analisis/comparar-dias.ts`
 - Create: `src/modules/core/analisis/comparar-dias.test.ts`
 
-- [ ] **Paso 1: Escribir el test**
+- [x] **Paso 1: Escribir el test**
 
 `src/modules/core/analisis/comparar-dias.test.ts`:
 
@@ -204,14 +204,14 @@ describe("compararGrupos con datos suficientes", () => {
 });
 ```
 
-- [ ] **Paso 2: Ejecutar y verlo fallar**
+- [x] **Paso 2: Ejecutar y verlo fallar**
 
 ```bash
 cd "/c/PROYECTO JUAMPI"
 npx vitest run src/modules/core/analisis/comparar-dias.test.ts
 ```
 
-- [ ] **Paso 3: Escribirlo**
+- [x] **Paso 3: Escribirlo**
 
 `src/modules/core/analisis/comparar-dias.ts`:
 
@@ -292,14 +292,14 @@ export function compararGrupos(
 }
 ```
 
-- [ ] **Paso 4: Verificar que no sabe de dominios**
+- [x] **Paso 4: Verificar que no sabe de dominios**
 
 ```bash
 npx vitest run src/modules/core/analisis/comparar-dias.test.ts && npx tsc --noEmit
 grep -n "habitos\|musica" src/modules/core/analisis/comparar-dias.ts || echo "sin dominios: correcto"
 ```
 
-- [ ] **Paso 5: Commit y push**
+- [x] **Paso 5: Commit y push**
 
 ```bash
 git add src/modules/core/analisis
