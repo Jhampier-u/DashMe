@@ -131,6 +131,33 @@ export type TaskCategoryRow = typeof taskCategories.$inferSelect;
  * tarea es una tarea tenga proyecto o no; `/proyectos` es esta misma tabla
  * filtrada por `project_id`.
  */
+/**
+ * Notas por hábito y día.
+ *
+ * Tabla aparte y NO una columna de `habit_logs` a propósito: si fuera una
+ * columna, escribir una nota en un día que no cumpliste obligaría a crear el
+ * registro de ese día, o sea a marcar el hábito como hecho para poder decir que
+ * no lo hiciste. Y ese es justo el día en que más quieres escribir algo.
+ */
+export const habitNotes = sqliteTable(
+  "habit_notes",
+  {
+    id: text("id").primaryKey(),
+    habitId: text("habit_id")
+      .notNull()
+      .references(() => habits.id, { onDelete: "cascade" }),
+    date: integer("date", { mode: "timestamp_ms" }).notNull(),
+    text: text("text").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => ({
+    unqHabitDate: uniqueIndex("habit_notes_habit_date_unq").on(t.habitId, t.date),
+  }),
+);
+
+export type HabitNoteRow = typeof habitNotes.$inferSelect;
+
 export const tasks = sqliteTable(
   "tasks",
   {

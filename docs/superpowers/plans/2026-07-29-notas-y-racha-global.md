@@ -284,7 +284,7 @@ git commit -m "feat(habitos): la racha global, pura y con tope"
 - Create: `src/modules/habitos/lib/notas.ts`
 - Create: `src/modules/habitos/lib/notas.test.ts`
 
-- [ ] **Paso 1: El esquema**
+- [x] **Paso 1: El esquema**
 
 En `schema-sql.ts`, tras `habit_logs` y sus índices:
 
@@ -334,7 +334,7 @@ export const habitNotes = sqliteTable(
 export type HabitNoteRow = typeof habitNotes.$inferSelect;
 ```
 
-- [ ] **Paso 2: El test**
+- [x] **Paso 2: El test**
 
 `src/modules/habitos/lib/notas.test.ts`:
 
@@ -428,13 +428,13 @@ describe("notasDeHabito", () => {
 });
 ```
 
-- [ ] **Paso 3: Ejecutar y verlo fallar**
+- [x] **Paso 3: Ejecutar y verlo fallar**
 
 ```bash
 npx vitest run src/modules/habitos/lib/notas.test.ts
 ```
 
-- [ ] **Paso 4: Escribirlo**
+- [x] **Paso 4: Escribirlo**
 
 `src/modules/habitos/lib/notas.ts`:
 
@@ -520,7 +520,7 @@ export async function setNota(
 }
 ```
 
-- [ ] **Paso 5: El server action**
+- [x] **Paso 5: El server action**
 
 En `actions.ts`:
 
@@ -545,7 +545,7 @@ Y en `index.ts`:
 export { getNota, notasDeHabito, LIMITE_NOTA, type Nota } from "./lib/notas";
 ```
 
-- [ ] **Paso 6: Verificar**
+- [x] **Paso 6: Verificar**
 
 ```bash
 npx vitest run && npx tsc --noEmit && npm run lint
@@ -555,7 +555,7 @@ npx vitest run && npx tsc --noEmit && npm run lint
 falla, revisa que no hayas escrito las dos palabras de la sentencia de creación
 dentro de un comentario del DDL.
 
-- [ ] **Paso 7: Commit**
+- [x] **Paso 7: Commit**
 
 ```bash
 git add -A src

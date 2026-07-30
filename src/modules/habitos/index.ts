@@ -21,6 +21,8 @@ export {
   type HabitDiagnosis,
 } from "./lib/habits";
 export { getHomeMetrics, type HomeMetrics } from "./lib/home";
+export { getNota, notasDeHabito, LIMITE_NOTA, type Nota } from "./lib/notas";
+export { dayKey } from "./lib/day";
 export {
   listProjects,
   getProjectWithTree,
