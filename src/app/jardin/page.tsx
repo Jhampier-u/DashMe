@@ -4,6 +4,8 @@ import { PageHeader } from "@/modules/core/ui/PageHeader";
 import { buttonStyle } from "@/modules/core/ui/Button";
 import { Stat, StatGrid } from "@/modules/core/ui/Stat";
 import { GardenScene } from "@/modules/habitos/components/GardenScene";
+import { Sprite } from "@/modules/core/ui/pixel/Sprite";
+import { spriteDe } from "@/modules/habitos/lib/sprites";
 import { db } from "@/modules/core/db";
 import {
   climaDe,
@@ -15,12 +17,17 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/*
+  La leyenda dibuja las MISMAS etapas que el jardín, tomando la flor como
+  ejemplo. Con emoji decía que «Joven» era 🌿 mientras la planta pintaba otra
+  cosa: una leyenda que no coincide con lo que explica es peor que ninguna.
+*/
 const STAGES = [
-  { emoji: "🟫", label: "Semilla", days: "0 d" },
-  { emoji: "🌱", label: "Brote", days: "1-2 d" },
-  { emoji: "🌿", label: "Joven", days: "3-6 d" },
-  { emoji: "🌷", label: "Madura", days: "7-13 d" },
-  { emoji: "🌻", label: "Floreciente", days: "14 d o más" },
+  { label: "Semilla", days: "0 d" },
+  { label: "Brote", days: "1-2 d" },
+  { label: "Joven", days: "3-6 d" },
+  { label: "Madura", days: "7-13 d" },
+  { label: "Floreciente", days: "14 d o más" },
 ];
 
 export default async function GardenPage() {
@@ -100,12 +107,12 @@ export default async function GardenPage() {
           {wilted > 0 ? (
             <Card>
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden>
-                  🥀
+                <span style={{ lineHeight: 1 }} aria-hidden>
+                  <Sprite grid={spriteDe("flower", 0, true)} size={34} label="" />
                 </span>
                 <div>
-                  {/* Iba en rojo. Lo que avisa ahora son el 🥀 de al lado y el
-                      grosor: el aviso no puede depender del tono. */}
+                  {/* Iba en rojo. Lo que avisa ahora son la planta caída de al
+                      lado y el grosor: el aviso no puede depender del tono. */}
                   <div style={{ fontSize: 13.5, fontWeight: 700 }}>
                     {wilted === 1 ? "Una planta marchita" : `${wilted} plantas marchitas`}
                   </div>
@@ -135,10 +142,13 @@ export default async function GardenPage() {
                 gap: 10,
               }}
             >
-              {STAGES.map((s) => (
+              {STAGES.map((s, i) => (
                 <div key={s.label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 24 }} aria-hidden>
-                    {s.emoji}
+                  <div
+                    style={{ display: "flex", justifyContent: "center" }}
+                    aria-hidden
+                  >
+                    <Sprite grid={spriteDe("flower", i, false)} size={34} label="" />
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>
                     {s.label}

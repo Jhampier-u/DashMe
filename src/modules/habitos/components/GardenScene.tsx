@@ -7,6 +7,15 @@ import { ETIQUETA, type Tiempo } from "@/modules/habitos/lib/clima";
 import { isPlantWilted, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
 import { Sprite } from "@/modules/core/ui/pixel/Sprite";
 import { spriteDe } from "@/modules/habitos/lib/sprites";
+import {
+  AURORA,
+  LUNA,
+  NUBE,
+  CORONA,
+  DESTELLO,
+  NUBE_LLUVIA,
+  SOL,
+} from "@/modules/habitos/lib/sprites/cielo";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";
 import { formatDays } from "@/modules/habitos/lib/day";
 import { toggleToday } from "@/modules/habitos/actions";
@@ -59,11 +68,12 @@ const GROUND: Record<SkyPhase, string> = {
 };
 
 // El amanecer y el atardecer también cuentan como "oscuros" para las estrellas,
-// así que el icono no puede deducirse de isDark — antes el 🌅 nunca salía.
-function skyIcon(phase: SkyPhase): string {
-  if (phase === "dawn" || phase === "dusk") return "🌅";
-  if (phase === "night") return "🌙";
-  return "☀️";
+// así que el dibujo no puede deducirse de isDark: si se dedujera, la aurora no
+// saldría nunca y esas dos franjas del día se verían de noche.
+function skySprite(phase: SkyPhase): string {
+  if (phase === "dawn" || phase === "dusk") return AURORA;
+  if (phase === "night") return LUNA;
+  return SOL;
 }
 
 const SKY_LABEL: Record<SkyPhase, string> = {
@@ -213,7 +223,8 @@ export function GardenScene({ habits, tiempo }: Props) {
               : "drop-shadow(0 0 10px rgba(245, 200, 158, 0.4))",
         }}
       >
-        {skyIcon(phase)}
+        {/* El dibujo cambia; QUIÉN decide sigue siendo la hora real. */}
+        <Sprite grid={skySprite(phase)} size={38} label="" />
       </span>
 
       {isDark
@@ -255,7 +266,11 @@ export function GardenScene({ habits, tiempo }: Props) {
             userSelect: "none",
           }}
         >
-          {tiempo.estado === "lluvia" ? "🌧️" : "☁️"}
+          <Sprite
+            grid={tiempo.estado === "lluvia" ? NUBE_LLUVIA : NUBE}
+            size={c.size * 22}
+            label=""
+          />
         </span>
       ))}
 
@@ -371,7 +386,7 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
             userSelect: "none",
           }}
         >
-          ✨
+          <Sprite grid={DESTELLO} size={14} label="" />
         </span>
       ) : null}
 
@@ -388,7 +403,7 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
             filter: "drop-shadow(0 0 4px rgba(245, 200, 158, 0.8))",
           }}
         >
-          👑
+          <Sprite grid={CORONA} size={14} label="" />
         </span>
       ) : null}
 
