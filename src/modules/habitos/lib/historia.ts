@@ -30,8 +30,17 @@ export type HabitoHistorico = {
   /** Cuándo se creó, en clave de día. Antes de esto la planta no existía. */
   creado: Date;
   pausas: Rango[];
-  /** `getTime()` de cada clave de día cumplida. */
+  /** `getTime()` de cada clave de día cumplida, con la regla del jardín vivo. */
   cumplidos: number[];
+  /**
+   * `getTime()` de cada día con registro NO parcial.
+   *
+   * Es OTRA definición, la que usa `getDiasCumplidos` para el clima, y va
+   * separada porque de verdad son distintas: `cumplidos` respeta el objetivo
+   * numérico y esta no. Unificarlas sería otro bloque; mezclarlas haría que el
+   * clima de la memoria no coincidiera con el del presente.
+   */
+  plenos: number[];
 };
 
 /** Una planta tal y como se veía ese día. */
@@ -44,6 +53,8 @@ export type PlantaEn = {
   streak: number;
   stage: 0 | 1 | 2 | 3 | 4;
   marchita: boolean;
+  /** Si a esa altura ya se había cumplido alguna vez. Separa marchita de semilla. */
+  algunaVezCumplido: boolean;
   cumplidoEseDia: boolean;
   programadoEseDia: boolean;
 };
@@ -111,6 +122,7 @@ export function jardinEn(
       // `hasEverBeenDone` es, ese día, «hubo alguna vez un cumplido»: el tamaño
       // del conjunto recortado responde justo eso.
       marchita: isPlantWilted(streak, cumplidoEseDia, hasta.size > 0),
+      algunaVezCumplido: hasta.size > 0,
       cumplidoEseDia,
       programadoEseDia: estaProgramado(calendario, dia),
     });
@@ -132,4 +144,44 @@ export function primerDiaConDatos(habitos: HabitoHistorico[]): Date | null {
     }
   }
   return min === null ? null : new Date(min);
+}
+
+/**
+ * Los días cumplidos y fallados de la semana que acaba en `dia`.
+ *
+ * Es `getDiasCumplidos` reconstruido sin base de datos, y repite su regla al
+ * pie de la letra: un día cuenta solo si algún hábito vigente lo tenía
+ * programado, y se da por cumplido si TODOS ellos lo cumplieron. Los días sin
+ * nada programado —fin de semana, pausa, jardín aún vacío— no caen en ninguno
+ * de los dos conjuntos, que es lo que hace que unas vacaciones lleguen al clima
+ * como cero y cero en vez de como una semana de fallos.
+ */
+export function semanaEn(
+  habitos: HabitoHistorico[],
+  dia: Date,
+): { cumplidos: number; fallados: number } {
+  const plenosPorDia = new Map<number, Set<string>>();
+  for (const h of habitos) {
+    for (const t of h.plenos) {
+      const set = plenosPorDia.get(t);
+      if (set) set.add(h.id);
+      else plenosPorDia.set(t, new Set([h.id]));
+    }
+  }
+
+  let cumplidos = 0;
+  let fallados = 0;
+  for (let i = 6; i >= 0; i -= 1) {
+    const d = addDays(dia, -i);
+    const t = d.getTime();
+    const vigentes = habitos.filter(
+      (h) =>
+        h.creado.getTime() <= t && estaProgramado(cal(h.schedule, h.pausas), d),
+    );
+    if (vigentes.length === 0) continue;
+    const hechos = plenosPorDia.get(t) ?? new Set<string>();
+    if (vigentes.every((h) => hechos.has(h.id))) cumplidos += 1;
+    else fallados += 1;
+  }
+  return { cumplidos, fallados };
 }

@@ -1,7 +1,13 @@
 import { asc, desc, eq } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
-import { habits as habitsTable } from "../schema";
+import { habits as habitsTable, habitLogs } from "../schema";
 import { asignarHuecos, intercambiar, type ConHueco } from "./huecos";
+import { pausasPorHabito } from "./pausas";
+import { sanitizeSchedule } from "./calendario";
+import { normalizeDayKey } from "./day";
+import { diasQueCuentan } from "./cantidad";
+import type { PlantSpecies } from "./garden";
+import type { HabitoHistorico } from "./historia";
 
 /*
   Guardar la colocación del jardín.
@@ -51,4 +57,79 @@ export async function intercambiarHuecos(
       .set({ gardenSlot: slot })
       .where(eq(habitsTable.id, id));
   }
+}
+
+/**
+ * Todo lo que hace falta para reconstruir cualquier día del jardín.
+ *
+ * Se trae de una vez y el recorrido pasa entero en el navegador. La alternativa
+ * era pedir cada día al servidor, y entonces arrastrar el deslizador dispararía
+ * una petición por día: el timelapse iría a tirones.
+ *
+ * Lo que viaja son CLAVES DE DÍA, no filas de registro. Un año de cinco hábitos
+ * son unos pocos miles de números, y ni el XP ni los escudos ni las notas hacen
+ * falta para saber de qué tamaño estaba una planta.
+ */
+export async function getJardinHistorico(db: Db): Promise<HabitoHistorico[]> {
+  const [filas, logs, pausas] = await Promise.all([
+    db
+      .select()
+      .from(habitsTable)
+      .orderBy(desc(habitsTable.isAnchor), asc(habitsTable.createdAt)),
+    db
+      .select({
+        habitId: habitLogs.habitId,
+        date: habitLogs.date,
+        partial: habitLogs.partial,
+        count: habitLogs.count,
+      })
+      .from(habitLogs),
+    pausasPorHabito(db),
+  ]);
+
+  const porId = new Map<string, typeof logs>();
+  for (const l of logs) {
+    const lista = porId.get(l.habitId);
+    if (lista) lista.push(l);
+    else porId.set(l.habitId, [l]);
+  }
+
+  return filas.map((h) => ({
+    id: h.id,
+    name: h.name,
+    color: h.color,
+    plantSpecies: (h.plantSpecies as PlantSpecies) ?? "flower",
+    isAnchor: h.isAnchor,
+    schedule: sanitizeSchedule(h.schedule),
+    creado: normalizeDayKey(h.createdAt),
+    pausas: (pausas.get(h.id) ?? []).map((p) => ({
+      desde: p.desde,
+      hasta: p.hasta,
+    })),
+    /*
+      Los mismos días que cuentan para el jardín vivo —`diasQueCuentan` respeta
+      lo parcial y el objetivo numérico—. Si aquí se contara cualquier registro,
+      HOY se vería distinto según lo miraras desde el jardín o desde su memoria,
+      y no habría forma de saber cuál de los dos miente.
+    */
+    cumplidos: [
+      ...diasQueCuentan(
+        (porId.get(h.id) ?? []).map((l) => ({
+          date: l.date,
+          partial: !!l.partial,
+          count: l.count,
+        })),
+        h.targetCount,
+      ),
+    ],
+    /*
+      Y aparte, los días con registro NO parcial, que es lo que cuenta
+      `getDiasCumplidos` para el clima. Son dos definiciones distintas y ya lo
+      eran antes de este bloque; traerlas las dos es lo que permite que el clima
+      de la memoria salga idéntico al del presente.
+    */
+    plenos: (porId.get(h.id) ?? [])
+      .filter((l) => !l.partial)
+      .map((l) => normalizeDayKey(l.date).getTime()),
+  }));
 }
