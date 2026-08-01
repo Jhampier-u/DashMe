@@ -4,9 +4,9 @@ import { useTransition, type CSSProperties } from "react";
 import type { HabitWithStatus } from "@/modules/habitos/lib/habits";
 import { useLocalHour } from "@/modules/habitos/lib/useLocalHour";
 import { ETIQUETA, type Tiempo } from "@/modules/habitos/lib/clima";
-import { isPlantWilted, plantEmoji, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
+import { isPlantWilted, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
 import { Sprite } from "@/modules/core/ui/pixel/Sprite";
-import { FLOR, FLOR_MARCHITA } from "@/modules/habitos/lib/sprites/flor";
+import { spriteDe } from "@/modules/habitos/lib/sprites";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";
 import { formatDays } from "@/modules/habitos/lib/day";
 import { toggleToday } from "@/modules/habitos/actions";
@@ -302,24 +302,17 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
   const sparkle = useSparkleBurst("spark");
   const drops = useSparkleBurst("drop");
 
-  const plant = plantEmoji(
-    habit.plantSpecies,
-    habit.streak,
-    habit.doneToday,
-    habit.hasEverBeenDone,
-  );
   const stage = stageFor(habit.streak);
   const isWilted = isPlantWilted(
     habit.streak,
     habit.doneToday,
     habit.hasEverBeenDone,
   );
-  const gridFlor =
-    habit.plantSpecies === "flower"
-      ? isPlantWilted(habit.streak, habit.doneToday, habit.hasEverBeenDone)
-        ? FLOR_MARCHITA
-        : FLOR[stageFor(habit.streak)]
-      : null;
+  const grid = spriteDe(
+    habit.plantSpecies,
+    stageFor(habit.streak),
+    isPlantWilted(habit.streak, habit.doneToday, habit.hasEverBeenDone),
+  );
 
   const estado = plantStateLabel(
     habit.streak,
@@ -416,22 +409,9 @@ function GardenPlant({ habit }: { habit: HabitWithStatus }) {
           transition: "opacity 200ms",
         }}
       >
-        {/*
-          La flor ya está dibujada; las otras cuatro especies siguen en emoji
-          hasta que les toque. Es un estado intermedio a propósito: enseñar el
-          estilo con un sprite antes de dibujar los veinte que faltan.
-        */}
-        {gridFlor ? (
-          <Sprite
-            grid={gridFlor}
-            size={PLANT_SIZE[stage]}
-            /* Vacío porque el `aria-label` lo pone el botón de fuera, que es lo
-               que se pulsa: repetirlo aquí lo diría dos veces. */
-            label=""
-          />
-        ) : (
-          plant
-        )}
+        {/* Vacío porque el `aria-label` lo pone el botón de fuera, que es lo que
+            se pulsa: repetirlo aquí lo diría dos veces. */}
+        <Sprite grid={grid} size={PLANT_SIZE[stage]} label="" />
         <SparkleLayer particles={sparkle.particles} />
         <SparkleLayer particles={drops.particles} />
       </span>
