@@ -1,9 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { createTestDb } from "@/modules/core/db/testing";
 import { habits, habitLogs, player, tasks } from "@/modules/habitos/schema";
 import { dayKey } from "./day";
 import { XP_PER_HABIT, XP_PER_TASK, ANCHOR_BONUS } from "./level";
+import { EARLY_QUEST_HOUR } from "./quests";
 import {
   createHabit,
   toggleToday,
@@ -11,6 +12,43 @@ import {
   updateTaskStatus,
   setHabitCount,
 } from "./mutations";
+
+/*
+  EL RELOJ, CONGELADO — y congelado AQUÍ ARRIBA, que es la parte que importa.
+
+  Estos tests marcan hábitos, y marcar un hábito puede completar una misión
+  diaria, que da XP de más. Qué misiones existen depende de la FECHA
+  —`pickQuestsForDate` reparte tres de las cinco según el día— y si toca la de
+  «antes de las 10», también de la HORA a la que corras la suite. El resultado
+  era un test que pasaba por la tarde y fallaba por la mañana.
+
+  Va antes de `HOY` porque `HOY` se calcula al importar el módulo, o sea ANTES
+  de cualquier `beforeEach`. Congelando solo dentro del gancho, `HOY` se quedaba
+  con la fecha real mientras el código bajo prueba veía la falsa, y las dos no
+  coincidían.
+
+  Se falsea solo `Date`, no los temporizadores: falsear `setTimeout` colgaría el
+  código asíncrono de debajo.
+
+  LA HORA ES LOAD-BEARING, y conviene decirlo en vez de fingir que no: a las
+  nueve de la mañana salta la misión «antes de las 10» y sus 30 XP se cuelan en
+  los tests que cuentan el XP total. Congelar el reloj quita el azar, no el
+  acoplamiento — así que el acoplamiento se vigila abajo con un test propio, para
+  que mover este instante dé un fallo que se explica solo en vez de dos
+  descuadres de XP incomprensibles.
+*/
+const MOMENTO = new Date(2026, 6, 15, 15, 0, 0);
+vi.useFakeTimers({ toFake: ["Date"] });
+vi.setSystemTime(MOMENTO);
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(MOMENTO);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const HOY = dayKey();
 
@@ -380,5 +418,21 @@ describe("hábitos con cantidad", () => {
     await setHabitCount(db, "h1", 8);
     const corto = await setHabitCount(db, "h1", 2);
     expect(corto.player.xp).toBe(Math.floor(XP_PER_HABIT / 2));
+  });
+});
+
+describe("el reloj congelado de este archivo", () => {
+  it("cae después de la misión «antes de las 10»", () => {
+    /*
+      Si mueves `MOMENTO` a antes de esta hora, esa misión se completa al marcar
+      un hábito y suma 30 XP a los tests que comprueban el XP total. Este test
+      existe para que eso salga como «la hora está mal elegida» y no como
+      «esperaba 12 y llegó 42».
+    */
+    expect(MOMENTO.getHours()).toBeGreaterThanOrEqual(EARLY_QUEST_HOUR);
+  });
+
+  it("es la misma en todos los tests, sin depender de cuándo corras la suite", () => {
+    expect(Date.now()).toBe(MOMENTO.getTime());
   });
 });
