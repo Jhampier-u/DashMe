@@ -6,6 +6,8 @@ import { Stat, StatGrid } from "@/modules/core/ui/Stat";
 import { GardenScene } from "@/modules/habitos/components/GardenScene";
 import { db } from "@/modules/core/db";
 import {
+  climaDe,
+  getDiasCumplidos,
   getHabitsWithTodayStatus,
   isPlantWilted,
   stageFor,
@@ -22,7 +24,20 @@ const STAGES = [
 ];
 
 export default async function GardenPage() {
-  const habits = await getHabitsWithTodayStatus(db);
+  /*
+    El tiempo del jardín sale de la MISMA fuente que la racha global y el cruce
+    con música: `getDiasCumplidos`, que ya respeta las pausas. Una semana de
+    vacaciones llega como cero y cero, no como una semana de fallos.
+  */
+  const hoy = new Date();
+  const hace7 = new Date(hoy);
+  hace7.setUTCDate(hace7.getUTCDate() - 6);
+
+  const [habits, dias] = await Promise.all([
+    getHabitsWithTodayStatus(db),
+    getDiasCumplidos(db, hace7, hoy),
+  ]);
+  const tiempo = climaDe(dias.cumplidos.size, dias.fallados.size);
 
   const total = habits.length;
   const wateredToday = habits.filter((h) => h.doneToday).length;
@@ -105,7 +120,7 @@ export default async function GardenPage() {
           ) : null}
 
           <Card>
-            <GardenScene habits={habits} />
+            <GardenScene habits={habits} tiempo={tiempo} />
             <p style={{ fontSize: 12, marginTop: 10 }}>
               Click en una planta para regarla. La corona marca el hábito ancla y el
               destello, una racha de 7 días o más.
