@@ -73,11 +73,30 @@ function baseVieja(): Database.Database {
   const item = s.prepare(
     'insert into project_items (id, project_id, parent_id, title, status, "order", created_at, updated_at, completed_at) values (?,?,?,?,?,?,?,?,?)',
   );
-  item.run("i1", "p1", null, "Pintar el salón", "IN_PROGRESS", 1, 1000, 1000, null);
+  item.run(
+    "i1",
+    "p1",
+    null,
+    "Pintar el salón",
+    "IN_PROGRESS",
+    1,
+    1000,
+    1000,
+    null,
+  );
   item.run("i2", "p1", "i1", "Comprar pintura", "DONE", 1, 1000, 2000, 2000);
   s.prepare(
     'insert into tasks (id, title, description, status, "order", created_at, updated_at, completed_at) values (?,?,?,?,?,?,?,?)',
-  ).run("t1", "Llamar al banco", "Antes del viernes", "TODO", 1, 1000, 1000, null);
+  ).run(
+    "t1",
+    "Llamar al banco",
+    "Antes del viernes",
+    "TODO",
+    1,
+    1000,
+    1000,
+    null,
+  );
   return s;
 }
 
@@ -130,7 +149,11 @@ describe("ponerAlDia sobre una base con la forma vieja", () => {
       parent_id: null,
       project_id: "p1",
     });
-    expect(filas[1]).toMatchObject({ id: "i2", parent_id: "i1", project_id: "p1" });
+    expect(filas[1]).toMatchObject({
+      id: "i2",
+      parent_id: "i1",
+      project_id: "p1",
+    });
     s.close();
   });
 
@@ -150,7 +173,9 @@ describe("ponerAlDia sobre una base con la forma vieja", () => {
   it("conserva las fechas de cierre, que es de donde salen las métricas", () => {
     const s = baseVieja();
     ponerAlDia(s);
-    const t = s.prepare("select completed_at from tasks where id = 'i2'").get() as {
+    const t = s
+      .prepare("select completed_at from tasks where id = 'i2'")
+      .get() as {
       completed_at: number;
     };
     expect(t.completed_at).toBe(2000);
@@ -209,9 +234,9 @@ describe("la secuencia real: SCHEMA_SQL y después ponerAlDia", () => {
     s.exec(SCHEMA_SQL);
     ponerAlDia(s);
     const idx = (
-      s
-        .prepare("select name from sqlite_master where type='index'")
-        .all() as { name: string }[]
+      s.prepare("select name from sqlite_master where type='index'").all() as {
+        name: string;
+      }[]
     ).map((i) => i.name);
     expect(idx).toContain("tasks_parent_idx");
     expect(idx).toContain("tasks_project_idx");
@@ -258,6 +283,68 @@ describe("ponerAlDia sobre una base ya al día", () => {
     >;
     expect(t.priority).toBe("URGENT");
     expect(t.category_id).toBe("c1");
+    s.close();
+  });
+});
+
+/*
+  La tabla `player` no está en el esquema fósil de arriba, así que ninguno de
+  esos bloques la recorre. En la base REAL sí existe, y lleva dentro todo el XP
+  del usuario: si `xp_spent` se añadiera mal, el nivel se calcularía sobre un
+  nulo y saldría NaN en toda la aplicación.
+*/
+describe("xp_spent sobre una base que ya tenía jugador", () => {
+  function conJugador(): Database.Database {
+    const s = new Database(":memory:");
+    s.exec(`
+      CREATE TABLE player (
+        id              TEXT PRIMARY KEY,
+        xp              INTEGER NOT NULL DEFAULT 0,
+        shields         INTEGER NOT NULL DEFAULT 2,
+        shields_updated INTEGER NOT NULL,
+        created_at      INTEGER NOT NULL,
+        updated_at      INTEGER NOT NULL
+      );
+    `);
+    s.prepare(
+      "insert into player (id, xp, shields, shields_updated, created_at, updated_at) values ('default', 150, 2, 1, 1, 1)",
+    ).run();
+    return s;
+  }
+
+  it("añade la columna sin tocar el XP que ya había", () => {
+    const s = conJugador();
+    ponerAlDia(s);
+    const p = s.prepare("select xp, xp_spent from player").get() as {
+      xp: number;
+      xp_spent: number;
+    };
+    expect(p.xp).toBe(150);
+    expect(p.xp_spent).toBe(0);
+    s.close();
+  });
+
+  it("el valor por defecto es 0 y NO nulo", () => {
+    // Un nulo aquí convertiría `xp + xp_spent` en NaN y el nivel dejaría de
+    // existir en todas las pantallas a la vez.
+    const s = conJugador();
+    ponerAlDia(s);
+    const p = s.prepare("select xp_spent from player").get() as {
+      xp_spent: number | null;
+    };
+    expect(p.xp_spent).not.toBeNull();
+    s.close();
+  });
+
+  it("correrla dos veces no la duplica ni la reinicia", () => {
+    const s = conJugador();
+    ponerAlDia(s);
+    s.prepare("update player set xp_spent = 350").run();
+    ponerAlDia(s);
+    expect(
+      (s.prepare("select xp_spent from player").get() as { xp_spent: number })
+        .xp_spent,
+    ).toBe(350);
     s.close();
   });
 });

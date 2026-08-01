@@ -42,6 +42,13 @@ const COLUMNAS_NUEVAS: Record<string, [string, string][]> = {
   ],
   /** Lo apuntado ese día. Nulo = no se apuntó cantidad. */
   habit_logs: [["count", "INTEGER"]],
+  /*
+    Lo gastado en la tienda. Va con DEFAULT 0 y no anulable porque aquí sí se
+    puede: `ADD COLUMN` admite NOT NULL cuando trae valor por defecto. Y hace
+    falta que lo traiga: el nivel se calcula con esta columna, y un nulo lo
+    convertiría en NaN para todo el mundo.
+  */
+  player: [["xp_spent", "INTEGER NOT NULL DEFAULT 0"]],
 };
 
 function columnasDe(sqlite: Sqlite, tabla: string): Set<string> {
@@ -70,11 +77,13 @@ function existeTabla(sqlite: Sqlite, tabla: string): boolean {
  *
  * Aquí van después de los `ALTER TABLE`, así que las columnas existen seguro.
  */
-const INDICES_NUEVOS = [
-  "CREATE INDEX IF NOT EXISTS tasks_parent_idx   ON tasks(parent_id)",
-  "CREATE INDEX IF NOT EXISTS tasks_project_idx  ON tasks(project_id)",
-  "CREATE INDEX IF NOT EXISTS tasks_category_idx ON tasks(category_id)",
-];
+const INDICES_NUEVOS: Record<string, string[]> = {
+  tasks: [
+    "CREATE INDEX IF NOT EXISTS tasks_parent_idx   ON tasks(parent_id)",
+    "CREATE INDEX IF NOT EXISTS tasks_project_idx  ON tasks(project_id)",
+    "CREATE INDEX IF NOT EXISTS tasks_category_idx ON tasks(category_id)",
+  ],
+};
 
 export function ponerAlDia(sqlite: Sqlite): void {
   for (const [tabla, columnas] of Object.entries(COLUMNAS_NUEVAS)) {
@@ -88,7 +97,17 @@ export function ponerAlDia(sqlite: Sqlite): void {
       }
     }
   }
-  for (const sql of INDICES_NUEVOS) sqlite.exec(sql);
+  /*
+    Los índices se saltan si su tabla no está, igual que las columnas. Sin esta
+    guarda, poner al día una base a la que le falte `tasks` reventaba con «no
+    such table» aunque no hubiera nada que indexar. En la base real `tasks`
+    siempre existe, pero una migración que solo funciona sobre la forma que
+    esperas no es una migración: es una suposición.
+  */
+  for (const [tabla, indices] of Object.entries(INDICES_NUEVOS)) {
+    if (!existeTabla(sqlite, tabla)) continue;
+    for (const sql of indices) sqlite.exec(sql);
+  }
   if (existeTabla(sqlite, "project_items")) absorberProjectItems(sqlite);
 }
 

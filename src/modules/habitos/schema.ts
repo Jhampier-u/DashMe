@@ -70,7 +70,17 @@ export type HabitLogRow = typeof habitLogs.$inferSelect;
 /** Tabla de una sola fila con id fijo "default". Se revisita con la auth. */
 export const player = sqliteTable("player", {
   id: text("id").primaryKey(),
+  /** El SALDO: lo que queda por gastar en la tienda del jardín. */
   xp: integer("xp").notNull().default(0),
+  /**
+   * Lo gastado desde siempre. Solo sube.
+   *
+   * Está aquí para que el nivel salga de `xp + xp_spent` —lo GANADO— y comprar
+   * no te degrade. La alternativa era sumar el precio de lo comprado cada vez
+   * que hiciera falta el nivel, lo que obligaría a consultar las decoraciones
+   * en sitios que no tienen nada que ver con el jardín.
+   */
+  xpSpent: integer("xp_spent").notNull().default(0),
   shields: integer("shields").notNull().default(2),
   shieldsUpdated: integer("shields_updated", {
     mode: "timestamp_ms",

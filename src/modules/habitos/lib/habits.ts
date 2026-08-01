@@ -246,7 +246,7 @@ export async function getPlayerLevelInfo(
   db: Db,
 ): Promise<LevelInfo & { shields: number }> {
   const player = await getOrCreatePlayer(db);
-  return { ...getLevelInfo(player.xp), shields: player.shields };
+  return { ...getLevelInfo(player), shields: player.shields };
 }
 
 export type MonthDay = {

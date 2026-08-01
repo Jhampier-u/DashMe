@@ -35,22 +35,42 @@ export function levelFromXp(xp: number): number {
 
 export type LevelInfo = {
   level: number;
+  /** El SALDO: lo que queda por gastar. Sube y baja. */
   xp: number;
+  /** Lo GANADO desde el principio. De aquí sale el nivel, y nunca baja. */
+  ganado: number;
+  /** Lo que se ha ido en la tienda. */
+  gastado: number;
   xpIntoLevel: number;
   xpForNextLevel: number;
   progress: number;
 };
 
-export function getLevelInfo(xp: number): LevelInfo {
-  const safeXp = Math.max(0, xp);
-  const level = levelFromXp(safeXp);
+/**
+ * Lo que hace falta saber del jugador para situarlo en la curva.
+ *
+ * Recibe el objeto y no un número suelto A PROPÓSITO. Con un número, cualquier
+ * sitio podía pasar `player.xp` —el saldo— y el nivel bajaría al comprar en la
+ * tienda: gastar te degradaría, que es justo lo contrario de una recompensa.
+ * Pidiendo los dos campos, el compilador obliga a decidir en cada sitio.
+ */
+export type XpDelJugador = { xp: number; xpSpent: number };
+
+export function getLevelInfo(player: XpDelJugador): LevelInfo {
+  const saldo = Math.max(0, player.xp);
+  const gastado = Math.max(0, player.xpSpent);
+  // El nivel sale de lo ganado, que es saldo más gastado y solo sube.
+  const ganado = saldo + gastado;
+  const level = levelFromXp(ganado);
   const base = xpForLevel(level);
   const next = xpForLevel(level + 1);
   const span = next - base;
-  const xpIntoLevel = safeXp - base;
+  const xpIntoLevel = ganado - base;
   return {
     level,
-    xp: safeXp,
+    xp: saldo,
+    ganado,
+    gastado,
     xpIntoLevel,
     xpForNextLevel: span,
     progress: span === 0 ? 0 : xpIntoLevel / span,

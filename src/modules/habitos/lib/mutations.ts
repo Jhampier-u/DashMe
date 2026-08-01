@@ -99,8 +99,8 @@ async function grantXp(
   const current = await getOrCreatePlayer(db);
   if (delta === 0) {
     return {
-      oldLevel: levelFromXp(current.xp),
-      player: { ...getLevelInfo(current.xp), shields: current.shields },
+      oldLevel: levelFromXp(current.xp + current.xpSpent),
+      player: { ...getLevelInfo(current), shields: current.shields },
     };
   }
 
@@ -125,14 +125,19 @@ async function grantXp(
   }
 
   return {
-    oldLevel: levelFromXp(Math.max(0, updated.xp - delta)),
-    player: { ...getLevelInfo(xp), shields: updated.shields },
+    // El nivel de ANTES sale del ganado de antes, que es lo mismo menos el
+    // delta. Lo gastado no cambia al ganar o perder XP.
+    oldLevel: levelFromXp(Math.max(0, updated.xp - delta) + updated.xpSpent),
+    player: {
+      ...getLevelInfo({ xp, xpSpent: updated.xpSpent }),
+      shields: updated.shields,
+    },
   };
 }
 
 async function playerSnapshot(db: Db): Promise<PlayerSnapshot> {
   const player = await getOrCreatePlayer(db);
-  return { ...getLevelInfo(player.xp), shields: player.shields };
+  return { ...getLevelInfo(player), shields: player.shields };
 }
 
 // ---------- ESCUDOS ----------

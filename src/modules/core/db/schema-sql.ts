@@ -70,6 +70,7 @@ CREATE INDEX IF NOT EXISTS habit_pauses_habit_idx ON habit_pauses(habit_id);
 CREATE TABLE IF NOT EXISTS player (
   id              TEXT PRIMARY KEY,
   xp              INTEGER NOT NULL DEFAULT 0,
+  xp_spent        INTEGER NOT NULL DEFAULT 0,
   shields         INTEGER NOT NULL DEFAULT 2,
   shields_updated INTEGER NOT NULL,
   created_at      INTEGER NOT NULL,
