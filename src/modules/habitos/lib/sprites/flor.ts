@@ -5,7 +5,7 @@
   filas y la planta crece hacia arriba desde ahí.
 
   Letras: g/G hoja y tallo · r/R pétalos · a centro · m/M tierra · . nada.
-  Ver `core/ui/pixel/sprite.ts` para la paleta entera.
+  Ver `core/ui/pixel/rejilla.ts` para la paleta entera.
 
   CADA ETAPA CAMBIA DE SILUETA, no solo de tamaño. Es lo que el jardín prometía
   con emoji y no cumplía: tres de las cinco especies repetían el mismo dibujo.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSprite, rectsDe } from "@/modules/core/ui/pixel/sprite";
+import { parseSprite, rectsDe } from "@/modules/core/ui/pixel/rejilla";
 import { FLOR, FLOR_MARCHITA } from "@/modules/habitos/lib/sprites/flor";
 
 describe("los sprites de la flor", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PALETA_PIXEL, parseSprite, rectsDe } from "./sprite";
+import { PALETA_PIXEL, parseSprite, rectsDe } from "./rejilla";
 
 describe("parseSprite", () => {
   it("lee una rejilla y devuelve sus dimensiones", () => {

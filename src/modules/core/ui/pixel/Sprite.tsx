@@ -1,4 +1,4 @@
-import { parseSprite, rectsDe } from "./sprite";
+import { parseSprite, rectsDe } from "./rejilla";
 
 /**
  * Pinta una rejilla de texto como SVG.
