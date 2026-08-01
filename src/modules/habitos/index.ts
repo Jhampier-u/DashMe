@@ -24,10 +24,18 @@ export { getHomeMetrics, type HomeMetrics } from "./lib/home";
 export { getNota, notasDeHabito, LIMITE_NOTA, type Nota } from "./lib/notas";
 export { pausasDeHabito, pausasPorHabito, type Pausa } from "./lib/pausas";
 export { asignarHuecos, intercambiar, type ConHueco } from "./lib/huecos";
-export { intercambiarHuecos } from "./lib/jardin";
+export { intercambiarHuecos, getJardinHistorico } from "./lib/jardin";
+export {
+  jardinEn,
+  rachaEn,
+  semanaEn,
+  primerDiaConDatos,
+  type HabitoHistorico,
+  type PlantaEn,
+} from "./lib/historia";
 export { getDiasCumplidos, type DiasCumplidos } from "./lib/dias-cumplidos";
 export { climaDe, ETIQUETA, NUBES, type Clima, type Tiempo } from "./lib/clima";
-export { dayKey } from "./lib/day";
+export { dayKey, isoFromDayKey } from "./lib/day";
 export {
   listProjects,
   getProjectWithTree,

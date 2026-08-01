@@ -3,13 +3,16 @@ import { Card } from "@/modules/core/ui/Card";
 import { PageHeader } from "@/modules/core/ui/PageHeader";
 import { buttonStyle } from "@/modules/core/ui/Button";
 import { Stat, StatGrid } from "@/modules/core/ui/Stat";
-import { GardenScene } from "@/modules/habitos/components/GardenScene";
+import { MemoriaDelJardin } from "@/modules/habitos/components/MemoriaDelJardin";
 import { Sprite } from "@/modules/core/ui/pixel/Sprite";
 import { spriteDe } from "@/modules/habitos/lib/sprites";
 import { db } from "@/modules/core/db";
 import {
   climaDe,
+  dayKey,
+  isoFromDayKey,
   getDiasCumplidos,
+  getJardinHistorico,
   getHabitsWithTodayStatus,
   isPlantWilted,
   stageFor,
@@ -40,9 +43,10 @@ export default async function GardenPage() {
   const hace7 = new Date(hoy);
   hace7.setUTCDate(hace7.getUTCDate() - 6);
 
-  const [habits, dias] = await Promise.all([
+  const [habits, dias, historia] = await Promise.all([
     getHabitsWithTodayStatus(db),
     getDiasCumplidos(db, hace7, hoy),
+    getJardinHistorico(db),
   ]);
   const tiempo = climaDe(dias.cumplidos.size, dias.fallados.size);
 
@@ -127,7 +131,12 @@ export default async function GardenPage() {
           ) : null}
 
           <Card>
-            <GardenScene habits={habits} tiempo={tiempo} />
+            <MemoriaDelJardin
+              habitsHoy={habits}
+              tiempoHoy={tiempo}
+              historia={historia}
+              hoyISO={isoFromDayKey(dayKey(hoy))}
+            />
             <p style={{ fontSize: 12, marginTop: 10 }}>
               Click en una planta para regarla. La corona marca el hábito ancla y el
               destello, una racha de 7 días o más.
