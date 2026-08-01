@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS habits (
   schedule      TEXT NOT NULL DEFAULT '1111111',
   intention     TEXT,
   target_count  INTEGER,
+  garden_slot   INTEGER,
   created_at    INTEGER NOT NULL
 );
 

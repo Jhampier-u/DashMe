@@ -31,6 +31,8 @@ export const habits = sqliteTable("habits", {
   intention: text("intention"),
   /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
   targetCount: integer("target_count"),
+  /** Su hueco en el jardín. Nulo = aún sin sitio. */
+  gardenSlot: integer("garden_slot"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
@@ -125,13 +127,6 @@ export const taskCategories = sqliteTable("task_categories", {
 export type TaskCategoryRow = typeof taskCategories.$inferSelect;
 
 /**
- * La única tabla de tareas del dashboard.
- *
- * Absorbió a `project_items`, que guardaba casi lo mismo y no se conocían. Una
- * tarea es una tarea tenga proyecto o no; `/proyectos` es esta misma tabla
- * filtrada por `project_id`.
- */
-/**
  * Notas por hábito y día.
  *
  * Tabla aparte y NO una columna de `habit_logs` a propósito: si fuera una
@@ -183,6 +178,13 @@ export const habitPauses = sqliteTable(
 
 export type HabitPauseRow = typeof habitPauses.$inferSelect;
 
+/**
+ * La única tabla de tareas del dashboard.
+ *
+ * Absorbió a `project_items`, que guardaba casi lo mismo y no se conocían. Una
+ * tarea es una tarea tenga proyecto o no; `/proyectos` es esta misma tabla
+ * filtrada por `project_id`.
+ */
 export const tasks = sqliteTable(
   "tasks",
   {

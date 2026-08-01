@@ -20,6 +20,7 @@ import * as c from "./lib/categorias";
 import * as adj from "./lib/adjuntos";
 import * as n from "./lib/notas";
 import * as pa from "./lib/pausas";
+import { intercambiarHuecos } from "./lib/jardin";
 import { dayKeyFromISO } from "./lib/day";
 
 export type {
@@ -282,5 +283,11 @@ export async function anadirArchivo(taskId: string, formData: FormData) {
 
 export async function borrarAdjunto(id: string) {
   await adj.deleteAttachment(db, id);
+  refresh();
+}
+
+/** Cambia de sitio dos plantas del jardín. */
+export async function moverPlanta(a: string, b: string) {
+  await intercambiarHuecos(db, a, b);
   refresh();
 }

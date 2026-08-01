@@ -132,6 +132,13 @@ export default async function GardenPage() {
               Click en una planta para regarla. La corona marca el hábito ancla y el
               destello, una racha de 7 días o más.
             </p>
+            {/* Las dos rutas se explican juntas porque son la misma función: el
+                teclado no es un apaño de repuesto. */}
+            <p style={{ fontSize: 12, marginTop: 6 }}>
+              Para cambiarlas de sitio, arrastra el asa <b>⠿</b> de la esquina, o
+              enfócala y pulsa <b>Enter</b>: muévela con las flechas, <b>Enter</b>{" "}
+              para dejarla ahí y <b>Escape</b> para devolverla donde estaba.
+            </p>
           </Card>
 
           <Card title="Etapas de crecimiento">

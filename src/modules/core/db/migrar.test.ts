@@ -161,6 +161,7 @@ describe("ponerAlDia sobre una base con la forma vieja", () => {
     const s = baseVieja();
     ponerAlDia(s);
     expect(columnas(s, "habits")).toContain("target_count");
+    expect(columnas(s, "habits")).toContain("garden_slot");
     expect(columnas(s, "habit_logs")).toContain("count");
     s.close();
   });

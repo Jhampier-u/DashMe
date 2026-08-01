@@ -34,8 +34,12 @@ const COLUMNAS_NUEVAS: Record<string, [string, string][]> = {
     ["category_id", "TEXT"],
     ["priority", "TEXT"],
   ],
-  /** El objetivo numérico del día. Nulo = este hábito no se cuenta. */
-  habits: [["target_count", "INTEGER"]],
+  habits: [
+    /** El objetivo numérico del día. Nulo = este hábito no se cuenta. */
+    ["target_count", "INTEGER"],
+    /** Su hueco en el jardín. Nulo = aún sin sitio; se resuelve al pintarlo. */
+    ["garden_slot", "INTEGER"],
+  ],
   /** Lo apuntado ese día. Nulo = no se apuntó cantidad. */
   habit_logs: [["count", "INTEGER"]],
 };

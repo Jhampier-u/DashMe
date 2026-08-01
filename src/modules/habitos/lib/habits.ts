@@ -57,6 +57,8 @@ export type HabitWithStatus = {
   partialToday: boolean;
   /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
   targetCount: number | null;
+  /** Su hueco en el jardín tal y como está en la base. Nulo = aún sin sitio. */
+  gardenSlot: number | null;
   /** La nota de hoy, si la hay. */
   notaHoy: string | null;
   /** Si hoy cae dentro de una pausa. */
@@ -164,6 +166,7 @@ export async function getHabitsWithTodayStatus(
       doneToday: !!todayLog,
       partialToday: !!todayLog?.partial,
       targetCount: h.targetCount,
+      gardenSlot: h.gardenSlot,
       notaHoy: notaPorHabito.get(h.id) ?? null,
       // Se expone aparte de `scheduledToday` a propósito: los dos serán falsos
       // hoy, pero la fila tiene que poder decir POR QUÉ. Sin esto, un hábito

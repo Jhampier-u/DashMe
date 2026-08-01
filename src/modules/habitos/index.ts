@@ -23,6 +23,8 @@ export {
 export { getHomeMetrics, type HomeMetrics } from "./lib/home";
 export { getNota, notasDeHabito, LIMITE_NOTA, type Nota } from "./lib/notas";
 export { pausasDeHabito, pausasPorHabito, type Pausa } from "./lib/pausas";
+export { asignarHuecos, intercambiar, type ConHueco } from "./lib/huecos";
+export { intercambiarHuecos } from "./lib/jardin";
 export { getDiasCumplidos, type DiasCumplidos } from "./lib/dias-cumplidos";
 export { climaDe, ETIQUETA, NUBES, type Clima, type Tiempo } from "./lib/clima";
 export { dayKey } from "./lib/day";
