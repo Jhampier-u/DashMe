@@ -3,6 +3,7 @@
 import { useTransition, type CSSProperties } from "react";
 import type { HabitWithStatus } from "@/modules/habitos/lib/habits";
 import { useLocalHour } from "@/modules/habitos/lib/useLocalHour";
+import { ETIQUETA, type Tiempo } from "@/modules/habitos/lib/clima";
 import { isPlantWilted, plantEmoji, plantStateLabel, stageFor } from "@/modules/habitos/lib/garden";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";
 import { formatDays } from "@/modules/habitos/lib/day";
@@ -10,7 +11,7 @@ import { toggleToday } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useSparkleBurst, SparkleLayer } from "./Sparkle";
 
-type Props = { habits: HabitWithStatus[] };
+type Props = { habits: HabitWithStatus[]; tiempo: Tiempo };
 
 type SkyPhase = "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night";
 
@@ -93,7 +94,7 @@ function seedRand(seed: number) {
   };
 }
 
-export function GardenScene({ habits }: Props) {
+export function GardenScene({ habits, tiempo }: Props) {
   const hour = useLocalHour();
   const phase: SkyPhase = hour === null ? "night" : phaseFor(hour);
   const isDark = phase === "night" || phase === "dusk" || phase === "dawn";
@@ -106,7 +107,12 @@ export function GardenScene({ habits }: Props) {
     size: 2 + Math.floor(rand() * 2),
     delay: rand() * 1.6,
   }));
-  const clouds = Array.from({ length: 4 }, (_, i) => ({
+  /*
+    Las nubes ya no son cuatro fijas: son las que le tocan a tu semana. Cero si
+    está despejado, cuatro si llueve. La cantidad ES la señal, para que el estado
+    no dependa de distinguir un emoji pequeño.
+  */
+  const clouds = Array.from({ length: tiempo.nubes }, (_, i) => ({
     left: 5 + i * 22 + rand() * 6,
     top: 6 + rand() * 18,
     size: 1.4 + rand() * 0.6,
@@ -159,6 +165,34 @@ export function GardenScene({ habits }: Props) {
         }}
       >
         {SKY_LABEL[phase]}
+      </div>
+
+      {/*
+        El tiempo va en TEXTO, no solo en la forma de las nubes: es la regla del
+        rediseño —nunca una sola señal— y aquí además el emoji es diminuto.
+
+        El `title` dice de dónde sale el dato, para que «Lluvia» no se lea como un
+        juicio sobre ti sino como el recuento que es.
+      */}
+      <div
+        title={
+          tiempo.evaluables === 0
+            ? "Aún no hay días que evaluar esta semana"
+            : `${tiempo.cumplidos} de ${tiempo.evaluables} días cumplidos esta semana`
+        }
+        style={{
+          ...PEGATINA,
+          position: "absolute",
+          top: 12,
+          right: 12,
+          zIndex: 20,
+          padding: "3px 9px",
+          borderRadius: 999,
+          fontSize: 11,
+          fontWeight: 700,
+        }}
+      >
+        {ETIQUETA[tiempo.estado]}
       </div>
 
       <span
@@ -219,7 +253,7 @@ export function GardenScene({ habits }: Props) {
             userSelect: "none",
           }}
         >
-          ☁️
+          {tiempo.estado === "lluvia" ? "🌧️" : "☁️"}
         </span>
       ))}
 
