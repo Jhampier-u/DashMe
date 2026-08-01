@@ -24,6 +24,11 @@ import {
 } from "@/modules/habitos/lib/day";
 import { buttonStyle } from "@/modules/core/ui/Button";
 import type { Decoracion } from "@/modules/habitos/lib/decoraciones";
+import {
+  faunaEn,
+  fraseDeFauna,
+  type DiaDeFauna,
+} from "@/modules/habitos/lib/fauna";
 import { GardenScene } from "./GardenScene";
 
 /*
@@ -43,6 +48,7 @@ type Props = {
   /** Hoy, en clave de día, para que el cliente no lo deduzca de su reloj. */
   hoyISO: string;
   decoraciones: Decoracion[];
+  fauna: DiaDeFauna[];
 };
 
 /**
@@ -89,6 +95,7 @@ export function MemoriaDelJardin({
   historia,
   hoyISO,
   decoraciones,
+  fauna,
 }: Props) {
   const hoy = useMemo(() => dayKeyFromISO(hoyISO), [hoyISO]);
   const primero = useMemo(() => primerDiaConDatos(historia), [historia]);
@@ -133,7 +140,15 @@ export function MemoriaDelJardin({
         tiempo={reconstruido ? reconstruido.tiempo : tiempoHoy}
         soloLectura={enElPasado}
         decoraciones={decoraciones}
+        fauna={dia ? faunaEn(fauna, dia) : { pajaros: 0, mariposas: 0 }}
       />
+      {/*
+        El recuento en TEXTO. La fauna es el adorno de un dato que se puede leer,
+        no la única forma de saberlo.
+      */}
+      <p style={{ fontSize: 12, marginTop: 8 }}>
+        {dia ? fraseDeFauna(fauna, dia) : null}
+      </p>
       {hayMemoria ? (
         <BarraDeTiempo
           indice={indice}

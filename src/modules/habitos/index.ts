@@ -29,6 +29,8 @@ export { intercambiarHuecos, getJardinHistorico } from "./lib/jardin";
 // `actions.ts` se llama igual, y tener los dos a mano invita a que una pantalla
 // llame al que recibe la base desde el navegador, donde no hay base.
 export { decoracionesTuyas } from "./lib/tienda";
+export { primerDiaDeRegistro, diasConTareaCerrada } from "./lib/jardin";
+export { mezclarFauna, type DiaDeFauna } from "./lib/fauna";
 export {
   CATALOGO,
   TIENDA,
@@ -49,7 +51,7 @@ export {
 } from "./lib/historia";
 export { getDiasCumplidos, type DiasCumplidos } from "./lib/dias-cumplidos";
 export { climaDe, ETIQUETA, NUBES, type Clima, type Tiempo } from "./lib/clima";
-export { dayKey, isoFromDayKey } from "./lib/day";
+export { dayKey, isoFromDayKey, dayKeyFromISO } from "./lib/day";
 export {
   listProjects,
   getProjectWithTree,

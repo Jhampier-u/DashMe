@@ -8,15 +8,20 @@ import { Tienda } from "@/modules/habitos/components/Tienda";
 import { Sprite } from "@/modules/core/ui/pixel/Sprite";
 import { spriteDe } from "@/modules/habitos/lib/sprites";
 import { db } from "@/modules/core/db";
+import { getByDate } from "@/modules/musica";
 import {
   climaDe,
   dayKey,
   isoFromDayKey,
+  dayKeyFromISO,
   getDiasCumplidos,
   getJardinHistorico,
   getHabitsWithTodayStatus,
   getPlayerLevelInfo,
   decoracionesTuyas,
+  primerDiaDeRegistro,
+  diasConTareaCerrada,
+  mezclarFauna,
   isPlantWilted,
   stageFor,
 } from "@/modules/habitos";
@@ -54,6 +59,34 @@ export default async function GardenPage() {
     decoracionesTuyas(db),
   ]);
   const tiempo = climaDe(dias.cumplidos.size, dias.fallados.size);
+
+  /*
+    La fauna se compone AQUÍ y no dentro de un módulo, por el mismo motivo que el
+    cruce de la portada: la música y los hábitos no se conocen, y ponerlo en uno
+    obligaría a ese a importar el otro. Esta página es de los pocos sitios que
+    conoce legítimamente las dos interfaces públicas.
+
+    Acotado al tramo al que llega la barra de tiempo. Hay casi tres mil días con
+    escuchas guardadas, y mandarlos todos sería pagar por un pasado al que no se
+    puede llegar.
+  */
+  const primero = await primerDiaDeRegistro(db);
+  const fauna = primero
+    ? mezclarFauna(
+        (
+          await getByDate(db, {
+            fromDate: isoFromDayKey(primero),
+            toDate: isoFromDayKey(dayKey(hoy)),
+            label: "jardín",
+            preset: "custom",
+          })
+        ).map((e) => ({
+          dia: dayKeyFromISO(e.date)?.getTime() ?? 0,
+          ms: e.ms ?? 0,
+        })),
+        await diasConTareaCerrada(db, primero),
+      ).filter((d) => d.dia > 0)
+    : [];
 
   const total = habits.length;
   const wateredToday = habits.filter((h) => h.doneToday).length;
@@ -107,23 +140,43 @@ export default async function GardenPage() {
             <Stat
               label="Regadas hoy"
               value={`${wateredToday} / ${total}`}
-              meta={wateredToday === total ? "el jardín está al día" : "aún queda riego"}
+              meta={
+                wateredToday === total
+                  ? "el jardín está al día"
+                  : "aún queda riego"
+              }
             />
-            <Stat label="Maduras" value={String(mature)} meta="racha de 7 días o más" />
-            <Stat label="Florecientes" value={String(blooming)} meta="racha de 14 días o más" />
+            <Stat
+              label="Maduras"
+              value={String(mature)}
+              meta="racha de 7 días o más"
+            />
+            <Stat
+              label="Florecientes"
+              value={String(blooming)}
+              meta="racha de 14 días o más"
+            />
           </StatGrid>
 
           {wilted > 0 ? (
             <Card>
-              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div
+                style={{ display: "flex", gap: 12, alignItems: "flex-start" }}
+              >
                 <span style={{ lineHeight: 1 }} aria-hidden>
-                  <Sprite grid={spriteDe("flower", 0, true)} size={34} label="" />
+                  <Sprite
+                    grid={spriteDe("flower", 0, true)}
+                    size={34}
+                    label=""
+                  />
                 </span>
                 <div>
                   {/* Iba en rojo. Lo que avisa ahora son la planta caída de al
                       lado y el grosor: el aviso no puede depender del tono. */}
                   <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-                    {wilted === 1 ? "Una planta marchita" : `${wilted} plantas marchitas`}
+                    {wilted === 1
+                      ? "Una planta marchita"
+                      : `${wilted} plantas marchitas`}
                   </div>
                   <p style={{ fontSize: 12.5, marginTop: 4 }}>
                     {wilted === 1
@@ -141,18 +194,20 @@ export default async function GardenPage() {
               tiempoHoy={tiempo}
               historia={historia}
               decoraciones={decoraciones}
+              fauna={fauna}
               hoyISO={isoFromDayKey(dayKey(hoy))}
             />
             <p style={{ fontSize: 12, marginTop: 10 }}>
-              Click en una planta para regarla. La corona marca el hábito ancla y el
-              destello, una racha de 7 días o más.
+              Click en una planta para regarla. La corona marca el hábito ancla
+              y el destello, una racha de 7 días o más.
             </p>
             {/* Las dos rutas se explican juntas porque son la misma función: el
                 teclado no es un apaño de repuesto. */}
             <p style={{ fontSize: 12, marginTop: 6 }}>
-              Para cambiarlas de sitio, arrastra el asa <b>⠿</b> de la esquina, o
-              enfócala y pulsa <b>Enter</b>: muévela con las flechas, <b>Enter</b>{" "}
-              para dejarla ahí y <b>Escape</b> para devolverla donde estaba.
+              Para cambiarlas de sitio, arrastra el asa <b>⠿</b> de la esquina,
+              o enfócala y pulsa <b>Enter</b>: muévela con las flechas,{" "}
+              <b>Enter</b> para dejarla ahí y <b>Escape</b> para devolverla
+              donde estaba.
             </p>
           </Card>
 
@@ -174,7 +229,11 @@ export default async function GardenPage() {
                     style={{ display: "flex", justifyContent: "center" }}
                     aria-hidden
                   >
-                    <Sprite grid={spriteDe("flower", i, false)} size={34} label="" />
+                    <Sprite
+                      grid={spriteDe("flower", i, false)}
+                      size={34}
+                      label=""
+                    />
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>
                     {s.label}
@@ -194,8 +253,8 @@ export default async function GardenPage() {
               ))}
             </div>
             <p style={{ fontSize: 12, marginTop: 12 }}>
-              Mantén la racha y la planta crece. Si la rompes se marchita, pero revive
-              en cuanto retomes el hábito.
+              Mantén la racha y la planta crece. Si la rompes se marchita, pero
+              revive en cuanto retomes el hábito.
             </p>
           </Card>
         </>

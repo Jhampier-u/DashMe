@@ -1,6 +1,6 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte } from "drizzle-orm";
 import type { Db } from "@/modules/core/db";
-import { habits as habitsTable, habitLogs } from "../schema";
+import { habits as habitsTable, habitLogs, tasks } from "../schema";
 import { asignarHuecos, intercambiar, type ConHueco } from "./huecos";
 import { pausasPorHabito } from "./pausas";
 import { sanitizeSchedule } from "./calendario";
@@ -8,6 +8,7 @@ import { normalizeDayKey } from "./day";
 import { diasQueCuentan } from "./cantidad";
 import type { PlantSpecies } from "./garden";
 import type { HabitoHistorico } from "./historia";
+
 
 /*
   Guardar la colocación del jardín.
@@ -132,4 +133,39 @@ export async function getJardinHistorico(db: Db): Promise<HabitoHistorico[]> {
       .filter((l) => !l.partial)
       .map((l) => normalizeDayKey(l.date).getTime()),
   }));
+}
+
+/**
+ * El día del registro de hábito más antiguo. Nulo si no hay ninguno.
+ *
+ * Es donde empieza la barra de tiempo, y por tanto hasta dónde hay que traer
+ * datos de fuera. Sin él no hay pasado que enseñar.
+ */
+export async function primerDiaDeRegistro(db: Db): Promise<Date | null> {
+  const [fila] = await db
+    .select({ dia: habitLogs.date })
+    .from(habitLogs)
+    .orderBy(asc(habitLogs.date))
+    .limit(1);
+  return fila ? normalizeDayKey(fila.dia) : null;
+}
+
+/**
+ * Cuántas tareas se cerraron cada día, desde `desde`.
+ *
+ * Devuelve una lista de claves de día en bruto —una por tarea— y no un recuento
+ * ya hecho: quien las cuenta es `mezclarFauna`, que es puro y se prueba sin
+ * base.
+ */
+export async function diasConTareaCerrada(
+  db: Db,
+  desde: Date,
+): Promise<number[]> {
+  const filas = await db
+    .select({ cerrada: tasks.completedAt })
+    .from(tasks)
+    .where(and(eq(tasks.status, "DONE"), gte(tasks.completedAt, desde)));
+  return filas
+    .filter((f) => f.cerrada !== null)
+    .map((f) => normalizeDayKey(f.cerrada as Date).getTime());
 }
