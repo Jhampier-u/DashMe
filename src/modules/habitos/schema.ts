@@ -262,3 +262,21 @@ export const taskAttachments = sqliteTable(
 );
 
 export type TaskAttachmentRow = typeof taskAttachments.$inferSelect;
+
+/**
+ * Lo comprado en la tienda del jardín.
+ *
+ * La clave primaria es el `kind` y no un id propio: cada decoración es única, y
+ * eso convierte «no comprar dos veces la misma» en algo que impide el motor en
+ * vez de algo que hay que acordarse de comprobar.
+ */
+export const gardenDecorations = sqliteTable("garden_decorations", {
+  /** Clave del catálogo —`piedra`, `valla`…—, no un nombre visible. */
+  kind: text("kind").primaryKey(),
+  /** Lo que costó EL DÍA QUE SE COMPRÓ. Si mañana cambia el precio, el gasto
+   *  que ya se hizo no cambia. */
+  precio: integer("precio").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export type GardenDecorationRow = typeof gardenDecorations.$inferSelect;

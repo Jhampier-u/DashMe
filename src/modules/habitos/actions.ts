@@ -21,6 +21,7 @@ import * as adj from "./lib/adjuntos";
 import * as n from "./lib/notas";
 import * as pa from "./lib/pausas";
 import { intercambiarHuecos } from "./lib/jardin";
+import { comprarDecoracion as comprar } from "./lib/tienda";
 import { dayKeyFromISO } from "./lib/day";
 
 export type {
@@ -290,4 +291,11 @@ export async function borrarAdjunto(id: string) {
 export async function moverPlanta(a: string, b: string) {
   await intercambiarHuecos(db, a, b);
   refresh();
+}
+
+/** Compra una decoración del jardín. Devuelve el motivo si no se puede. */
+export async function comprarDecoracion(kind: string) {
+  const r = await comprar(db, kind);
+  if (r.ok) refresh();
+  return r;
 }

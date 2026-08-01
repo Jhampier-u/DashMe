@@ -4,6 +4,7 @@ import { PageHeader } from "@/modules/core/ui/PageHeader";
 import { buttonStyle } from "@/modules/core/ui/Button";
 import { Stat, StatGrid } from "@/modules/core/ui/Stat";
 import { MemoriaDelJardin } from "@/modules/habitos/components/MemoriaDelJardin";
+import { Tienda } from "@/modules/habitos/components/Tienda";
 import { Sprite } from "@/modules/core/ui/pixel/Sprite";
 import { spriteDe } from "@/modules/habitos/lib/sprites";
 import { db } from "@/modules/core/db";
@@ -14,6 +15,8 @@ import {
   getDiasCumplidos,
   getJardinHistorico,
   getHabitsWithTodayStatus,
+  getPlayerLevelInfo,
+  decoracionesTuyas,
   isPlantWilted,
   stageFor,
 } from "@/modules/habitos";
@@ -43,10 +46,12 @@ export default async function GardenPage() {
   const hace7 = new Date(hoy);
   hace7.setUTCDate(hace7.getUTCDate() - 6);
 
-  const [habits, dias, historia] = await Promise.all([
+  const [habits, dias, historia, jugador, decoraciones] = await Promise.all([
     getHabitsWithTodayStatus(db),
     getDiasCumplidos(db, hace7, hoy),
     getJardinHistorico(db),
+    getPlayerLevelInfo(db),
+    decoracionesTuyas(db),
   ]);
   const tiempo = climaDe(dias.cumplidos.size, dias.fallados.size);
 
@@ -135,6 +140,7 @@ export default async function GardenPage() {
               habitsHoy={habits}
               tiempoHoy={tiempo}
               historia={historia}
+              decoraciones={decoraciones}
               hoyISO={isoFromDayKey(dayKey(hoy))}
             />
             <p style={{ fontSize: 12, marginTop: 10 }}>
@@ -148,6 +154,10 @@ export default async function GardenPage() {
               enfócala y pulsa <b>Enter</b>: muévela con las flechas, <b>Enter</b>{" "}
               para dejarla ahí y <b>Escape</b> para devolverla donde estaba.
             </p>
+          </Card>
+
+          <Card title="Tienda del jardín">
+            <Tienda saldo={jugador.xp} tuyas={decoraciones} />
           </Card>
 
           <Card title="Etapas de crecimiento">

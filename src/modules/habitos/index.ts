@@ -25,6 +25,20 @@ export { getNota, notasDeHabito, LIMITE_NOTA, type Nota } from "./lib/notas";
 export { pausasDeHabito, pausasPorHabito, type Pausa } from "./lib/pausas";
 export { asignarHuecos, intercambiar, type ConHueco } from "./lib/huecos";
 export { intercambiarHuecos, getJardinHistorico } from "./lib/jardin";
+// `comprarDecoracion` NO sale por aquí a propósito: el server action de
+// `actions.ts` se llama igual, y tener los dos a mano invita a que una pantalla
+// llame al que recibe la base desde el navegador, donde no hay base.
+export { decoracionesTuyas } from "./lib/tienda";
+export {
+  CATALOGO,
+  TIENDA,
+  puedeComprar,
+  esDecoracion,
+  type Decoracion,
+  type EnLaTienda,
+  type Compra,
+  type Rechazo,
+} from "./lib/decoraciones";
 export {
   jardinEn,
   rachaEn,

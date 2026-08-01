@@ -23,6 +23,7 @@ import {
   isoFromDayKey,
 } from "@/modules/habitos/lib/day";
 import { buttonStyle } from "@/modules/core/ui/Button";
+import type { Decoracion } from "@/modules/habitos/lib/decoraciones";
 import { GardenScene } from "./GardenScene";
 
 /*
@@ -41,6 +42,7 @@ type Props = {
   historia: HabitoHistorico[];
   /** Hoy, en clave de día, para que el cliente no lo deduzca de su reloj. */
   hoyISO: string;
+  decoraciones: Decoracion[];
 };
 
 /**
@@ -86,6 +88,7 @@ export function MemoriaDelJardin({
   tiempoHoy,
   historia,
   hoyISO,
+  decoraciones,
 }: Props) {
   const hoy = useMemo(() => dayKeyFromISO(hoyISO), [hoyISO]);
   const primero = useMemo(() => primerDiaConDatos(historia), [historia]);
@@ -129,6 +132,7 @@ export function MemoriaDelJardin({
         habits={reconstruido ? reconstruido.plantas : habitsHoy}
         tiempo={reconstruido ? reconstruido.tiempo : tiempoHoy}
         soloLectura={enElPasado}
+        decoraciones={decoraciones}
       />
       {hayMemoria ? (
         <BarraDeTiempo

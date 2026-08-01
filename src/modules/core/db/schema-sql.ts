@@ -303,4 +303,10 @@ CREATE INDEX IF NOT EXISTS task_attachments_task_idx ON task_attachments(task_id
     genres     TEXT NOT NULL DEFAULT '[]',
     fetched_at INTEGER NOT NULL
   );
+
+CREATE TABLE IF NOT EXISTS garden_decorations (
+  kind       TEXT PRIMARY KEY,
+  precio     INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
 `;
