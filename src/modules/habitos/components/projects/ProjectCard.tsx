@@ -104,13 +104,25 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
           marginBottom: 8,
         }}
       >
+        {/*
+          Dice de QUÉ son los números. El tablero de `/tareas` enseña solo las
+          raíces, así que un proyecto puede decir «de 3» mientras allí se ve una
+          sola tarjeta. No es un fallo —cuentan cosas distintas— pero sin la
+          palabra parecía que una de las dos pantallas mentía.
+        */}
         <span>
-          {project.doneItems} de {project.totalItems}
+          {project.doneItems} de {project.totalItems}{" "}
+          <span style={{ fontFamily: "var(--font-cuerpo)", fontSize: 11.5 }}>
+            tareas y subtareas
+          </span>
         </span>
         <span>{Math.round(percent * 100)}%</span>
       </div>
 
-      <ProgressBar value={percent} />
+      <ProgressBar
+        value={percent}
+        label={`${project.name}: ${project.doneItems} de ${project.totalItems} tareas y subtareas`}
+      />
 
       {/* El aviso iba en ámbar. Ahora lo dicen el ▲ que ya llevaba y el grosor:
           el pastel es fondo, nunca texto. */}

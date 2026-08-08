@@ -13,15 +13,30 @@ export function ProgressBar({
   /** Color del relleno. Pastel o tinta, nunca un tono pensado para texto. */
   fill = "var(--color-pink)",
   height = 12,
+  label,
 }: {
   value: number;
   fill?: string;
   height?: number;
+  /** Qué mide. Sin esto la barra es decoración y se anuncia como tal. */
+  label?: string;
 }) {
   const percent = Math.round(Math.min(1, Math.max(0, value)) * 100);
 
+  /*
+    Era un `div` sin rol: para un lector de pantalla la barra no existía. Ahora
+    es un `progressbar` de verdad cuando se le da un `label`, y decoración
+    declarada cuando no —que es lo correcto donde el número ya está escrito al
+    lado, para no anunciarlo dos veces—.
+  */
   return (
     <div
+      role={label ? "progressbar" : undefined}
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+      aria-valuenow={label ? percent : undefined}
+      aria-valuemin={label ? 0 : undefined}
+      aria-valuemax={label ? 100 : undefined}
       style={{
         height,
         background: "var(--color-paper-2)",
