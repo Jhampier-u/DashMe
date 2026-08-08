@@ -351,6 +351,105 @@ se pueda volver a importar. No como feature de marketing, sino porque:
 Es, junto al estado «interiorizado», la otra cosa de este documento que un
 competidor comercial no puede copiar sin renunciar a su modelo de negocio.
 
+---
+
+# Parte 6 · Lo que aporta el sexto informe
+
+## 6.1 La pieza que le faltaba al estado «interiorizado»
+
+En la parte 2 propuse que el usuario marcara a mano un hábito como interiorizado.
+**Hay una forma mejor y con base psicométrica de saber cuándo sugerirlo.**
+
+**SRBAI** — Gardner, Abraham, Lally y de Bruijn (2012), *IJBNPA* 9:102. Una
+subescala validada de **cuatro ítems** que mide automaticidad:
+
+> lo hago automáticamente · lo hago sin recordarlo conscientemente · lo hago sin
+> pensar · empiezo antes de darme cuenta
+
+**Ninguna app comercial mide automaticidad. Todas miden frecuencia.** Y son cosas
+distintas: la racha cuenta días seguidos; el SRBAI mide si ya no tienes que
+querer hacerlo.
+
+Combinado con Lally et al. (2010) —la automaticidad crece por una curva asintótica
+individual, con un rango de **18 a 254 días**— sale una alternativa a la racha que
+sí responde a la pregunta que importa: *¿esto ya es un hábito?*
+
+**Propuesta corregida:** cuatro preguntas una vez por semana, y cuando la curva se
+aplane, el dashboard **sugiere** el estado interiorizado. La decisión sigue siendo
+del usuario —el riesgo de 2.3 no cambia—, pero deja de ser una corazonada.
+
+## 6.2 El hueco mejor documentado del sector: los hábitos negativos
+
+No los tenemos, y **nadie los tiene bien**. En Loop, los hábitos de tipo «como
+mucho» están rotos de una forma que se lee sola:
+
+- Un día **sin registro rompe la racha**: para abstenerte tienes que registrar
+  activamente un cero cada día.
+- La «mejor racha» se calcula sobre los periodos en que **sí** practicaste el mal
+  hábito. El signo está invertido — [issue #2321](https://github.com/iSoron/uhabits/issues/2321), abierta en febrero de 2026.
+- Y de ahí sale la frase más elocuente de todo el estudio: **el confeti celebra la
+  recaída.**
+
+Loop tuvo que añadir en 2.3.0 una regla reveladora: *«nunca marcar los hábitos de
+"como mucho" como completados del día»* — porque siempre puedes empeorarlo antes
+de medianoche.
+
+La alternativa del mercado (I Am Sober, QuitNow) cuenta **tiempo desde el último
+evento**, lo que evita el registro diario pero hace que **un desliz borre meses,
+sin crédito parcial posible**.
+
+Es un hueco real y bien probado. No lo propongo para ya —es una feature nueva, no
+un arreglo—, pero es la mejor candidata si algún día quieres ampliar.
+
+## 6.3 Dos piezas de arquitectura que merece la pena robar
+
+**`aggday`, de Beeminder.** Separa tres cosas que todo el mundo mezcla: *qué
+registras*, *cómo se resume un día* (suma, media, mediana, mínimo, máximo,
+recuento, binario…) y *cómo decae el histórico*. Convierte «¿hice bastante?» de
+una pregunta binaria en un escalar. Es la mejor idea de diseño de datos del
+estudio.
+
+**La asimetría del «horizonte de akrasia».** En Beeminder puedes bajarte el listón,
+pero **con siete días de retardo**; subírtelo es inmediato. Resuelve el problema de
+«ajustar la exigencia sin que sea una excusa» sin necesidad de juzgar al usuario.
+
+## 6.4 Una advertencia que toca nuestra tienda
+
+**Renfree et al. (CHI 2016)**, 16 usuarios de Lift: los recordatorios y las rachas
+sostienen la repetición **pero crean dependencia de la app**, y como todo el mundo
+acaba abandonándola, la conducta se derrumba con ella. Textual:
+
+> *«Con las rachas, las recompensas extrínsecas esperadas anulan el desarrollo de
+> la automaticidad al mantener la conducta orientada a la meta.»*
+
+Y una revisión de 50 recomendaciones desde la teoría de la autodeterminación
+(Alberts, Lyngs y Lukoff, 2024) remata el diagnóstico: *«la SDT se usa para
+optimizar el compromiso con la tecnología misma, no con la conducta objetivo»*.
+
+**Es el argumento más fuerte a favor del estado interiorizado**: si el éxito es que
+el hábito sobreviva sin la app, la app tiene que tener una salida.
+
+## 6.5 Y una corrección a un consejo popular
+
+**Beshears et al. (2021), *Management Science*.** Incentivar la rutina —pagar por
+ir al gimnasio **dentro de una ventana horaria planificada**— produjo **menos
+visitas** que incentivar la flexibilidad, **durante la intervención y después de
+retirarla**. El grupo de horario rígido cayó más al quitar los incentivos.
+
+Va contra el consejo de «hazlo a la misma hora cada día». **No** va contra anclar a
+un evento: encaja exactamente con Stawarz. Refuerza que los ejemplos del campo
+`intention` deban ser sucesos —«cuando cierre el portátil»— y nunca relojes.
+
+## 6.6 Un detalle que hay que comprobar en nuestras gráficas
+
+**Niess et al. (MobileHCI 2020)** probaron cuatro formas de visualizar metas **no
+alcanzadas** con 165 encuestados y 20 entrevistas: **las barras favorecen
+significativamente la reflexión, y las barras multicolor disparan
+significativamente más rumiación.**
+
+El semáforo rojo/verde es el patrón malo. Merece la pena revisar cómo pintamos los
+días fallados en `last30` y en las gráficas de cumplimiento.
+
 # Orden sugerido
 
 1. **La barra de filtros** (parte 1). Es lo que molesta hoy, es pequeño y todo
@@ -361,5 +460,7 @@ competidor comercial no puede copiar sin renunciar a su modelo de negocio.
    genuinamente único. Toca esquema, consultas y jardín.
 4. **La memoria de UbiFit** (3.3), si tras lo anterior sigue apeteciendo.
 5. **Los pájaros por presencia** (parte 4), que es una línea.
-6. **La exportación honesta** (5.3). Es la otra que un competidor no puede
+6. **El SRBAI para sugerir «interiorizado»** (6.1). Cuatro preguntas semanales;
+   convierte la propuesta 3 de corazonada en medida.
+7. **La exportación honesta** (5.3). Es la otra que un competidor no puede
    copiar, y no depende de nada de lo anterior: se puede hacer cuando se quiera.
