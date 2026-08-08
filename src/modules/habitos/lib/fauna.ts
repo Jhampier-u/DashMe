@@ -23,33 +23,37 @@ export type DiaDeFauna = {
 export type Fauna = { pajaros: number; mariposas: number };
 
 /**
- * Los tramos de los pájaros, por minutos escuchados.
+ * Los pájaros que salen cuando hubo música. Siempre los mismos.
  *
- * Tramos y no una división: con «un pájaro por cada 30 minutos» una tarde larga
- * llenaría el cielo, y la diferencia entre nueve y diez pájaros no la ve nadie.
- * Cuatro estados se distinguen; veinte no.
+ * ANTES ERAN CUATRO TRAMOS por minutos escuchados, y se cambió a propósito.
+ *
+ * Etkin (2016), *Journal of Consumer Research*, seis experimentos: medir una
+ * actividad placentera aumenta cuánto la haces **y reduce cuánto la disfrutas**,
+ * porque la atención se va al resultado medible y la cosa «se parece más a
+ * trabajo». El efecto aparece SIN recompensa externa: medir por sí solo ya opera
+ * como una.
+ *
+ * La música es probablemente lo único de este dashboard que no se pide como
+ * deber. Un cielo con escalones —tres pájaros a los 90 minutos, cuatro a los
+ * 180— convierte escuchar en algo que se supera. Con presencia no hay nada que
+ * batir: o hubo música o no.
+ *
+ * La CANTIDAD no se pierde: sigue escrita debajo de la escena, que es un
+ * registro y no una recompensa.
  */
-const TRAMOS: { hasta: number; pajaros: number }[] = [
-  { hasta: 30, pajaros: 1 },
-  { hasta: 90, pajaros: 2 },
-  { hasta: 180, pajaros: 3 },
-];
-
-export const MAX_PAJAROS = 4;
+export const MAX_PAJAROS = 3;
 export const MAX_MARIPOSAS = 5;
 
 /**
- * Cuántos pájaros para esos minutos.
+ * Si hubo música, salen pájaros. Si no, no.
  *
- * Cero minutos son CERO pájaros, y eso es deliberado: un día sin música no se
- * rellena con un pájaro suelto para que el cielo no parezca vacío. Si el día
- * estuvo vacío, la escena lo dice.
+ * Cero minutos son CERO pájaros, y eso sigue siendo deliberado: un día sin
+ * música no se rellena para que el cielo no parezca vacío. Y un número imposible
+ * —infinito, negativo— también da cero: un dato roto no es «escuchaste
+ * muchísimo».
  */
 export function pajarosPara(minutos: number): number {
   if (!Number.isFinite(minutos) || minutos <= 0) return 0;
-  for (const t of TRAMOS) {
-    if (minutos < t.hasta) return t.pajaros;
-  }
   return MAX_PAJAROS;
 }
 

@@ -30,18 +30,18 @@ describe("pajarosPara", () => {
     expect(pajarosPara(0)).toBe(0);
   });
 
-  it("recorre los tramos de la tabla", () => {
-    expect(pajarosPara(1)).toBe(1);
-    expect(pajarosPara(29)).toBe(1);
-    expect(pajarosPara(30)).toBe(2);
-    expect(pajarosPara(89)).toBe(2);
-    expect(pajarosPara(90)).toBe(3);
-    expect(pajarosPara(179)).toBe(3);
-    expect(pajarosPara(180)).toBe(4);
-  });
+  it("los mismos pájaros escuches un minuto o cinco horas", () => {
+    /*
+      CAMBIÓ A PROPÓSITO. Antes eran cuatro tramos por minutos. Etkin (2016),
+      seis experimentos: medir una actividad placentera aumenta cuánto la haces
+      y REDUCE cuánto la disfrutas, sin necesidad de recompensa externa.
 
-  it("no pasa del tope por mucho que escuches", () => {
-    // Criterio 3. La diferencia entre nueve y diez pájaros no la ve nadie.
+      Un cielo con escalones convierte escuchar música en algo que se supera. Con
+      presencia no hay nada que batir. La cantidad sigue escrita debajo de la
+      escena, que es un registro y no una recompensa.
+    */
+    expect(pajarosPara(1)).toBe(MAX_PAJAROS);
+    expect(pajarosPara(90)).toBe(MAX_PAJAROS);
     expect(pajarosPara(10_000)).toBe(MAX_PAJAROS);
   });
 
@@ -85,8 +85,8 @@ describe("faunaEn", () => {
 
   it("da la fauna del día que se le pide", () => {
     // Criterio 6: al viajar a un día, la fauna es la de ESE día.
-    expect(faunaEn(dias, D(1))).toEqual({ pajaros: 2, mariposas: 2 });
-    expect(faunaEn(dias, D(3))).toEqual({ pajaros: 4, mariposas: 5 });
+    expect(faunaEn(dias, D(1))).toEqual({ pajaros: MAX_PAJAROS, mariposas: 2 });
+    expect(faunaEn(dias, D(3))).toEqual({ pajaros: MAX_PAJAROS, mariposas: 5 });
   });
 
   it("un día del que no se sabe nada no tiene fauna", () => {
