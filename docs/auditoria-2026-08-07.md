@@ -6,7 +6,39 @@ tareas y proyectos. Música queda fuera por decisión del usuario.
 **Estado: COMPLETO.** Auditoría cerrada y las cinco líneas de investigación
 devueltas.
 
-**Nada de esto se ha corregido.** Es un informe, por decisión del usuario.
+**Este informe se escribió sin tocar código.** Lo que vino después sí lo tocó, y
+queda registrado abajo para que el documento no diga lo contrario de lo que hay.
+
+## Estado a 8 de agosto de 2026
+
+| | Estado | Commit |
+|---|---|---|
+| Hallazgo 1 · «hecho hoy» ≠ «cuenta para la racha» | **Arreglado** | `bb69f08` |
+| Hallazgo 2 · dos definiciones de «día cumplido» | **Arreglado** | `bb69f08` |
+| Hallazgo 3 · la prioridad no hace nada | **Resuelto diciéndolo**, no ordenando | `1556d38` |
+| Hallazgo 4 · las huérfanas desaparecen del tablero | **Arreglado** | `1556d38` |
+| Propuesta 1 · premiar volver tras fallar | **Hecha** | `cef3638` |
+| Propuesta 2 · la racha no muere de un golpe | **Hecha** | `8f6636b` |
+| Propuesta 3 · la planta no muere por un día | **Cubierta por la 2**, sin tocar el jardín | `8f6636b` |
+| Propuesta «sacar `intention` a la vista» (D.2) | **Hecha** | `77a1c32` |
+| Propuesta 4 · reconsiderar los pájaros de la música | Sin hacer, pendiente de decisión | — |
+
+Tres cosas que conviene retener de la ejecución, porque corrigen al informe:
+
+1. **La propuesta 3 salió gratis.** `isPlantWilted` marchita cuando la racha es
+   cero, así que perdonar un fallo mantiene la planta viva sin tocar una línea
+   del jardín. No hizo falta el sistema de tendencia que este documento proponía.
+2. **`updateHabitIntention` existía como server action y nada la llamaba.** Un
+   hábito creado sin intención no podía ganarla nunca. El informe hablaba de
+   «darle peso a lo que ya está»; resultó que primero había que conectarlo.
+3. **Un test escrito para la gracia encontró un fallo en la propia gracia**: el
+   recorrido gastaba el perdón en el fallo anterior al comienzo de la racha, y
+   una racha impecable se anunciaba con «1 día perdonado».
+
+Lo que sigue sin hacer y **no depende de código**: el repositorio es público y
+dos documentos de diseño nombran los hábitos reales del usuario; y las tres dudas
+sobre los sprites —el hongo sin nada de verde, los cinco marchitos que se parecen
+entre sí, la hierba en etapa 1 a 30 px— siguen esperando un ojo humano.
 
 ---
 
