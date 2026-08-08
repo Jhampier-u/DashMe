@@ -1054,3 +1054,26 @@ export async function renameTask(db: Db, taskId: string, newTitle: string) {
     .set({ title: t, updatedAt: new Date() })
     .where(eq(tasks.id, taskId));
 }
+
+/**
+ * Marca un hábito como interiorizado, o lo devuelve a la lista.
+ *
+ * Es una decisión EXPLÍCITA y nunca una inferencia. Epstein et al. (CHI 2016)
+ * encontraron que el 7,1 % de quienes dejaron de registrarse por barreras
+ * técnicas seguían aplicando lo aprendido: la causa del abandono no predice si
+ * el resultado fue bueno, así que el sistema no puede decidirlo por ti.
+ *
+ * Deshacerlo no penaliza ni pierde nada: la pausa desaparece y los días vuelven
+ * a estar programados desde hoy.
+ */
+export async function marcarInteriorizado(
+  db: Db,
+  habitId: string,
+  interiorizado: boolean,
+) {
+  if (!habitId) return;
+  await db
+    .update(habitsTable)
+    .set({ internalizedAt: interiorizado ? dayKey() : null })
+    .where(eq(habitsTable.id, habitId));
+}

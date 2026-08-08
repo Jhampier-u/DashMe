@@ -299,3 +299,12 @@ export async function comprarDecoracion(kind: string) {
   if (r.ok) refresh();
   return r;
 }
+
+/** Da un hábito por interiorizado, o lo devuelve a la lista. */
+export async function marcarInteriorizado(
+  habitId: string,
+  interiorizado: boolean,
+) {
+  await m.marcarInteriorizado(db, habitId, interiorizado);
+  refresh();
+}

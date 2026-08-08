@@ -8,6 +8,7 @@ import {
   apuntarCantidad,
   guardarNota,
   updateHabitIntention,
+  marcarInteriorizado,
 } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
@@ -24,6 +25,7 @@ type Props = {
   streak: number;
   doneToday: boolean;
   rachaPerdonados: number;
+  interiorizadoEl: Date | null;
   /** Si hay registro hoy. El botón de marcar lo BORRA, así que decide él. */
   registradoHoy: boolean;
   partialToday: boolean;
@@ -398,6 +400,43 @@ export function HabitRow(p: Props) {
         aria-label={`Intención de ${p.name}: cuándo y dónde lo harás`}
         className="w-full mt-2 bg-paper-2 text-tinta font-cuerpo text-[12.5px] italic border-3 border-line rounded-control px-2 py-1 placeholder:text-tinta-2 outline-none focus:outline-3 focus:outline-offset-2 focus:outline-line"
       />
+      {/*
+        EL TERCER ESTADO. Ni activo ni borrado: ya está formado.
+
+        Borrar un hábito conseguido castiga por haberlo conseguido, y dejarlo
+        activo para siempre convierte un éxito en una tarea perpetua. Epstein et
+        al. (CHI 2016) lo llaman «abandono feliz», y la métrica dominante del
+        sector no lo distingue del fracaso desde 2005.
+
+        Va sin adorno ni celebración: es un cambio de estado, no un trofeo.
+      */}
+      {p.interiorizadoEl ? (
+        <div style={{ fontSize: 12, marginTop: 8 }}>
+          Lo diste por hecho el{" "}
+          <b>{p.interiorizadoEl.toLocaleDateString("es-ES")}</b>. No se te pide
+          y no cuenta como fallo.{" "}
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              startTransition(() => marcarInteriorizado(p.id, false))
+            }
+            className="underline bg-transparent border-0 p-0 font-cuerpo text-[12px] text-tinta cursor-pointer"
+          >
+            Volver a pedírmelo
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => startTransition(() => marcarInteriorizado(p.id, true))}
+          className="underline bg-transparent border-0 p-0 mt-2 font-cuerpo text-[11.5px] text-tinta cursor-pointer"
+        >
+          Ya no necesito que me lo pidas
+        </button>
+      )}
+
       {!p.intention ? (
         <div style={{ fontSize: 11.5, marginTop: 4 }}>
           Atarlo a algo que ya haces —«cuando me siente a desayunar»— funciona

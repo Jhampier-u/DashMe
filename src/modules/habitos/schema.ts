@@ -33,6 +33,16 @@ export const habits = sqliteTable("habits", {
   targetCount: integer("target_count"),
   /** Su hueco en el jardín. Nulo = aún sin sitio. */
   gardenSlot: integer("garden_slot"),
+  /**
+   * El día que dejó de hacer falta. Nulo = sigue activo.
+   *
+   * No es «archivado» ni «borrado»: es un TERCER ESTADO. El hábito ya está
+   * formado, deja de pedirse, y conserva todo su historial. Epstein et al.
+   * (CHI 2016) lo llaman «abandono feliz» y ninguna herramienta lo implementa;
+   * la métrica dominante del sector, de 2005, ni siquiera lo distingue del
+   * fracaso.
+   */
+  internalizedAt: integer("internalized_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 

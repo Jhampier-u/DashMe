@@ -97,6 +97,7 @@ export default async function HabitsPage() {
                   doneToday={habit.doneToday}
                   registradoHoy={habit.registradoHoy}
                   rachaPerdonados={habit.rachaPerdonados}
+                  interiorizadoEl={habit.interiorizadoEl}
                   partialToday={habit.partialToday}
                   targetCount={habit.targetCount}
                   countToday={habit.countToday}

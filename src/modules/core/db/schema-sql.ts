@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS habits (
   intention     TEXT,
   target_count  INTEGER,
   garden_slot   INTEGER,
+  internalized_at INTEGER,
   created_at    INTEGER NOT NULL
 );
 

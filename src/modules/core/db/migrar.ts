@@ -39,6 +39,8 @@ const COLUMNAS_NUEVAS: Record<string, [string, string][]> = {
     ["target_count", "INTEGER"],
     /** Su hueco en el jardín. Nulo = aún sin sitio; se resuelve al pintarlo. */
     ["garden_slot", "INTEGER"],
+    /** El día que dejó de hacer falta. Nulo = sigue activo. */
+    ["internalized_at", "INTEGER"],
   ],
   /** Lo apuntado ese día. Nulo = no se apuntó cantidad. */
   habit_logs: [["count", "INTEGER"]],

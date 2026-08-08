@@ -63,6 +63,8 @@ export type HabitWithStatus = {
   gardenSlot: number | null;
   /** La nota de hoy, si la hay. */
   notaHoy: string | null;
+  /** El día que se dio por hecho. Nulo = sigue activo. */
+  interiorizadoEl: Date | null;
   /** Si hoy cae dentro de una pausa. */
   enPausaHoy: boolean;
   /** Lo apuntado hoy. Nulo si no se apuntó. */
@@ -194,6 +196,7 @@ export async function getHabitsWithTodayStatus(
       // Se expone aparte de `scheduledToday` a propósito: los dos serán falsos
       // hoy, pero la fila tiene que poder decir POR QUÉ. Sin esto, un hábito
       // pausado parece simplemente desaparecido.
+      interiorizadoEl: h.internalizedAt,
       enPausaHoy: enPausa(pausasPorId.get(h.id) ?? [], today),
       countToday: todayLog?.count ?? null,
       scheduledToday: estaProgramado(calendario, today),

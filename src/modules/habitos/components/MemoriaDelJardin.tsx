@@ -84,6 +84,9 @@ function comoHabito(p: PlantaEn, slot: number | null): HabitWithStatus {
     targetCount: null,
     gardenSlot: slot,
     notaHoy: null,
+    // El pasado se reconstruye tal y como fue: si el hábito estaba activo aquel
+    // día, así se pinta, lo hayas dado por hecho después o no.
+    interiorizadoEl: null,
     enPausaHoy: false,
     countToday: null,
     scheduledToday: p.programadoEseDia,
