@@ -19,8 +19,7 @@ export type Categoria = {
 };
 
 export type ResultadoCategoria =
-  | { ok: true; id: string }
-  | { ok: false; motivo: "vacio" | "repetida" };
+  { ok: true; id: string } | { ok: false; motivo: "vacio" | "repetida" };
 
 /**
  * Traduce el color guardado. Las OCHO claves valen, incluida `acid`: las

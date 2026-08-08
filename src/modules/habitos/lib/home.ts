@@ -3,9 +3,19 @@ import type { Db } from "@/modules/core/db";
 import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { addDays, dayKey, normalizeDayKey } from "./day";
 import { computeStreak, isCriticalDay } from "./streak";
-import { diasQueCuentan, type LogParaRacha } from "./cantidad";
+import {
+  cumplidosPorDia,
+  diasQueCuentan,
+  esCompleto,
+  type LogParaRacha,
+} from "./cantidad";
 import { rachaGlobal } from "./racha-global";
-import { cal, estaProgramado, sanitizeSchedule, type Rango } from "./calendario";
+import {
+  cal,
+  estaProgramado,
+  sanitizeSchedule,
+  type Rango,
+} from "./calendario";
 import { pausasPorHabito } from "./pausas";
 import {
   bestWeekday,
@@ -92,28 +102,40 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   // Las gráficas también: un día en pausa sale del denominador, así que el
   // porcentaje no baja por estar de vacaciones.
   const specs = buildHabitSpecs(
-    habits.map((h) => ({ id: h.id, schedule: h.schedule, createdKey: dayKey(h.createdAt) })),
+    habits.map((h) => ({
+      id: h.id,
+      schedule: h.schedule,
+      createdKey: dayKey(h.createdAt),
+    })),
     entries,
     pausasPorId,
   );
 
+  const objetivoPorHabito = new Map(habits.map((h) => [h.id, h.targetCount]));
+
   /*
-    Solo los NO parciales: un día a medias no es un día completo, y es la misma
-    definición que usa la misión «día completo». `specs` trae el `since` de cada
-    hábito, así que uno recién creado no arrastra la racha global a cero.
+    La MISMA regla que las rachas de cada hábito, vía `cumplidosPorDia`. Antes
+    esto filtraba solo por `partial` y se saltaba el objetivo: con 2 de 8 vasos
+    apuntados tres días seguidos, esta racha global decía 3 mientras la racha de
+    ese mismo hábito decía 0. `specs` trae el `since` de cada hábito, así que uno
+    recién creado no arrastra la racha global a cero.
   */
-  const plenosPorDia = new Map<number, Set<string>>();
-  for (const entry of entries) {
-    if (entry.partial) continue;
-    const t = entry.day.getTime();
-    const set = plenosPorDia.get(t);
-    if (set) set.add(entry.habitId);
-    else plenosPorDia.set(t, new Set([entry.habitId]));
-  }
+  const plenosPorDia = cumplidosPorDia(
+    entries.map((e) => ({
+      habitId: e.habitId,
+      date: e.day,
+      partial: e.partial,
+      count: e.count,
+    })),
+    objetivoPorHabito,
+  );
   const globalStreak = rachaGlobal(specs, plenosPorDia, today);
 
   const series = complianceSeries(specs, entries, from, today);
-  const mean = rollingMean(series.map((d) => d.rate), MEAN_WINDOW);
+  const mean = rollingMean(
+    series.map((d) => d.rate),
+    MEAN_WINDOW,
+  );
 
   // Días cumplidos por hábito, para reutilizar la regla de los 2 días ya
   // probada en lib/streak en vez de reimplementar "ayer".
@@ -123,7 +145,6 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   const calDe = (h: { id: string; schedule: string }) =>
     cal(sanitizeSchedule(h.schedule), pausasPorId.get(h.id) ?? []);
 
-  const objetivoPorHabito = new Map(habits.map((h) => [h.id, h.targetCount]));
   const logsPorHabito = new Map<string, LogParaRacha[]>();
   for (const entry of entries) {
     const l = { date: entry.day, partial: entry.partial, count: entry.count };
@@ -145,9 +166,19 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
   // mínimo (la gráfica ya los cuenta al 50%).
   const todayDoneMap = new Map<string, boolean>();
   for (const entry of entries) {
-    if (entry.day.getTime() === today.getTime() && !entry.shielded) {
-      todayDoneMap.set(entry.habitId, entry.partial);
+    if (entry.day.getTime() !== today.getTime() || entry.shielded) continue;
+    // Con objetivo, un día corto NO está hecho. Antes bastaba con que existiera
+    // el registro, y «Hoy» daba por cumplido un 2 de 8 quitándolo de pendientes.
+    if (
+      !esCompleto(
+        objetivoPorHabito.get(entry.habitId) ?? null,
+        entry.count,
+        entry.partial,
+      )
+    ) {
+      continue;
     }
+    todayDoneMap.set(entry.habitId, entry.partial);
   }
   const doneToday = new Set(todayDoneMap.keys());
   const scheduledToday = habits.filter((h) => estaProgramado(calDe(h), today));
@@ -170,7 +201,8 @@ export async function getHomeMetrics(db: Db): Promise<HomeMetrics> {
     today: {
       scheduled: scheduledToday.length,
       done: scheduledToday.filter((h) => doneToday.has(h.id)).length,
-      partial: scheduledToday.filter((h) => todayDoneMap.get(h.id) === true).length,
+      partial: scheduledToday.filter((h) => todayDoneMap.get(h.id) === true)
+        .length,
       pending: scheduledToday
         .filter((h) => !doneToday.has(h.id))
         .map((h) => {

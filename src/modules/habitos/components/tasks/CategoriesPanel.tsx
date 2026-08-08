@@ -92,7 +92,12 @@ export function CategoriesPanel({ categorias }: { categorias: Categoria[] }) {
       }}
     >
       <div
-        style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap",
+        }}
       >
         <input
           value={nombre}
@@ -127,7 +132,11 @@ export function CategoriesPanel({ categorias }: { categorias: Categoria[] }) {
         >
           Crear
         </button>
-        <button type="button" onClick={() => setAbierto(false)} className={CHIP}>
+        <button
+          type="button"
+          onClick={() => setAbierto(false)}
+          className={CHIP}
+        >
           Cerrar
         </button>
       </div>
@@ -137,7 +146,12 @@ export function CategoriesPanel({ categorias }: { categorias: Categoria[] }) {
       {categorias.map((c) => (
         <div
           key={c.id}
-          style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
         >
           {/*
             El renombrado se dispara al salir del campo y no con un botón: son
@@ -164,7 +178,9 @@ export function CategoriesPanel({ categorias }: { categorias: Categoria[] }) {
             <button
               key={k}
               type="button"
-              onClick={() => startTransition(() => cambiarColorCategoria(c.id, k))}
+              onClick={() =>
+                startTransition(() => cambiarColorCategoria(c.id, k))
+              }
               aria-label={`${c.name} en ${k}`}
               aria-pressed={c.color === k}
               className={MUESTRA}

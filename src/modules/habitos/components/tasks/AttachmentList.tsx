@@ -118,7 +118,9 @@ export function AttachmentList({
                 {a.kind === "file" ? "📎" : "🔗"}
               </span>
               <a
-                href={a.kind === "file" ? `/api/adjunto/${a.id}` : (a.url ?? "#")}
+                href={
+                  a.kind === "file" ? `/api/adjunto/${a.id}` : (a.url ?? "#")
+                }
                 /* Los enlaces del usuario salen fuera: `noopener` para que la
                    página abierta no pueda tocar esta, y `noreferrer` para no
                    contarle de dónde viene. */
@@ -165,7 +167,12 @@ export function AttachmentList({
       </div>
 
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "center",
+        }}
       >
         <input
           value={url}

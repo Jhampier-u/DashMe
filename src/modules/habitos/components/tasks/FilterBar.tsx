@@ -41,7 +41,12 @@ export function FilterBar({
 
   return (
     <div
-      style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 8,
+        alignItems: "center",
+      }}
     >
       {PRIORIDADES.map((p: Prioridad) => {
         const activo = filtro.prioridad === p;

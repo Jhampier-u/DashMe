@@ -7,22 +7,9 @@ import {
   projects,
   tasks,
 } from "@/modules/habitos/schema";
-import {
-  BACKFILL_MAX_DAYS,
-  getOrCreatePlayer,
-  getHabitMonth,
-} from "./habits";
-import {
-  addDays,
-  dayKey,
-  dayKeyFromISO,
-  daysBetween,
-} from "./day";
-import {
-  DEFAULT_HABIT_COLOR,
-  HABIT_COLORS,
-  type HabitColor,
-} from "./color";
+import { BACKFILL_MAX_DAYS, getOrCreatePlayer, getHabitMonth } from "./habits";
+import { addDays, dayKey, dayKeyFromISO, daysBetween } from "./day";
+import { DEFAULT_HABIT_COLOR, HABIT_COLORS, type HabitColor } from "./color";
 import {
   computeStreak,
   previousScheduledDay,
@@ -67,17 +54,36 @@ const LIMITS = {
 // quedó con los cinco antiguos, así que `oneOf` rechazaba "aqua", "violet" y
 // "orange" y guardaba el fallback. Elegir violeta guardaba otro color.
 const HABIT_COLOR_KEYS = HABIT_COLORS.map((c) => c.key);
-const PROJECT_ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
+const PROJECT_ICONS = [
+  "📁",
+  "🎯",
+  "🚀",
+  "🎨",
+  "🎮",
+  "📚",
+  "💼",
+  "🏗️",
+  "🌟",
+  "🧪",
+  "🎵",
+  "🌱",
+];
 
 const SPECIES_KEYS = PLANT_SPECIES.map((s) => s.key);
 
 /** Recorta y normaliza texto de formulario. Devuelve null si queda vacío. */
 function text(value: FormDataEntryValue | null, max: number): string | null {
-  const t = String(value ?? "").trim().slice(0, max);
+  const t = String(value ?? "")
+    .trim()
+    .slice(0, max);
   return t.length ? t : null;
 }
 
-function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+function oneOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T,
+): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
@@ -535,7 +541,9 @@ export async function createHabit(db: Db, formData: FormData) {
   */
   const objetivoBruto = String(formData.get("targetCount") ?? "").trim();
   const targetCount =
-    objetivoBruto === "" ? null : Math.max(1, Math.floor(Number(objetivoBruto) || 1));
+    objetivoBruto === ""
+      ? null
+      : Math.max(1, Math.floor(Number(objetivoBruto) || 1));
   const color = oneOf<HabitColor>(
     formData.get("color"),
     HABIT_COLOR_KEYS,

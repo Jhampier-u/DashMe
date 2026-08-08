@@ -47,7 +47,11 @@ describe("computeStreak · hábito diario", () => {
 
   it("cuenta los días consecutivos incluyendo hoy", () => {
     expect(
-      computeStreak(cal(DAILY), doneSet("2026-07-25", "2026-07-26", "2026-07-27"), today),
+      computeStreak(
+        cal(DAILY),
+        doneSet("2026-07-25", "2026-07-26", "2026-07-27"),
+        today,
+      ),
     ).toBe(3);
   });
 
@@ -60,7 +64,11 @@ describe("computeStreak · hábito diario", () => {
 
   it("se corta en el primer hueco", () => {
     expect(
-      computeStreak(cal(DAILY), doneSet("2026-07-27", "2026-07-25", "2026-07-24"), today),
+      computeStreak(
+        cal(DAILY),
+        doneSet("2026-07-27", "2026-07-25", "2026-07-24"),
+        today,
+      ),
     ).toBe(1);
   });
 
@@ -89,7 +97,12 @@ describe("computeStreak · hábito L-M-V", () => {
   });
 
   it("suma el día en curso al cumplirlo", () => {
-    const done = doneSet("2026-07-20", "2026-07-22", "2026-07-24", "2026-07-27");
+    const done = doneSet(
+      "2026-07-20",
+      "2026-07-22",
+      "2026-07-24",
+      "2026-07-27",
+    );
     expect(computeStreak(cal(MWF), done, key("2026-07-27"))).toBe(4);
   });
 });
@@ -97,8 +110,13 @@ describe("computeStreak · hábito L-M-V", () => {
 describe("computeBestStreak", () => {
   it("encuentra la mejor racha histórica", () => {
     const done = doneSet(
-      "2026-07-01", "2026-07-02", "2026-07-03", // 3
-      "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", // 4
+      "2026-07-01",
+      "2026-07-02",
+      "2026-07-03", // 3
+      "2026-07-10",
+      "2026-07-11",
+      "2026-07-12",
+      "2026-07-13", // 4
       "2026-07-20",
     );
     expect(
@@ -108,7 +126,12 @@ describe("computeBestStreak", () => {
 
   it("cuenta solo días programados", () => {
     // 4 sesiones L-M-V seguidas aunque haya fines de semana en medio.
-    const done = doneSet("2026-07-20", "2026-07-22", "2026-07-24", "2026-07-27");
+    const done = doneSet(
+      "2026-07-20",
+      "2026-07-22",
+      "2026-07-24",
+      "2026-07-27",
+    );
     expect(
       computeBestStreak(cal(MWF), done, key("2026-07-20"), key("2026-07-27")),
     ).toBe(4);
@@ -116,7 +139,12 @@ describe("computeBestStreak", () => {
 
   it("es 0 sin cumplimientos", () => {
     expect(
-      computeBestStreak(cal(DAILY), doneSet(), key("2026-07-01"), key("2026-07-27")),
+      computeBestStreak(
+        cal(DAILY),
+        doneSet(),
+        key("2026-07-01"),
+        key("2026-07-27"),
+      ),
     ).toBe(0);
   });
 });
@@ -136,9 +164,9 @@ describe("isCriticalDay", () => {
   });
 
   it("no avisa si hoy no toca", () => {
-    expect(
-      isCriticalDay(cal(MWF), doneSet(), key("2026-07-25"), true),
-    ).toBe(false);
+    expect(isCriticalDay(cal(MWF), doneSet(), key("2026-07-25"), true)).toBe(
+      false,
+    );
   });
 
   it("no avisa si ya está hecho hoy", () => {
@@ -148,9 +176,9 @@ describe("isCriticalDay", () => {
   });
 
   it("no avisa en hábitos recién creados", () => {
-    expect(
-      isCriticalDay(cal(MWF), doneSet(), key("2026-07-27"), false),
-    ).toBe(false);
+    expect(isCriticalDay(cal(MWF), doneSet(), key("2026-07-27"), false)).toBe(
+      false,
+    );
   });
 });
 
@@ -162,14 +190,20 @@ describe("previousScheduledDay", () => {
 
   it("devuelve null si no hay ninguno en la ventana", () => {
     // Solo domingos; desde el miércoles 22 mirando 2 días atrás (mar, lun).
-    expect(previousScheduledDay(cal("1000000"), key("2026-07-22"), 2)).toBeNull();
+    expect(
+      previousScheduledDay(cal("1000000"), key("2026-07-22"), 2),
+    ).toBeNull();
   });
 });
 
 describe("countScheduledDays", () => {
   it("cuenta los días activos de la ventana", () => {
-    expect(countScheduledDays(cal(DAILY), key("2026-07-21"), key("2026-07-27"))).toBe(7);
-    expect(countScheduledDays(cal(MWF), key("2026-07-21"), key("2026-07-27"))).toBe(3);
+    expect(
+      countScheduledDays(cal(DAILY), key("2026-07-21"), key("2026-07-27")),
+    ).toBe(7);
+    expect(
+      countScheduledDays(cal(MWF), key("2026-07-21"), key("2026-07-27")),
+    ).toBe(3);
   });
 });
 

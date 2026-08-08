@@ -17,7 +17,11 @@ import { estaProgramado, type Calendario } from "./calendario";
   Se reexportan para no romper a quien las importaba de aquí, que son unos
   cuantos.
 */
-export { isScheduledOn, sanitizeSchedule, DEFAULT_SCHEDULE } from "./calendario";
+export {
+  isScheduledOn,
+  sanitizeSchedule,
+  DEFAULT_SCHEDULE,
+} from "./calendario";
 
 /** Día programado inmediatamente anterior a `from` (excluyente). */
 export function previousScheduledDay(

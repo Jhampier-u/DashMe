@@ -36,11 +36,13 @@ async function seedArbol(db: Db) {
   await db
     .insert(projects)
     .values({ id: "p1", name: "Proyecto", createdAt: T0, updatedAt: T0 });
-  await db.insert(tasks).values([
-    item("raiz", null),
-    item("hijo", "raiz", "DONE", 0, T0),
-    item("nieto", "hijo", "DONE", 0, T0),
-  ]);
+  await db
+    .insert(tasks)
+    .values([
+      item("raiz", null),
+      item("hijo", "raiz", "DONE", 0, T0),
+      item("nieto", "hijo", "DONE", 0, T0),
+    ]);
 }
 
 describe("getProjectWithTree", () => {

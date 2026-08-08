@@ -30,10 +30,7 @@ export const DEFAULT_SCHEDULE = "1111111";
 
 /** Normaliza un schedule a 7 chars "1"/"0". Nunca devuelve todo apagado. */
 export function sanitizeSchedule(s: string | null | undefined): string {
-  const cleaned = (s ?? "")
-    .replace(/[^01]/g, "")
-    .padEnd(7, "0")
-    .slice(0, 7);
+  const cleaned = (s ?? "").replace(/[^01]/g, "").padEnd(7, "0").slice(0, 7);
   return cleaned === "0000000" ? DEFAULT_SCHEDULE : cleaned;
 }
 

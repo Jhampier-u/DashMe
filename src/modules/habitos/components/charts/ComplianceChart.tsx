@@ -35,9 +35,13 @@ export function ComplianceChart({ points }: { points: ChartPoint[] }) {
         const active = points[index];
         return (
           <>
-            <strong style={{ fontSize: 12.5 }}>{formatDayLabel(active.date)}</strong>
+            <strong style={{ fontSize: 12.5 }}>
+              {formatDayLabel(active.date)}
+            </strong>
             <br />
-            {active.mean === null ? "Sin datos" : `Media 7d: ${Math.round(active.mean * 100)}%`}
+            {active.mean === null
+              ? "Sin datos"
+              : `Media 7d: ${Math.round(active.mean * 100)}%`}
             <br />
             {/* El tooltip ya fija su tinta; el gris claro sobre papel no se
                 leería. */}

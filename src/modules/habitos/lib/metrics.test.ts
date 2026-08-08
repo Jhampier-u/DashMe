@@ -107,9 +107,17 @@ describe("complianceSeries", () => {
   });
 
   it("devuelve un elemento por día del rango, en orden", () => {
-    const days = complianceSeries([habit("a")], [], key("2026-07-20"), key("2026-07-23"));
+    const days = complianceSeries(
+      [habit("a")],
+      [],
+      key("2026-07-20"),
+      key("2026-07-23"),
+    );
     expect(days.map((d) => d.date)).toEqual([
-      "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23",
+      "2026-07-20",
+      "2026-07-21",
+      "2026-07-22",
+      "2026-07-23",
     ]);
   });
 });
@@ -145,7 +153,9 @@ describe("averageRate", () => {
 
   it("devuelve null si no hay ningún día con datos", () => {
     expect(
-      averageRate([{ date: "a", scheduled: 0, done: 0, shielded: 0, rate: null }]),
+      averageRate([
+        { date: "a", scheduled: 0, done: 0, shielded: 0, rate: null },
+      ]),
     ).toBeNull();
   });
 });
@@ -221,14 +231,24 @@ describe("buildHabitSpecs", () => {
   const created = key("2026-07-10");
 
   it("sin registros, arranca en la fecha de creación", () => {
-    const specs = buildHabitSpecs([{ id: "a", schedule: "1111111", createdKey: created }], []);
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "1111111", createdKey: created }],
+      [],
+    );
     expect(specs[0].since.getTime()).toBe(created.getTime());
   });
 
   it("con registros posteriores, sigue arrancando en la creación", () => {
     const specs = buildHabitSpecs(
       [{ id: "a", schedule: "1111111", createdKey: created }],
-      [{ habitId: "a", day: key("2026-07-15"), partial: false, shielded: false }],
+      [
+        {
+          habitId: "a",
+          day: key("2026-07-15"),
+          partial: false,
+          shielded: false,
+        },
+      ],
     );
     expect(specs[0].since.getTime()).toBe(created.getTime());
   });
@@ -237,8 +257,18 @@ describe("buildHabitSpecs", () => {
     const specs = buildHabitSpecs(
       [{ id: "a", schedule: "1111111", createdKey: created }],
       [
-        { habitId: "a", day: key("2026-07-15"), partial: false, shielded: false },
-        { habitId: "a", day: key("2026-07-02"), partial: false, shielded: false },
+        {
+          habitId: "a",
+          day: key("2026-07-15"),
+          partial: false,
+          shielded: false,
+        },
+        {
+          habitId: "a",
+          day: key("2026-07-02"),
+          partial: false,
+          shielded: false,
+        },
       ],
     );
     expect(specs[0].since.getTime()).toBe(key("2026-07-02").getTime());
@@ -247,13 +277,23 @@ describe("buildHabitSpecs", () => {
   it("ignora los registros de otros hábitos", () => {
     const specs = buildHabitSpecs(
       [{ id: "a", schedule: "1111111", createdKey: created }],
-      [{ habitId: "b", day: key("2026-07-02"), partial: false, shielded: false }],
+      [
+        {
+          habitId: "b",
+          day: key("2026-07-02"),
+          partial: false,
+          shielded: false,
+        },
+      ],
     );
     expect(specs[0].since.getTime()).toBe(created.getTime());
   });
 
   it("normaliza el calendario", () => {
-    const specs = buildHabitSpecs([{ id: "a", schedule: "", createdKey: created }], []);
+    const specs = buildHabitSpecs(
+      [{ id: "a", schedule: "", createdKey: created }],
+      [],
+    );
     expect(specs[0].calendario.schedule).toBe("1111111");
   });
 });
@@ -282,7 +322,10 @@ describe("bestWeekday", () => {
 describe("weekdayRates", () => {
   it("devuelve siete posiciones, de domingo a sábado", () => {
     // 2026-07-26 es domingo y 2026-07-27 lunes.
-    const rates = weekdayRates([day("2026-07-26", 0.4), day("2026-07-27", 0.8)]);
+    const rates = weekdayRates([
+      day("2026-07-26", 0.4),
+      day("2026-07-27", 0.8),
+    ]);
     expect(rates).toHaveLength(7);
     expect(rates[0]).toBeCloseTo(0.4, 6);
     expect(rates[1]).toBeCloseTo(0.8, 6);

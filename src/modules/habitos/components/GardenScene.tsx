@@ -680,7 +680,13 @@ function GardenPlant({
   const accent = habitColorVar(resolveHabitColor(habit.color));
 
   function handleWater() {
-    if (soloLectura || habit.doneToday || !habit.scheduledToday || pending)
+    /*
+      `registradoHoy` y no `doneToday`: regar llama a `toggleToday`, que BORRA el
+      registro si ya existe. Con un objetivo de 8 y 2 apuntados, `doneToday` es
+      falso pero el registro está — y mirar `doneToday` haría que un clic aquí
+      borrase esos 2 sin avisar.
+    */
+    if (soloLectura || habit.registradoHoy || !habit.scheduledToday || pending)
       return;
     drops.burst();
     sparkle.burst();
@@ -691,11 +697,13 @@ function GardenPlant({
 
   const situacion = soloLectura
     ? "así estaba ese día"
-    : habit.doneToday
-      ? "ya regada hoy"
-      : offDay
-        ? "hoy no toca"
-        : "click para regar";
+    : habit.registradoHoy && !habit.doneToday
+      ? `apuntado ${habit.countToday ?? 0} de ${habit.targetCount}`
+      : habit.doneToday
+        ? "ya regada hoy"
+        : offDay
+          ? "hoy no toca"
+          : "click para regar";
 
   return (
     <div
@@ -752,7 +760,7 @@ function GardenPlant({
       <button
         type="button"
         onClick={handleWater}
-        disabled={soloLectura || pending || habit.doneToday || offDay}
+        disabled={soloLectura || pending || habit.registradoHoy || offDay}
         title={`${habit.name} · ${estado} · racha de ${formatDays(habit.streak)} · ${situacion}`}
         style={{
           position: "relative",
@@ -764,7 +772,7 @@ function GardenPlant({
           border: 0,
           padding: 0,
           fontFamily: "inherit",
-          cursor: habit.doneToday || offDay ? "default" : "pointer",
+          cursor: habit.registradoHoy || offDay ? "default" : "pointer",
         }}
       >
         {stage >= 3 && habit.doneToday ? (

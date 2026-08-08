@@ -1,6 +1,10 @@
 export type PlantSpecies = "flower" | "tree" | "mushroom" | "cactus" | "herb";
 
-export const PLANT_SPECIES: { key: PlantSpecies; label: string; sample: string }[] = [
+export const PLANT_SPECIES: {
+  key: PlantSpecies;
+  label: string;
+  sample: string;
+}[] = [
   { key: "flower", label: "Flor", sample: "🌻" },
   { key: "tree", label: "Árbol", sample: "🌳" },
   { key: "mushroom", label: "Hongo", sample: "🍄" },
@@ -11,11 +15,11 @@ export const PLANT_SPECIES: { key: PlantSpecies; label: string; sample: string }
 // Stage 0 (just planted) uses a small sprout that grows visually thanks to size scaling.
 // Done-today vs not-done is conveyed via opacity in the renderer.
 const STAGES: Record<PlantSpecies, string[]> = {
-  flower:   ["🌱", "🌿", "🌷", "🌻", "💐"],
-  tree:     ["🌱", "🪴", "🌳", "🌲", "🎄"],
+  flower: ["🌱", "🌿", "🌷", "🌻", "💐"],
+  tree: ["🌱", "🪴", "🌳", "🌲", "🎄"],
   mushroom: ["🌱", "🍄", "🍄", "🍄", "🍄"],
-  cactus:   ["🌱", "🌵", "🌵", "🌵", "🌵"],
-  herb:     ["🌱", "🌿", "🌾", "🌾", "🌾"],
+  cactus: ["🌱", "🌵", "🌵", "🌵", "🌵"],
+  herb: ["🌱", "🌿", "🌾", "🌾", "🌾"],
 };
 
 const WILTED = "🥀";
@@ -64,12 +68,18 @@ export function plantEmoji(
 
 export function stageLabel(stage: number): string {
   switch (stage) {
-    case 0: return "Semilla";
-    case 1: return "Brote";
-    case 2: return "Joven";
-    case 3: return "Madura";
-    case 4: return "Floreciente";
-    default: return "";
+    case 0:
+      return "Semilla";
+    case 1:
+      return "Brote";
+    case 2:
+      return "Joven";
+    case 3:
+      return "Madura";
+    case 4:
+      return "Floreciente";
+    default:
+      return "";
   }
 }
 

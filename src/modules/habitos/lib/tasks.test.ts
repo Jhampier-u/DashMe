@@ -41,11 +41,13 @@ function makeTask({
 describe("getTasksGrouped", () => {
   it("reparte por estado en las tres columnas", async () => {
     const db = createTestDb();
-    await db.insert(tasks).values([
-      makeTask({ id: "a", status: "TODO" }),
-      makeTask({ id: "b", status: "IN_PROGRESS" }),
-      makeTask({ id: "c", status: "DONE" }),
-    ]);
+    await db
+      .insert(tasks)
+      .values([
+        makeTask({ id: "a", status: "TODO" }),
+        makeTask({ id: "b", status: "IN_PROGRESS" }),
+        makeTask({ id: "c", status: "DONE" }),
+      ]);
 
     const g = await getTasksGrouped(db);
 
@@ -56,11 +58,17 @@ describe("getTasksGrouped", () => {
 
   it("ordena por order y desempata por fecha de creación", async () => {
     const db = createTestDb();
-    await db.insert(tasks).values([
-      makeTask({ id: "tarde", order: 1, createdAt: new Date("2026-07-02") }),
-      makeTask({ id: "primera", order: 0, createdAt: new Date("2026-07-03") }),
-      makeTask({ id: "empate", order: 1, createdAt: new Date("2026-07-01") }),
-    ]);
+    await db
+      .insert(tasks)
+      .values([
+        makeTask({ id: "tarde", order: 1, createdAt: new Date("2026-07-02") }),
+        makeTask({
+          id: "primera",
+          order: 0,
+          createdAt: new Date("2026-07-03"),
+        }),
+        makeTask({ id: "empate", order: 1, createdAt: new Date("2026-07-01") }),
+      ]);
 
     const g = await getTasksGrouped(db);
 
@@ -107,11 +115,13 @@ describe("getTaskMetrics", () => {
 
   it("considera abierta cualquiera que no esté en DONE", async () => {
     const db = createTestDb();
-    await db.insert(tasks).values([
-      makeTask({ id: "abierta", status: "TODO", createdAt: T0 }),
-      makeTask({ id: "curso", status: "IN_PROGRESS", createdAt: T0 }),
-      makeTask({ id: "cerrada", status: "DONE", completedAt: T0 }),
-    ]);
+    await db
+      .insert(tasks)
+      .values([
+        makeTask({ id: "abierta", status: "TODO", createdAt: T0 }),
+        makeTask({ id: "curso", status: "IN_PROGRESS", createdAt: T0 }),
+        makeTask({ id: "cerrada", status: "DONE", completedAt: T0 }),
+      ]);
 
     const m = await getTaskMetrics(db);
 
@@ -128,7 +138,11 @@ function nodo(id: string, parentId: string | null) {
 
 describe("buildTaskTree", () => {
   it("cuelga cada hijo de su padre", () => {
-    const raices = buildTaskTree([nodo("a", null), nodo("b", "a"), nodo("c", "b")]);
+    const raices = buildTaskTree([
+      nodo("a", null),
+      nodo("b", "a"),
+      nodo("c", "b"),
+    ]);
     expect(raices).toHaveLength(1);
     expect(raices[0].children[0].id).toBe("b");
     expect(raices[0].children[0].children[0].id).toBe("c");
@@ -141,7 +155,10 @@ describe("buildTaskTree", () => {
     vez de tragárselo.
   */
   it("un hijo cuyo padre no existe sale como raíz, no desaparece", () => {
-    const raices = buildTaskTree([nodo("a", null), nodo("huerfano", "fantasma")]);
+    const raices = buildTaskTree([
+      nodo("a", null),
+      nodo("huerfano", "fantasma"),
+    ]);
     expect(raices.map((r) => r.id).sort()).toEqual(["a", "huerfano"]);
   });
 
@@ -217,7 +234,10 @@ describe("getTasksGrouped con árbol y filtro", () => {
       { ...base, id: "b", priority: "LOW" },
       { ...base, id: "sin", priority: null },
     ]);
-    const g = await getTasksGrouped(db, { categoriaId: null, prioridad: "URGENT" });
+    const g = await getTasksGrouped(db, {
+      categoriaId: null,
+      prioridad: "URGENT",
+    });
     expect(g.TODO.map((t) => t.id)).toEqual(["u"]);
   });
 
@@ -248,7 +268,10 @@ describe("getTasksGrouped con árbol y filtro", () => {
       { ...base, id: "padre", priority: "URGENT" },
       { ...base, id: "h1", parentId: "padre", priority: "LOW" },
     ]);
-    const g = await getTasksGrouped(db, { categoriaId: null, prioridad: "URGENT" });
+    const g = await getTasksGrouped(db, {
+      categoriaId: null,
+      prioridad: "URGENT",
+    });
     expect(g.TODO[0].hijos).toEqual({ total: 1, hechos: 0 });
   });
 
@@ -291,7 +314,13 @@ describe("getTasksGrouped trae el árbol de cada raíz", () => {
 });
 
 describe("getTask", () => {
-  const base = { title: "x", status: "TODO", order: 1, createdAt: T0, updatedAt: T0 };
+  const base = {
+    title: "x",
+    status: "TODO",
+    order: 1,
+    createdAt: T0,
+    updatedAt: T0,
+  };
 
   it("devuelve null si no existe", async () => {
     expect(await getTask(createTestDb(), "fantasma")).toBeNull();

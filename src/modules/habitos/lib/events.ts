@@ -45,12 +45,18 @@ export function on<K extends keyof UntapEvents>(
   name: K,
   handler: (detail: UntapEvents[K]) => void,
 ): () => void {
-  const listener = (e: Event) => handler((e as CustomEvent<UntapEvents[K]>).detail);
+  const listener = (e: Event) =>
+    handler((e as CustomEvent<UntapEvents[K]>).detail);
   window.addEventListener(name, listener);
   return () => window.removeEventListener(name, listener);
 }
 
-function emitPlayer(player: PlayerSnapshot, xpDelta: number, partial: boolean, leveledUp: boolean) {
+function emitPlayer(
+  player: PlayerSnapshot,
+  xpDelta: number,
+  partial: boolean,
+  leveledUp: boolean,
+) {
   emit("untap:xp", { player, xpDelta, partial });
   if (leveledUp) emit("untap:levelup", { level: player.level });
 }

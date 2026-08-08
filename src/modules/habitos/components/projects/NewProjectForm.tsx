@@ -5,7 +5,20 @@ import { createProject } from "@/modules/habitos/actions";
 import { Button } from "@/modules/core/ui/Button";
 import { Field, TextArea } from "@/modules/core/ui/Field";
 
-const ICONS = ["📁", "🎯", "🚀", "🎨", "🎮", "📚", "💼", "🏗️", "🌟", "🧪", "🎵", "🌱"];
+const ICONS = [
+  "📁",
+  "🎯",
+  "🚀",
+  "🎨",
+  "🎮",
+  "📚",
+  "💼",
+  "🏗️",
+  "🌟",
+  "🧪",
+  "🎵",
+  "🌱",
+];
 
 /** La superficie de `Card`, a mano: esto es un `<form>` y `Card` es un `<div>`. */
 const SUPERFICIE = {
@@ -40,7 +53,12 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      style={{ ...SUPERFICIE, display: "flex", flexDirection: "column", gap: 16 }}
+      style={{
+        ...SUPERFICIE,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
     >
       <Field
         label="Nombre"
@@ -59,7 +77,14 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
       />
 
       <div>
-        <span style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+        <span
+          style={{
+            display: "block",
+            fontSize: 12,
+            fontWeight: 700,
+            marginBottom: 8,
+          }}
+        >
           Icono
         </span>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -94,7 +119,11 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
         <Button variant="secondary" onClick={onDone} disabled={pending}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary" disabled={pending || !name.trim()}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={pending || !name.trim()}
+        >
           {pending ? "Guardando…" : "Crear"}
         </Button>
       </div>

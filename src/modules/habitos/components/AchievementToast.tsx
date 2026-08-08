@@ -5,7 +5,13 @@ import { on } from "@/modules/habitos/lib/events";
 
 type Toast =
   | { kind: "levelup"; key: number; level: number }
-  | { kind: "milestone"; key: number; habit: string; days: number; bonus: number }
+  | {
+      kind: "milestone";
+      key: number;
+      habit: string;
+      days: number;
+      bonus: number;
+    }
   | { kind: "shield"; key: number }
   | { kind: "quest"; key: number; label: string; xp: number; emoji: string }
   | { kind: "anchor"; key: number };
@@ -68,7 +74,12 @@ export function AchievementToast() {
     const offs = [
       on("untap:levelup", (d) => push({ kind: "levelup", level: d.level })),
       on("untap:milestone", (d) =>
-        push({ kind: "milestone", habit: d.habit, days: d.days, bonus: d.bonus }),
+        push({
+          kind: "milestone",
+          habit: d.habit,
+          days: d.days,
+          bonus: d.bonus,
+        }),
       ),
       on("untap:shield", () => push({ kind: "shield" })),
       on("untap:anchor", () => push({ kind: "anchor" })),

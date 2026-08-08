@@ -134,7 +134,9 @@ export function TaskDetail({
               className={OPCION}
               style={{
                 background:
-                  tarea.status === s ? "var(--color-pink)" : "var(--color-paper)",
+                  tarea.status === s
+                    ? "var(--color-pink)"
+                    : "var(--color-paper)",
                 boxShadow: tarea.status === s ? "var(--shadow-hard)" : "none",
               }}
             >
@@ -165,7 +167,8 @@ export function TaskDetail({
                     tarea.priority === p
                       ? prioridadColorVar(p)
                       : "var(--color-paper)",
-                  boxShadow: tarea.priority === p ? "var(--shadow-hard)" : "none",
+                  boxShadow:
+                    tarea.priority === p ? "var(--shadow-hard)" : "none",
                 }}
               >
                 <span

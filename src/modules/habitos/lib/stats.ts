@@ -120,7 +120,13 @@ export type GlobalStats = {
 const WEEKDAY_NAMES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 const WEEKDAY_FULL = [
-  "domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado",
+  "domingo",
+  "lunes",
+  "martes",
+  "miércoles",
+  "jueves",
+  "viernes",
+  "sábado",
 ];
 
 /** Abreviatura, para etiquetas de eje donde no cabe más. */
@@ -180,7 +186,8 @@ export async function getGlobalStats(db: Db): Promise<GlobalStats> {
 
   let bestWeekday: GlobalStats["bestWeekday"] = null;
   for (const [wd, c] of byWeekday) {
-    if (!bestWeekday || c > bestWeekday.count) bestWeekday = { weekday: wd, count: c };
+    if (!bestWeekday || c > bestWeekday.count)
+      bestWeekday = { weekday: wd, count: c };
   }
 
   // Sin filtro de fecha: cuenta también lo que cae fuera del mapa de calor.

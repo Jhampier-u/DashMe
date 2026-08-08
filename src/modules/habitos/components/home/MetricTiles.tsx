@@ -40,14 +40,22 @@ export function MetricTiles(p: Props) {
       <Stat
         label="Mejor día"
         value={p.best ? weekdayName(p.best.weekday) : "—"}
-        meta={p.best ? `${Math.round(p.best.rate * 100)}% de cumplimiento` : "aún sin datos"}
+        meta={
+          p.best
+            ? `${Math.round(p.best.rate * 100)}% de cumplimiento`
+            : "aún sin datos"
+        }
       />
       <Stat
         label="Nivel"
         value={String(p.level)}
         meta={`${p.xp} XP · ${p.xpToNext} para el ${p.level + 1}`}
       />
-      <Stat label="Escudos" value={`${p.shields} / ${p.maxShields}`} meta="disponibles" />
+      <Stat
+        label="Escudos"
+        value={`${p.shields} / ${p.maxShields}`}
+        meta="disponibles"
+      />
     </StatGrid>
   );
 }

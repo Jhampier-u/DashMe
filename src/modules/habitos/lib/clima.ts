@@ -55,7 +55,12 @@ export function climaDe(cumplidos: number, fallados: number): Tiempo {
   // Sin días que evaluar no se inventa un tiempo. Misma regla que en el panel de
   // música: antes callar que inventar.
   if (evaluables === 0) {
-    return { estado: "sin-dato", nubes: NUBES["sin-dato"], cumplidos: 0, evaluables: 0 };
+    return {
+      estado: "sin-dato",
+      nubes: NUBES["sin-dato"],
+      cumplidos: 0,
+      evaluables: 0,
+    };
   }
 
   const tasa = c / evaluables;

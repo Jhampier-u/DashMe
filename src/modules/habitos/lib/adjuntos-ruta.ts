@@ -21,8 +21,7 @@ export const DIR_ADJUNTOS = path.join(process.cwd(), "data", "adjuntos");
  */
 export const LIMITE_BYTES = 50 * 1024 * 1024;
 
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /**
  * ¿Tiene forma de nombre en disco?

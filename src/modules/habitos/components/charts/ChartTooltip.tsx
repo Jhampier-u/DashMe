@@ -16,7 +16,11 @@ export function ChartTooltip({
   children: ReactNode;
 }) {
   const anchor =
-    left < 15 ? "translateX(0)" : left > 85 ? "translateX(-100%)" : "translateX(-50%)";
+    left < 15
+      ? "translateX(0)"
+      : left > 85
+        ? "translateX(-100%)"
+        : "translateX(-50%)";
 
   return (
     <div

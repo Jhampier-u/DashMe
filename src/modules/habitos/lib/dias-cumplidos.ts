@@ -4,6 +4,7 @@ import { habits as habitsTable, habitLogs } from "@/modules/habitos/schema";
 import { addDays, dayKey, normalizeDayKey } from "./day";
 import { cal, estaProgramado, sanitizeSchedule } from "./calendario";
 import { pausasPorHabito } from "./pausas";
+import { cumplidosPorDia } from "./cantidad";
 
 export type DiasCumplidos = {
   /** Días en que se cumplió TODO lo programado. */
@@ -42,6 +43,7 @@ export async function getDiasCumplidos(
         id: habitsTable.id,
         schedule: habitsTable.schedule,
         createdAt: habitsTable.createdAt,
+        targetCount: habitsTable.targetCount,
       })
       .from(habitsTable)
       .orderBy(asc(habitsTable.createdAt)),
@@ -50,6 +52,7 @@ export async function getDiasCumplidos(
         habitId: habitLogs.habitId,
         date: habitLogs.date,
         partial: habitLogs.partial,
+        count: habitLogs.count,
       })
       .from(habitLogs)
       .where(and(gte(habitLogs.date, a), lte(habitLogs.date, b))),
@@ -62,15 +65,20 @@ export async function getDiasCumplidos(
     desde: dayKey(h.createdAt),
   }));
 
-  // Solo los NO parciales: un día a medias no es un día cumplido.
-  const plenos = new Map<number, Set<string>>();
-  for (const l of logs) {
-    if (l.partial) continue;
-    const t = normalizeDayKey(l.date).getTime();
-    const set = plenos.get(t);
-    if (set) set.add(l.habitId);
-    else plenos.set(t, new Set([l.habitId]));
-  }
+  /*
+    La MISMA regla que las rachas, no una propia. Antes esto filtraba solo por
+    `partial` y se saltaba el objetivo: con 2 de 8 vasos el clima daba el día por
+    cumplido mientras la racha de ese hábito seguía a cero.
+  */
+  const plenos = cumplidosPorDia(
+    logs.map((l) => ({
+      habitId: l.habitId,
+      date: l.date,
+      partial: !!l.partial,
+      count: l.count,
+    })),
+    new Map(filas.map((h) => [h.id, h.targetCount])),
+  );
 
   const cumplidos = new Set<number>();
   const fallados = new Set<number>();

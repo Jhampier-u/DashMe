@@ -143,7 +143,9 @@ describe("casos que no deberían existir pero existen", () => {
   });
 
   it("cambiar al estado que ya tiene no cambia nada", () => {
-    expect(planCascada(arbol("a:DONE"), { id: "a", nuevo: "DONE" })).toEqual([]);
+    expect(planCascada(arbol("a:DONE"), { id: "a", nuevo: "DONE" })).toEqual(
+      [],
+    );
   });
 
   /*
@@ -151,7 +153,9 @@ describe("casos que no deberían existir pero existen", () => {
     subida simplemente no encuentra a quién recalcular y para.
   */
   it("un huérfano no rompe la subida", () => {
-    const t: FilaCascada[] = [{ id: "h", parentId: "fantasma", status: "TODO" }];
+    const t: FilaCascada[] = [
+      { id: "h", parentId: "fantasma", status: "TODO" },
+    ];
     expect(estados(t, "h", "DONE")).toEqual({ h: "DONE" });
   });
 

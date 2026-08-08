@@ -11,9 +11,7 @@ const T0 = new Date("2026-07-01T12:00:00Z");
 type Db = ReturnType<typeof createTestDb>;
 
 async function seedHabito(db: Db) {
-  await db
-    .insert(habits)
-    .values({ id: "h1", name: "Leer", createdAt: T0 });
+  await db.insert(habits).values({ id: "h1", name: "Leer", createdAt: T0 });
 }
 
 describe("getHabitStats", () => {

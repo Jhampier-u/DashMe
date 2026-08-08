@@ -30,17 +30,15 @@ export type HabitoHistorico = {
   /** Cuándo se creó, en clave de día. Antes de esto la planta no existía. */
   creado: Date;
   pausas: Rango[];
-  /** `getTime()` de cada clave de día cumplida, con la regla del jardín vivo. */
-  cumplidos: number[];
   /**
-   * `getTime()` de cada día con registro NO parcial.
+   * `getTime()` de cada clave de día cumplida.
    *
-   * Es OTRA definición, la que usa `getDiasCumplidos` para el clima, y va
-   * separada porque de verdad son distintas: `cumplidos` respeta el objetivo
-   * numérico y esta no. Unificarlas sería otro bloque; mezclarlas haría que el
-   * clima de la memoria no coincidiera con el del presente.
+   * Antes había DOS listas aquí, porque el clima contaba los días con una regla
+   * distinta a la de las rachas. Esa discrepancia era un fallo y está corregida:
+   * ahora todo pasa por `esCompleto`, así que una sola lista sirve para las
+   * plantas y para el clima.
    */
-  plenos: number[];
+  cumplidos: number[];
 };
 
 /** Una planta tal y como se veía ese día. */
@@ -162,7 +160,7 @@ export function semanaEn(
 ): { cumplidos: number; fallados: number } {
   const plenosPorDia = new Map<number, Set<string>>();
   for (const h of habitos) {
-    for (const t of h.plenos) {
+    for (const t of h.cumplidos) {
       const set = plenosPorDia.get(t);
       if (set) set.add(h.id);
       else plenosPorDia.set(t, new Set([h.id]));

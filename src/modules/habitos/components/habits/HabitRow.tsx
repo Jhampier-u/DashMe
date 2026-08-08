@@ -22,6 +22,8 @@ type Props = {
   color: string;
   streak: number;
   doneToday: boolean;
+  /** Si hay registro hoy. El botón de marcar lo BORRA, así que decide él. */
+  registradoHoy: boolean;
   partialToday: boolean;
   scheduledToday: boolean;
   criticalToday: boolean;
@@ -88,7 +90,10 @@ const SELLO = {
   },
   hecho: { background: "var(--color-tinta)", color: "var(--color-paper)" },
   minimo: { background: "var(--color-yellow)", color: "var(--color-tinta)" },
-  pendiente: { background: "var(--color-paper-2)", color: "var(--color-tinta)" },
+  pendiente: {
+    background: "var(--color-paper-2)",
+    color: "var(--color-tinta)",
+  },
   noToca: {
     background: "transparent",
     color: "var(--color-tinta)",
@@ -119,7 +124,12 @@ export function HabitRow(p: Props) {
     startTransition(() => deleteHabit(fd));
   }
 
-  const plant = plantEmoji(p.plantSpecies, p.streak, p.doneToday, p.hasEverBeenDone);
+  const plant = plantEmoji(
+    p.plantSpecies,
+    p.streak,
+    p.doneToday,
+    p.hasEverBeenDone,
+  );
   const accent = habitColorVar(resolveHabitColor(p.color));
   const schedule = (p.schedule || DEFAULT_SCHEDULE).padEnd(7, "0");
   const custom = schedule !== DEFAULT_SCHEDULE;
@@ -164,7 +174,9 @@ export function HabitRow(p: Props) {
           lavanda, ni rosa, que son identidad— y lleva además el ▲ junto al
           sello, para que el aviso no dependa solo del tono.
         */
-        background: p.criticalToday ? "var(--color-yellow)" : "var(--color-paper)",
+        background: p.criticalToday
+          ? "var(--color-yellow)"
+          : "var(--color-paper)",
         border: "3px solid var(--color-line)",
         borderRadius: "var(--radius-card)",
         // La franja de identidad va por dentro para no desplazar el contenido
@@ -217,7 +229,9 @@ export function HabitRow(p: Props) {
                 "font-cuerpo text-tinta"
           }
           aria-label={
-            p.doneToday ? `Desmarcar ${p.name}` : `Marcar ${p.name} como hecho`
+            p.registradoHoy
+              ? `Desmarcar ${p.name}`
+              : `Marcar ${p.name} como hecho`
           }
         >
           <span style={{ fontSize: 24 }} aria-hidden>
@@ -304,7 +318,9 @@ export function HabitRow(p: Props) {
 
         <button
           type="button"
-          onClick={() => startTransition(() => setHabitAnchor(p.id, !p.isAnchor))}
+          onClick={() =>
+            startTransition(() => setHabitAnchor(p.id, !p.isAnchor))
+          }
           disabled={pending}
           // Ancla encendida: fondo amarillo. Apagada: papel. El estado ya iba
           // además en `aria-pressed`, que no se toca.
@@ -324,7 +340,9 @@ export function HabitRow(p: Props) {
           disabled={pending}
           className={`${ICON_BUTTON} bg-paper`}
           aria-expanded={open}
-          aria-label={open ? `Ocultar detalles de ${p.name}` : `Ver detalles de ${p.name}`}
+          aria-label={
+            open ? `Ocultar detalles de ${p.name}` : `Ver detalles de ${p.name}`
+          }
         >
           {open ? "▴" : "▾"}
         </button>
@@ -375,11 +393,20 @@ export function HabitRow(p: Props) {
         </div>
       ) : null}
       {p.minimalGoal && p.targetCount === null ? (
-        <div style={{ fontSize: 12, marginTop: 6 }}>Modo mínimo: {p.minimalGoal}</div>
+        <div style={{ fontSize: 12, marginTop: 6 }}>
+          Modo mínimo: {p.minimalGoal}
+        </div>
       ) : null}
 
       {custom ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            marginTop: 10,
+          }}
+        >
           {WEEKDAY_ORDER.map((weekday) => {
             const on = schedule[weekday] === "1";
             return (

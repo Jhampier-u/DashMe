@@ -166,7 +166,9 @@ export function TaskTreeItem({
           onClick={() => setOpen((v) => !v)}
           className={`${ICON_BUTTON} bg-paper`}
           style={{ visibility: hasChildren ? "visible" : "hidden" }}
-          aria-label={open ? `Contraer ${node.title}` : `Expandir ${node.title}`}
+          aria-label={
+            open ? `Contraer ${node.title}` : `Expandir ${node.title}`
+          }
           aria-expanded={open}
         >
           {open ? "▾" : "▸"}
@@ -268,7 +270,12 @@ export function TaskTreeItem({
           {adding ? (
             <form
               onSubmit={submitChild}
-              style={{ display: "flex", gap: 8, padding: "6px 0", paddingLeft: (depth + 1) * 20 }}
+              style={{
+                display: "flex",
+                gap: 8,
+                padding: "6px 0",
+                paddingLeft: (depth + 1) * 20,
+              }}
             >
               <input
                 autoFocus
@@ -284,7 +291,12 @@ export function TaskTreeItem({
                 }}
                 className={CAMPO_LINEA}
               />
-              <Button type="submit" size="sm" variant="primary" disabled={!childTitle.trim()}>
+              <Button
+                type="submit"
+                size="sm"
+                variant="primary"
+                disabled={!childTitle.trim()}
+              >
                 Añadir
               </Button>
               <Button

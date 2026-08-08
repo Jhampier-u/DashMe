@@ -57,3 +57,37 @@ export function diasQueCuentan(
   }
   return set;
 }
+
+/** Un registro con su hábito, para agrupar por día varios hábitos a la vez. */
+export type LogConHabito = LogParaRacha & { habitId: string };
+
+/**
+ * Qué hábitos completaron cada día, con LA MISMA regla que las rachas.
+ *
+ * Existe porque tres sitios —la racha global de la portada, el clima del jardín
+ * y la misión del día perfecto— construían este mapa a mano filtrando solo por
+ * `partial`, sin mirar el objetivo. El resultado medido: con un objetivo de 8 y
+ * 2 apuntados, la portada felicitaba por «tres días cumpliendo todo» mientras la
+ * racha de ese mismo hábito era cero.
+ *
+ * Es exactamente el fallo contra el que avisa el comentario de arriba: cinco
+ * copias de la regla, y una que se queda atrás sin dar error.
+ */
+export function cumplidosPorDia(
+  logs: LogConHabito[],
+  objetivoPorHabito: Map<string, number | null>,
+): Map<number, Set<string>> {
+  const porDia = new Map<number, Set<string>>();
+  for (const l of logs) {
+    if (
+      !esCompleto(objetivoPorHabito.get(l.habitId) ?? null, l.count, l.partial)
+    ) {
+      continue;
+    }
+    const t = normalizeDayKey(l.date).getTime();
+    const set = porDia.get(t);
+    if (set) set.add(l.habitId);
+    else porDia.set(t, new Set([l.habitId]));
+  }
+  return porDia;
+}

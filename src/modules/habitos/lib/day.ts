@@ -19,7 +19,9 @@ export function dayKey(d: Date = new Date()): Date {
 
 /** Normaliza un valor date-only leído de la BD. Idempotente. */
 export function normalizeDayKey(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
 }
 
 /** "YYYY-MM-DD" -> clave, o null si no es una fecha válida. */
@@ -61,7 +63,10 @@ export function isSameDay(a: Date, b: Date): boolean {
  * Para consultar campos que guardan instantes (completedAt, createdAt),
  * no claves de día.
  */
-export function localDayRange(now: Date = new Date()): { start: Date; end: Date } {
+export function localDayRange(now: Date = new Date()): {
+  start: Date;
+  end: Date;
+} {
   const start = new Date(
     now.getFullYear(),
     now.getMonth(),

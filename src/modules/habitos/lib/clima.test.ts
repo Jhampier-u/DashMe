@@ -63,12 +63,7 @@ describe("climaDe", () => {
     estado no dependa de distinguir un emoji pequeño.
   */
   it("cada estado tiene su número de nubes, y son distintos", () => {
-    const n = [
-      NUBES.despejado,
-      NUBES.nublado,
-      NUBES.lluvia,
-      NUBES["sin-dato"],
-    ];
+    const n = [NUBES.despejado, NUBES.nublado, NUBES.lluvia, NUBES["sin-dato"]];
     expect(new Set(n).size).toBe(4);
   });
 

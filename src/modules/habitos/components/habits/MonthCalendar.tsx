@@ -6,8 +6,18 @@ import { fetchHabitMonth, toggleHabitOnDay } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 
 const MONTHS = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
 ];
 const WEEKDAYS = ["D", "L", "M", "M", "J", "V", "S"];
 
@@ -31,7 +41,10 @@ export function MonthCalendar({
   const [year, setYear] = useState(() => now.getFullYear());
   const [month, setMonth] = useState(() => now.getMonth());
   // El mes cargado viaja con sus datos, así que "cargando" es un valor derivado.
-  const [loaded, setLoaded] = useState<{ key: string; days: MonthDay[] } | null>(null);
+  const [loaded, setLoaded] = useState<{
+    key: string;
+    days: MonthDay[];
+  } | null>(null);
   const [token, setToken] = useState(0);
   const [pending, startTransition] = useTransition();
 
@@ -52,8 +65,14 @@ export function MonthCalendar({
   function shift(delta: number) {
     let m = month + delta;
     let y = year;
-    if (m < 0) { m = 11; y -= 1; }
-    if (m > 11) { m = 0; y += 1; }
+    if (m < 0) {
+      m = 11;
+      y -= 1;
+    }
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
     setMonth(m);
     setYear(y);
   }
@@ -103,18 +122,34 @@ export function MonthCalendar({
   */
   function colors(day: MonthDay) {
     if (day.shielded) {
-      return { bg: "var(--color-pink)", fg: "var(--color-tinta)", dashed: false };
+      return {
+        bg: "var(--color-pink)",
+        fg: "var(--color-tinta)",
+        dashed: false,
+      };
     }
     if (day.partial) {
-      return { bg: "var(--color-yellow)", fg: "var(--color-tinta)", dashed: false };
+      return {
+        bg: "var(--color-yellow)",
+        fg: "var(--color-tinta)",
+        dashed: false,
+      };
     }
     if (day.done) {
-      return { bg: "var(--color-tinta)", fg: "var(--color-paper)", dashed: false };
+      return {
+        bg: "var(--color-tinta)",
+        fg: "var(--color-paper)",
+        dashed: false,
+      };
     }
     if (!day.scheduled) {
       return { bg: "transparent", fg: "var(--color-tinta)", dashed: true };
     }
-    return { bg: "var(--color-paper-2)", fg: "var(--color-tinta)", dashed: false };
+    return {
+      bg: "var(--color-paper-2)",
+      fg: "var(--color-tinta)",
+      dashed: false,
+    };
   }
 
   return (
@@ -127,7 +162,12 @@ export function MonthCalendar({
           marginBottom: 10,
         }}
       >
-        <button type="button" onClick={() => shift(-1)} className={NAV_BUTTON} aria-label="Mes anterior">
+        <button
+          type="button"
+          onClick={() => shift(-1)}
+          className={NAV_BUTTON}
+          aria-label="Mes anterior"
+        >
           ←
         </button>
         <span
@@ -142,12 +182,23 @@ export function MonthCalendar({
         >
           {MONTHS[month]} {year}
         </span>
-        <button type="button" onClick={() => shift(1)} className={NAV_BUTTON} aria-label="Mes siguiente">
+        <button
+          type="button"
+          onClick={() => shift(1)}
+          className={NAV_BUTTON}
+          aria-label="Mes siguiente"
+        >
           →
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: 3,
+        }}
+      >
         {/* Las cabeceras van en Quicksand y no en VT323: a este tamaño la
             pixelada quedaría por debajo de sus 16px y dejaría de leerse. */}
         {WEEKDAYS.map((w, i) => (
@@ -206,7 +257,9 @@ export function MonthCalendar({
                     // Hoy se marca por fuera, con un cerco separado del borde.
                     // Teñir el propio borde lo habría hecho competir con la
                     // distinción continuo/discontinuo, que aquí vale más.
-                    outline: day.isToday ? "2px solid var(--color-line)" : undefined,
+                    outline: day.isToday
+                      ? "2px solid var(--color-line)"
+                      : undefined,
                     outlineOffset: day.isToday ? 2 : undefined,
                     opacity: day.inMonth ? (day.isFuture ? 0.45 : 1) : 0.3,
                     cursor: day.editable ? "pointer" : "default",

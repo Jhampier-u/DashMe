@@ -23,7 +23,11 @@ describe("createCategoria", () => {
     const { db } = await conCategoria();
     const lista = await listCategorias(db);
     expect(lista).toHaveLength(1);
-    expect(lista[0]).toMatchObject({ name: "Casa", color: "pink", taskCount: 0 });
+    expect(lista[0]).toMatchObject({
+      name: "Casa",
+      color: "pink",
+      taskCount: 0,
+    });
   });
 
   it("rechaza un nombre vacío", async () => {
@@ -60,9 +64,33 @@ describe("listCategorias", () => {
   it("cuenta cuántas tareas usan cada una", async () => {
     const { db, id } = await conCategoria();
     await db.insert(tasks).values([
-      { id: "t1", title: "A", categoryId: id, order: 1, status: "TODO", createdAt: T0, updatedAt: T0 },
-      { id: "t2", title: "B", categoryId: id, order: 2, status: "DONE", createdAt: T0, updatedAt: T0 },
-      { id: "t3", title: "C", categoryId: null, order: 3, status: "TODO", createdAt: T0, updatedAt: T0 },
+      {
+        id: "t1",
+        title: "A",
+        categoryId: id,
+        order: 1,
+        status: "TODO",
+        createdAt: T0,
+        updatedAt: T0,
+      },
+      {
+        id: "t2",
+        title: "B",
+        categoryId: id,
+        order: 2,
+        status: "DONE",
+        createdAt: T0,
+        updatedAt: T0,
+      },
+      {
+        id: "t3",
+        title: "C",
+        categoryId: null,
+        order: 3,
+        status: "TODO",
+        createdAt: T0,
+        updatedAt: T0,
+      },
     ]);
     expect((await listCategorias(db))[0].taskCount).toBe(2);
   });

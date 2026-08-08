@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { areaPath, invertLinear, linePath, scaleLinear, segments } from "./chart";
+import {
+  areaPath,
+  invertLinear,
+  linePath,
+  scaleLinear,
+  segments,
+} from "./chart";
 
 describe("scaleLinear", () => {
   it("mapea el dominio al rango", () => {
@@ -35,7 +41,12 @@ describe("invertLinear", () => {
 
 describe("linePath", () => {
   it("traza una polilínea", () => {
-    expect(linePath([{ x: 0, y: 10 }, { x: 5, y: 0 }])).toBe("M0 10 L5 0");
+    expect(
+      linePath([
+        { x: 0, y: 10 },
+        { x: 5, y: 0 },
+      ]),
+    ).toBe("M0 10 L5 0");
   });
 
   it("devuelve cadena vacía sin puntos", () => {
@@ -45,9 +56,15 @@ describe("linePath", () => {
 
 describe("areaPath", () => {
   it("cierra la línea contra la base", () => {
-    expect(areaPath([{ x: 0, y: 10 }, { x: 5, y: 0 }], 20)).toBe(
-      "M0 10 L5 0 L5 20 L0 20 Z",
-    );
+    expect(
+      areaPath(
+        [
+          { x: 0, y: 10 },
+          { x: 5, y: 0 },
+        ],
+        20,
+      ),
+    ).toBe("M0 10 L5 0 L5 20 L0 20 Z");
   });
 });
 

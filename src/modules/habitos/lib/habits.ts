@@ -54,6 +54,8 @@ export type HabitWithStatus = {
   schedule: string;
   intention: string | null;
   doneToday: boolean;
+  /** Si hay registro hoy, esté completo o no. Ver la nota en la construcción. */
+  registradoHoy: boolean;
   partialToday: boolean;
   /** Objetivo numérico del día. Nulo = este hábito no se cuenta. */
   targetCount: number | null;
@@ -124,7 +126,9 @@ export async function getHabitsWithTodayStatus(
     ? await db
         .select({ habitId: habitNotes.habitId, text: habitNotes.text })
         .from(habitNotes)
-        .where(and(inArray(habitNotes.habitId, ids), eq(habitNotes.date, today)))
+        .where(
+          and(inArray(habitNotes.habitId, ids), eq(habitNotes.date, today)),
+        )
     : [];
   const notaPorHabito = new Map(notasHoy.map((n) => [n.habitId, n.text]));
   // Las pausas de verdad. Con ellas, `estaProgramado` deja de ser un alias de
@@ -163,7 +167,23 @@ export async function getHabitsWithTodayStatus(
       isAnchor: !!h.isAnchor,
       schedule,
       intention: h.intention,
-      doneToday: !!todayLog,
+      /*
+        Sale de `doneKeys`, que es el MISMO conjunto del que salen la racha,
+        `last30` y el día crítico. Antes era `!!todayLog` —basta con que exista un
+        registro— y el mismo objeto se contradecía: con un objetivo de 8 y 2
+        apuntados decía `doneToday: true` y `last30[0]: false` a la vez.
+
+        Atarlo a `doneKeys` no es solo arreglarlo: hace imposible que vuelvan a
+        divergir, porque ya no hay dos cálculos que mantener de acuerdo.
+      */
+      doneToday: doneKeys.has(today.getTime()),
+      /**
+       * Si HAY registro hoy, complete o no. Es otra pregunta y hace falta
+       * aparte: el botón de marcar BORRA el registro existente, así que quien
+       * decida si se puede pulsar tiene que mirar esto y no `doneToday`. Si
+       * mirara `doneToday`, pulsar sobre un 2 de 8 borraría los 2.
+       */
+      registradoHoy: !!todayLog,
       partialToday: !!todayLog?.partial,
       targetCount: h.targetCount,
       gardenSlot: h.gardenSlot,
@@ -174,7 +194,12 @@ export async function getHabitsWithTodayStatus(
       enPausaHoy: enPausa(pausasPorId.get(h.id) ?? [], today),
       countToday: todayLog?.count ?? null,
       scheduledToday: estaProgramado(calendario, today),
-      criticalToday: isCriticalDay(calendario, doneKeys, today, hasEverBeenDone),
+      criticalToday: isCriticalDay(
+        calendario,
+        doneKeys,
+        today,
+        hasEverBeenDone,
+      ),
       streak: computeStreak(calendario, doneKeys, today),
       hasEverBeenDone,
       last30,
@@ -451,7 +476,8 @@ export async function getHabitDiagnosis(db: Db): Promise<HabitDiagnosis> {
     if (entry.shielded) continue;
     const t = entry.day.getTime();
     const previous = lastByHabit.get(entry.habitId);
-    if (previous === undefined || t > previous) lastByHabit.set(entry.habitId, t);
+    if (previous === undefined || t > previous)
+      lastByHabit.set(entry.habitId, t);
   }
 
   const untouched: HabitUntouched[] = habits

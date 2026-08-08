@@ -70,9 +70,17 @@ export function TodayCard({ done, scheduled, partial, pending }: Props) {
       </div>
 
       {pending.length > 0 ? (
-        <div style={{ marginTop: 16, paddingTop: 14, borderTop: "3px dashed var(--color-line)" }}>
+        <div
+          style={{
+            marginTop: 16,
+            paddingTop: 14,
+            borderTop: "3px dashed var(--color-line)",
+          }}
+        >
           <div style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 10 }}>
-            {pending.length === 1 ? "Falta 1 antes de medianoche" : `Faltan ${pending.length} antes de medianoche`}
+            {pending.length === 1
+              ? "Falta 1 antes de medianoche"
+              : `Faltan ${pending.length} antes de medianoche`}
           </div>
           {/* Se pulsan para marcar, así que tienen que parecer pulsables. */}
           {pending.map((habit) => (
@@ -101,7 +109,9 @@ export function TodayCard({ done, scheduled, partial, pending }: Props) {
                   height: 9,
                   borderRadius: "50%",
                   border: "2px solid var(--color-tinta)",
-                  background: habit.critical ? "var(--color-peach)" : "var(--color-pink)",
+                  background: habit.critical
+                    ? "var(--color-peach)"
+                    : "var(--color-pink)",
                 }}
               />
               {habit.name}

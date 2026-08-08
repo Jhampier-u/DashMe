@@ -92,7 +92,11 @@ export function complianceSeries(
   }
 
   const out: DayCompliance[] = [];
-  for (let cursor = from; cursor.getTime() <= to.getTime(); cursor = addDays(cursor, 1)) {
+  for (
+    let cursor = from;
+    cursor.getTime() <= to.getTime();
+    cursor = addDays(cursor, 1)
+  ) {
     const activeIds = new Set(
       habits
         .filter(
@@ -144,9 +148,7 @@ export function rollingMean(
 
 /** Cumplimiento medio de los días que tenían algo programado. */
 export function averageRate(days: DayCompliance[]): number | null {
-  const rates = days
-    .map((d) => d.rate)
-    .filter((v): v is number => v !== null);
+  const rates = days.map((d) => d.rate).filter((v): v is number => v !== null);
   if (rates.length === 0) return null;
   return rates.reduce((a, b) => a + b, 0) / rates.length;
 }
@@ -234,7 +236,8 @@ function pickWeekday(
   for (let weekday = 0; weekday < 7; weekday++) {
     const rate = rates[weekday];
     if (rate === null) continue;
-    if (picked === null || better(rate, picked.rate)) picked = { weekday, rate };
+    if (picked === null || better(rate, picked.rate))
+      picked = { weekday, rate };
   }
   return picked;
 }

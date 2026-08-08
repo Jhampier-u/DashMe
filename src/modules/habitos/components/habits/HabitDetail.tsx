@@ -46,15 +46,30 @@ export function HabitDetail({
     >
       {stats ? (
         <StatGrid min={110} gap={12}>
-          <Stat size="sm" label="Racha" value={formatDays(stats.currentStreak)} meta="actual" />
-          <Stat size="sm" label="Mejor" value={formatDays(stats.bestStreak)} meta="histórica" />
+          <Stat
+            size="sm"
+            label="Racha"
+            value={formatDays(stats.currentStreak)}
+            meta="actual"
+          />
+          <Stat
+            size="sm"
+            label="Mejor"
+            value={formatDays(stats.bestStreak)}
+            meta="histórica"
+          />
           <Stat
             size="sm"
             label="30 días"
             value={`${Math.round(stats.completionRate30 * 100)}%`}
             meta={`${stats.doneIn30} de ${stats.scheduledIn30} que tocaban`}
           />
-          <Stat size="sm" label="Total" value={String(stats.totalDone)} meta="veces cumplido" />
+          <Stat
+            size="sm"
+            label="Total"
+            value={String(stats.totalDone)}
+            meta="veces cumplido"
+          />
         </StatGrid>
       ) : (
         <div style={{ fontSize: 12.5 }}>Cargando estadísticas…</div>

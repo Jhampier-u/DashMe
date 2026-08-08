@@ -77,9 +77,9 @@ const tarea = (id: string, extra: Record<string, unknown> = {}) => ({
 describe("el motor no vigila nada en la base puesta al día", () => {
   it("y por eso estos tests tienen sentido", () => {
     const db = basePuestaAlDia();
-    const fks = (
-      db as unknown as { $client: Database.Database }
-    ).$client.prepare("pragma foreign_key_list(tasks)").all();
+    const fks = (db as unknown as { $client: Database.Database }).$client
+      .prepare("pragma foreign_key_list(tasks)")
+      .all();
     expect(fks).toHaveLength(0);
   });
 });
@@ -94,12 +94,14 @@ describe("borrar una tarea con subtareas", () => {
   */
   it("se lleva también sus descendientes, y no solo un nivel", async () => {
     const db = basePuestaAlDia();
-    await db.insert(tasks).values([
-      tarea("padre"),
-      tarea("hijo", { parentId: "padre" }),
-      tarea("nieto", { parentId: "hijo" }),
-      tarea("ajena"),
-    ]);
+    await db
+      .insert(tasks)
+      .values([
+        tarea("padre"),
+        tarea("hijo", { parentId: "padre" }),
+        tarea("nieto", { parentId: "hijo" }),
+        tarea("ajena"),
+      ]);
 
     await deleteTaskById(db, "padre");
 
@@ -109,10 +111,9 @@ describe("borrar una tarea con subtareas", () => {
 
   it("no deja huérfanos invisibles en el tablero", async () => {
     const db = basePuestaAlDia();
-    await db.insert(tasks).values([
-      tarea("padre"),
-      tarea("hijo", { parentId: "padre" }),
-    ]);
+    await db
+      .insert(tasks)
+      .values([tarea("padre"), tarea("hijo", { parentId: "padre" })]);
 
     await deleteTaskById(db, "padre");
 

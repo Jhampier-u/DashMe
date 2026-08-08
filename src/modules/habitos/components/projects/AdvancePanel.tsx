@@ -11,7 +11,14 @@ export function AdvancePanel({ metrics }: { metrics: ProjectMetrics }) {
 
   return (
     <Card title="Ritmo de avance">
-      <div style={{ display: "flex", alignItems: "baseline", gap: 9, flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 9,
+          flexWrap: "wrap",
+        }}
+      >
         <span
           style={{
             fontFamily: "var(--font-vt)",
@@ -53,7 +60,9 @@ export function AdvancePanel({ metrics }: { metrics: ProjectMetrics }) {
               <br />
               {/* El tooltip ya fija su tinta. */}
               <span>
-                {weeks[i].count === 1 ? "1 subtarea" : `${weeks[i].count} subtareas`}
+                {weeks[i].count === 1
+                  ? "1 subtarea"
+                  : `${weeks[i].count} subtareas`}
               </span>
             </>
           )}

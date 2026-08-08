@@ -5,7 +5,14 @@
 // tooltip); así sirve luego para tareas y proyectos sin tocarlo.
 
 import { useState, type ReactNode } from "react";
-import { areaPath, invertLinear, linePath, scaleLinear, segments, type Point } from "@/modules/habitos/lib/chart";
+import {
+  areaPath,
+  invertLinear,
+  linePath,
+  scaleLinear,
+  segments,
+  type Point,
+} from "@/modules/habitos/lib/chart";
 import { ChartTooltip } from "./ChartTooltip";
 
 export type LineChartProps = {
@@ -70,7 +77,8 @@ export function LineChart({
   }
 
   // Índice activo ya acotado: evita la aserción no nula `hover!` más abajo.
-  const activeIndex = hover === null ? null : Math.min(line.length - 1, Math.max(0, hover));
+  const activeIndex =
+    hover === null ? null : Math.min(line.length - 1, Math.max(0, hover));
 
   // Misma escala X que la cruceta del SVG: si difiriera, la cruceta y el
   // tooltip señalarían días distintos al pasar el ratón.
@@ -114,7 +122,11 @@ export function LineChart({
 
         {/* El área es superficie, así que va en pastel macizo. */}
         {lineSegments.map((seg, i) => (
-          <path key={`area-${i}`} d={areaPath(seg, y(0))} fill="var(--color-pink)" />
+          <path
+            key={`area-${i}`}
+            d={areaPath(seg, y(0))}
+            fill="var(--color-pink)"
+          />
         ))}
         {/* La línea ES el dato, así que va en tinta: un trazo fino en pastel
             sobre papel no se sostiene, y oscurecerlo lo sacaría de la paleta. */}
@@ -144,7 +156,13 @@ export function LineChart({
               strokeWidth={2}
             />
           ) : (
-            <circle key={i} cx={x(i)} cy={y(value)} r={2.5} fill="var(--color-tinta)" />
+            <circle
+              key={i}
+              cx={x(i)}
+              cy={y(value)}
+              r={2.5}
+              fill="var(--color-tinta)"
+            />
           ),
         )}
 
@@ -194,7 +212,9 @@ export function LineChart({
       </svg>
 
       {activeIndex !== null ? (
-        <ChartTooltip left={tooltipLeft}>{renderTooltip(activeIndex)}</ChartTooltip>
+        <ChartTooltip left={tooltipLeft}>
+          {renderTooltip(activeIndex)}
+        </ChartTooltip>
       ) : null}
     </div>
   );

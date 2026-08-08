@@ -130,26 +130,26 @@ export function TaskCard({
         única puerta al árbol sería tener ya un árbol.
       */}
       <>
-          <button
-            type="button"
-            onClick={() => setAbierto(!abierto)}
-            aria-expanded={abierto}
-            className="mt-1.5 text-[11.5px] text-tinta font-cuerpo underline cursor-pointer bg-transparent border-0 p-0 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line"
-          >
-            {abierto ? "▾" : "▸"}{" "}
-            {task.hijos.total === 0
-              ? "Subtareas"
-              : `${task.hijos.total} subtarea${
-                  task.hijos.total === 1 ? "" : "s"
-                } · ${task.hijos.hechos} hecha${
-                  task.hijos.hechos === 1 ? "" : "s"
-                }`}
-          </button>
-          {abierto ? (
-            <div style={{ marginTop: 8 }}>
-              <TaskTree roots={task.arbol} parentId={task.id} />
-            </div>
-          ) : null}
+        <button
+          type="button"
+          onClick={() => setAbierto(!abierto)}
+          aria-expanded={abierto}
+          className="mt-1.5 text-[11.5px] text-tinta font-cuerpo underline cursor-pointer bg-transparent border-0 p-0 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-line"
+        >
+          {abierto ? "▾" : "▸"}{" "}
+          {task.hijos.total === 0
+            ? "Subtareas"
+            : `${task.hijos.total} subtarea${
+                task.hijos.total === 1 ? "" : "s"
+              } · ${task.hijos.hechos} hecha${
+                task.hijos.hechos === 1 ? "" : "s"
+              }`}
+        </button>
+        {abierto ? (
+          <div style={{ marginTop: 8 }}>
+            <TaskTree roots={task.arbol} parentId={task.id} />
+          </div>
+        ) : null}
       </>
 
       <div style={{ display: "flex", gap: 6, marginTop: 12 }}>

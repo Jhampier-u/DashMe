@@ -78,7 +78,11 @@ export default async function HabitsPage() {
         ) : (
           <>
             <CriticalBanner habits={habits} />
-            <DayStatus initial={player} done={done} scheduled={scheduled.length} />
+            <DayStatus
+              initial={player}
+              done={done}
+              scheduled={scheduled.length}
+            />
             <QuestList quests={quests} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -91,6 +95,7 @@ export default async function HabitsPage() {
                   color={habit.color}
                   streak={habit.streak}
                   doneToday={habit.doneToday}
+                  registradoHoy={habit.registradoHoy}
                   partialToday={habit.partialToday}
                   targetCount={habit.targetCount}
                   countToday={habit.countToday}

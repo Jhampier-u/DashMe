@@ -16,7 +16,14 @@ export function FlowPanel({ metrics }: { metrics: TaskMetrics }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Card title="Ritmo de cierre">
-        <div style={{ display: "flex", alignItems: "baseline", gap: 9, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 9,
+            flexWrap: "wrap",
+          }}
+        >
           <span
             style={{
               fontFamily: "var(--font-vt)",
@@ -58,7 +65,9 @@ export function FlowPanel({ metrics }: { metrics: TaskMetrics }) {
                 <br />
                 {/* El tooltip ya fija su tinta. */}
                 <span>
-                  {weeks[i].count === 1 ? "1 tarea" : `${weeks[i].count} tareas`}
+                  {weeks[i].count === 1
+                    ? "1 tarea"
+                    : `${weeks[i].count} tareas`}
                 </span>
               </>
             )}
@@ -70,12 +79,18 @@ export function FlowPanel({ metrics }: { metrics: TaskMetrics }) {
         <Stat
           label="Tiempo de vida"
           value={medianLifetime === null ? "—" : formatDays(medianLifetime)}
-          meta={medianLifetime === null ? "aún no has cerrado nada" : "mediana, últimos 90 días"}
+          meta={
+            medianLifetime === null
+              ? "aún no has cerrado nada"
+              : "mediana, últimos 90 días"
+          }
         />
         <Stat
           label="Lo más antiguo abierto"
           value={oldestOpen === null ? "—" : formatDays(oldestOpen)}
-          meta={oldestOpen === null ? "no queda nada abierto" : "desde que se creó"}
+          meta={
+            oldestOpen === null ? "no queda nada abierto" : "desde que se creó"
+          }
         />
       </StatGrid>
     </div>

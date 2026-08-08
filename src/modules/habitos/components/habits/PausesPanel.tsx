@@ -124,7 +124,12 @@ export function PausesPanel({
       {aviso ? <p style={{ fontSize: 12.5 }}>{aviso}</p> : null}
 
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "center",
+        }}
       >
         <input
           type="date"

@@ -66,7 +66,10 @@ export function TaskTree({
       )}
 
       {!puedeCrear ? null : adding ? (
-        <form onSubmit={submit} style={{ display: "flex", gap: 8, paddingTop: 8 }}>
+        <form
+          onSubmit={submit}
+          style={{ display: "flex", gap: 8, paddingTop: 8 }}
+        >
           <input
             autoFocus
             value={title}
@@ -81,7 +84,12 @@ export function TaskTree({
             }}
             className={CAMPO_LINEA}
           />
-          <Button type="submit" variant="primary" size="sm" disabled={pending || !title.trim()}>
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            disabled={pending || !title.trim()}
+          >
             Añadir
           </Button>
           <Button

@@ -27,7 +27,14 @@ export function QuestList({ quests }: { quests: DailyQuestRow[] }) {
   };
 
   return (
-    <Card title="Objetivos del día" action={<span style={cifra}>{done}/{quests.length}</span>}>
+    <Card
+      title="Objetivos del día"
+      action={
+        <span style={cifra}>
+          {done}/{quests.length}
+        </span>
+      }
+    >
       {quests.map((q) => {
         const def = QUEST_DEFS[q.kind];
         const ratio = q.completed ? 1 : Math.min(1, q.progress / q.target);
@@ -46,11 +53,17 @@ export function QuestList({ quests }: { quests: DailyQuestRow[] }) {
               {/* Lo cumplido se tacha en vez de apagarse de color: sobre papel,
                   bajar el tono se come el contraste, y el tachado además se ve
                   sin distinguir tonos. */}
-              <span style={{ textDecoration: q.completed ? "line-through" : "none" }}>
+              <span
+                style={{
+                  textDecoration: q.completed ? "line-through" : "none",
+                }}
+              >
                 {def.description}
               </span>
               <span style={cifra}>
-                {q.completed ? `+${q.xpReward} XP` : `${q.progress}/${q.target}`}
+                {q.completed
+                  ? `+${q.xpReward} XP`
+                  : `${q.progress}/${q.target}`}
               </span>
             </div>
             <ProgressBar

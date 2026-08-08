@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { Card } from "@/modules/core/ui/Card";
-import { ComplianceChart, type ChartPoint } from "@/modules/habitos/components/charts/ComplianceChart";
+import {
+  ComplianceChart,
+  type ChartPoint,
+} from "@/modules/habitos/components/charts/ComplianceChart";
 import type { PeriodDelta } from "@/modules/habitos/lib/metrics";
 
 const RANGES = [
@@ -53,7 +56,9 @@ export function TrendCard({ points, delta }: Props) {
               // Iba en verde o rojo según subiera o bajara. Ahora lo dicen la
               // flecha y el grosor, que se leen sin distinguir tonos.
               <span style={{ fontSize: 12.5, fontWeight: changed ? 700 : 500 }}>
-                {changed ? `${up ? "▲" : "▼"} ${Math.abs(delta.deltaPoints)} pts` : "sin cambio"}
+                {changed
+                  ? `${up ? "▲" : "▼"} ${Math.abs(delta.deltaPoints)} pts`
+                  : "sin cambio"}
               </span>
             )}
           </div>

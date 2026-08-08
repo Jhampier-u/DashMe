@@ -4,10 +4,27 @@ import { useState, useTransition } from "react";
 import { createHabit } from "@/modules/habitos/actions";
 import { Button } from "@/modules/core/ui/Button";
 import { Field } from "@/modules/core/ui/Field";
-import { DEFAULT_HABIT_COLOR, HABIT_COLORS, habitColorVar } from "@/modules/habitos/lib/color";
+import {
+  DEFAULT_HABIT_COLOR,
+  HABIT_COLORS,
+  habitColorVar,
+} from "@/modules/habitos/lib/color";
 import { PLANT_SPECIES, type PlantSpecies } from "@/modules/habitos/lib/garden";
 
-const ICONS = ["⭐", "📖", "🏃", "🧘", "💧", "🎨", "🎮", "🌱", "🎵", "💪", "🍎", "✍️"];
+const ICONS = [
+  "⭐",
+  "📖",
+  "🏃",
+  "🧘",
+  "💧",
+  "🎨",
+  "🎮",
+  "🌱",
+  "🎵",
+  "💪",
+  "🍎",
+  "✍️",
+];
 // Índice por getUTCDay(): 0=domingo. Se muestran empezando en lunes.
 const WEEKDAYS = [
   { index: 1, label: "L" },
@@ -109,7 +126,12 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      style={{ ...SUPERFICIE, display: "flex", flexDirection: "column", gap: 16 }}
+      style={{
+        ...SUPERFICIE,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
     >
       <Field
         label="Nombre"
@@ -231,7 +253,14 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
         maxLength={80}
       />
 
-      <label style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer" }}>
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 9,
+          cursor: "pointer",
+        }}
+      >
         <input
           type="checkbox"
           checked={isAnchor}
@@ -246,7 +275,11 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
         <Button variant="secondary" onClick={onDone} disabled={pending}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary" disabled={pending || !name.trim()}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={pending || !name.trim()}
+        >
           {pending ? "Guardando…" : "Crear"}
         </Button>
       </div>

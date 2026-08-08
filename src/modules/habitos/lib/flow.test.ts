@@ -46,7 +46,9 @@ describe("weeklyCounts", () => {
     const out = weeklyCounts([new Date("2026-07-27T12:00:00Z")], 3, hoy);
     expect(out.map((b) => b.count)).toEqual([0, 0, 1]);
     expect(out.map((b) => b.week)).toEqual([
-      "2026-07-13", "2026-07-20", "2026-07-27",
+      "2026-07-13",
+      "2026-07-20",
+      "2026-07-27",
     ]);
   });
 
@@ -111,7 +113,10 @@ describe("oldestOpenDays", () => {
   it("devuelve los días de la más antigua", () => {
     expect(
       oldestOpenDays(
-        [new Date("2026-07-25T10:00:00-05:00"), new Date("2026-07-20T10:00:00-05:00")],
+        [
+          new Date("2026-07-25T10:00:00-05:00"),
+          new Date("2026-07-20T10:00:00-05:00"),
+        ],
         hoy,
       ),
     ).toBe(7);

@@ -23,7 +23,6 @@ function habito(over: Partial<HabitoHistorico> = {}): HabitoHistorico {
     creado: D(1),
     pausas: [],
     cumplidos: [],
-    plenos: [],
     ...over,
   };
 }
@@ -169,14 +168,14 @@ describe("primerDiaConDatos", () => {
 
 describe("semanaEn", () => {
   it("cuenta un día como cumplido solo si TODOS los vigentes lo cumplieron", () => {
-    const a = habito({ id: "a", plenos: [T(10)] });
-    const b = habito({ id: "b", plenos: [] });
+    const a = habito({ id: "a", cumplidos: [T(10)] });
+    const b = habito({ id: "b", cumplidos: [] });
     // Del 4 al 10: siete días programados para los dos, y solo `a` cumplió uno.
     expect(semanaEn([a, b], D(10))).toEqual({ cumplidos: 0, fallados: 7 });
   });
 
   it("con uno solo, sus días cumplidos salen como cumplidos", () => {
-    const a = habito({ id: "a", plenos: [T(8), T(9), T(10)] });
+    const a = habito({ id: "a", cumplidos: [T(8), T(9), T(10)] });
     expect(semanaEn([a], D(10))).toEqual({ cumplidos: 3, fallados: 4 });
   });
 
@@ -191,7 +190,7 @@ describe("semanaEn", () => {
   });
 
   it("los días anteriores a crear el hábito no cuentan", () => {
-    const a = habito({ id: "a", creado: D(9), plenos: [T(9), T(10)] });
+    const a = habito({ id: "a", creado: D(9), cumplidos: [T(9), T(10)] });
     expect(semanaEn([a], D(10))).toEqual({ cumplidos: 2, fallados: 0 });
   });
 

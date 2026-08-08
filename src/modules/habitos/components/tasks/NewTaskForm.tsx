@@ -67,7 +67,12 @@ export function NewTaskForm({
   return (
     <form
       onSubmit={submit}
-      style={{ ...SUPERFICIE, display: "flex", flexDirection: "column", gap: 16 }}
+      style={{
+        ...SUPERFICIE,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
     >
       <Field
         label="Título"
@@ -124,7 +129,9 @@ export function NewTaskForm({
               <button
                 key={c.id}
                 type="button"
-                onClick={() => setCategoriaId(categoriaId === c.id ? null : c.id)}
+                onClick={() =>
+                  setCategoriaId(categoriaId === c.id ? null : c.id)
+                }
                 aria-pressed={categoriaId === c.id}
                 className={OPCION}
                 style={{
@@ -133,7 +140,8 @@ export function NewTaskForm({
                       ? varColor(c.color)
                       : "var(--color-paper)",
                   borderBottom: `3px solid ${varColor(c.color)}`,
-                  boxShadow: categoriaId === c.id ? "var(--shadow-hard)" : "none",
+                  boxShadow:
+                    categoriaId === c.id ? "var(--shadow-hard)" : "none",
                 }}
               >
                 {c.name}
@@ -147,7 +155,11 @@ export function NewTaskForm({
         <Button variant="secondary" onClick={onDone} disabled={pending}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary" disabled={pending || !title.trim()}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={pending || !title.trim()}
+        >
           {pending ? "Guardando…" : "Crear"}
         </Button>
       </div>

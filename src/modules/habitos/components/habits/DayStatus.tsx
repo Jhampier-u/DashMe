@@ -49,7 +49,14 @@ export function DayStatus({ initial, done, scheduled }: Props) {
 
   return (
     <Card>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          flexWrap: "wrap",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <span style={{ fontSize: 36 }} aria-hidden>
             {avatarFor(ratio, scheduled)}
@@ -92,7 +99,9 @@ export function DayStatus({ initial, done, scheduled }: Props) {
                 /{scheduled}
               </span>
             </div>
-            <div style={{ fontSize: 12.5, marginTop: 4 }}>{moodFor(ratio, scheduled)}</div>
+            <div style={{ fontSize: 12.5, marginTop: 4 }}>
+              {moodFor(ratio, scheduled)}
+            </div>
           </div>
         </div>
 

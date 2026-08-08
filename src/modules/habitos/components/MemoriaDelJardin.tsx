@@ -75,6 +75,10 @@ function comoHabito(p: PlantaEn, slot: number | null): HabitWithStatus {
     schedule: "1111111",
     intention: null,
     doneToday: p.cumplidoEseDia,
+    // En el pasado no se riega ni se borra nada, así que este campo no llega a
+    // usarse. Se rellena con lo más cercano a la verdad: si el día contó, hubo
+    // registro.
+    registradoHoy: p.cumplidoEseDia,
     partialToday: false,
     targetCount: null,
     gardenSlot: slot,

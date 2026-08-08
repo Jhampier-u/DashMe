@@ -108,7 +108,9 @@ export function periodChange(buckets: WeekBucket[]): PeriodChange {
     previous,
     current,
     changePercent:
-      previous === 0 ? null : Math.round(((current - previous) / previous) * 100),
+      previous === 0
+        ? null
+        : Math.round(((current - previous) / previous) * 100),
   };
 }
 

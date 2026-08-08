@@ -67,12 +67,17 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                 */}
                 <ProgressBar
                   value={habit.rate ?? 0}
-                  fill={(habit.rate ?? 0) < 0.5 ? "var(--color-peach)" : "var(--color-pink)"}
+                  fill={
+                    (habit.rate ?? 0) < 0.5
+                      ? "var(--color-peach)"
+                      : "var(--color-pink)"
+                  }
                 />
               </div>
             ))}
             <p style={{ fontSize: 11, marginTop: 2 }}>
-              Cada uno sobre los días que le tocaban, en las últimas cuatro semanas.
+              Cada uno sobre los días que le tocaban, en las últimas cuatro
+              semanas.
             </p>
           </div>
         )}
@@ -104,9 +109,15 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
                       <div
                         style={{
                           width: "100%",
-                          height: rate === null ? 0 : `${Math.max(4, rate * 100)}%`,
-                          background: esPeor ? "var(--color-peach)" : "var(--color-pink)",
-                          border: rate === null ? "none" : "2px solid var(--color-line)",
+                          height:
+                            rate === null ? 0 : `${Math.max(4, rate * 100)}%`,
+                          background: esPeor
+                            ? "var(--color-peach)"
+                            : "var(--color-pink)",
+                          border:
+                            rate === null
+                              ? "none"
+                              : "2px solid var(--color-line)",
                           borderBottom: "none",
                           borderRadius: "6px 6px 0 0",
                         }}
@@ -126,7 +137,8 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
               })}
             </div>
             <p style={{ fontSize: 12.5 }}>
-              Tu peor día es el <strong>{weekdayFullName(worst.weekday)}</strong>, con un{" "}
+              Tu peor día es el{" "}
+              <strong>{weekdayFullName(worst.weekday)}</strong>, con un{" "}
               {pct(worst.rate)} de cumplimiento.
             </p>
           </>
@@ -141,12 +153,18 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
             {untouched.map((habit, i) => (
               <div
                 key={habit.id}
-                style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5 }}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 12.5,
+                }}
               >
                 {/* El primero es el más abandonado. Antes se marcaba tiñendo
                     el número; ahora con el grosor, que es lo único que queda
                     cuando el color de texto está reservado a la tinta. */}
-                <span style={{ fontWeight: i === 0 ? 700 : 400 }}>{habit.name}</span>
+                <span style={{ fontWeight: i === 0 ? 700 : 400 }}>
+                  {habit.name}
+                </span>
                 <span style={{ ...CIFRA, fontWeight: i === 0 ? 700 : 400 }}>
                   {habit.from === "creation"
                     ? "sin cumplir"
@@ -159,8 +177,8 @@ export function DiagnosisPanel({ diagnosis }: { diagnosis: HabitDiagnosis }) {
               </div>
             ))}
             <p style={{ fontSize: 11, marginTop: 2 }}>
-              No es la racha: uno de lunes y viernes puede tenerla viva y llevar cinco
-              días sin tocarse.
+              No es la racha: uno de lunes y viernes puede tenerla viva y llevar
+              cinco días sin tocarse.
             </p>
           </div>
         )}

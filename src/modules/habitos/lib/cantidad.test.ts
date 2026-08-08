@@ -76,7 +76,13 @@ describe("diasQueCuentan con objetivo", () => {
 
   it("normaliza al día, así que dos horas del mismo día son un día", () => {
     const set = diasQueCuentan(
-      [{ date: new Date(d(5).getTime() + 3_600_000), partial: false, count: 8 }],
+      [
+        {
+          date: new Date(d(5).getTime() + 3_600_000),
+          partial: false,
+          count: 8,
+        },
+      ],
       8,
     );
     expect(set.size).toBe(1);

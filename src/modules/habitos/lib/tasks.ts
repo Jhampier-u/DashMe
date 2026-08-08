@@ -236,7 +236,10 @@ export async function getTaskMetrics(db: Db): Promise<TaskMetrics> {
     weeks: buckets.slice(FLOW_WEEKS),
     change: periodChange(buckets),
     medianLifetime: median(lifetimeDays(recent)),
-    oldestOpen: oldestOpenDays(open.map((t) => t.createdAt), today),
+    oldestOpen: oldestOpenDays(
+      open.map((t) => t.createdAt),
+      today,
+    ),
   };
 }
 

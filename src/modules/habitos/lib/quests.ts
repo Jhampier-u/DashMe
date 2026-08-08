@@ -9,6 +9,7 @@ import {
 import { dayKey, localDayRange } from "./day";
 import { cal, estaProgramado } from "./calendario";
 import { pausasPorHabito } from "./pausas";
+import { esCompleto } from "./cantidad";
 
 export type QuestKind =
   | "QUEST_3_HABITS"
@@ -131,12 +132,17 @@ async function computeProgress(
       .select({
         habitId: habitLogs.habitId,
         partial: habitLogs.partial,
+        count: habitLogs.count,
         createdAt: habitLogs.createdAt,
       })
       .from(habitLogs)
       .where(and(eq(habitLogs.date, today), eq(habitLogs.shielded, false))),
     db
-      .select({ id: habitsTable.id, schedule: habitsTable.schedule })
+      .select({
+        id: habitsTable.id,
+        schedule: habitsTable.schedule,
+        targetCount: habitsTable.targetCount,
+      })
       .from(habitsTable),
     /*
       Dos misiones distintas, no una: «Dos tareas» y «Una subtarea de proyecto».
@@ -179,14 +185,30 @@ async function computeProgress(
   const scheduledToday = habits.filter((h) =>
     estaProgramado(cal(h.schedule, pausas.get(h.id) ?? []), today),
   );
+  /*
+    `esCompleto` y no `!partial`: con un objetivo, apuntar 2 de 8 no es un día
+    cumplido, y antes esta misión lo daba por bueno mientras la racha del mismo
+    hábito no se movía.
+  */
+  const objetivoPorHabito = new Map(habits.map((h) => [h.id, h.targetCount]));
   const fullyDone = new Set(
-    todayLogs.filter((l) => !l.partial).map((l) => l.habitId),
+    todayLogs
+      .filter((l) =>
+        esCompleto(
+          objetivoPorHabito.get(l.habitId) ?? null,
+          l.count,
+          !!l.partial,
+        ),
+      )
+      .map((l) => l.habitId),
   );
   const perfect =
     scheduledToday.length > 0 &&
     scheduledToday.every((h) => fullyDone.has(h.id));
 
-  const early = todayLogs.some((l) => l.createdAt.getTime() < earlyCutoff.getTime());
+  const early = todayLogs.some(
+    (l) => l.createdAt.getTime() < earlyCutoff.getTime(),
+  );
 
   return {
     QUEST_3_HABITS: todayLogs.length,
@@ -260,7 +282,9 @@ export async function syncDailyQuests(
       const pagadas = await db
         .update(dailyQuests)
         .set({ progress: value, completed: true, completedAt: now })
-        .where(and(eq(dailyQuests.id, row.id), eq(dailyQuests.completed, false)))
+        .where(
+          and(eq(dailyQuests.id, row.id), eq(dailyQuests.completed, false)),
+        )
         .returning({ id: dailyQuests.id });
       if (pagadas.length === 1) {
         xpDelta += row.xpReward;
@@ -305,10 +329,7 @@ export async function getTodayQuests(
       id: r.id,
       kind: r.kind as QuestKind,
       target: r.target,
-      progress: Math.min(
-        r.target,
-        progress[r.kind as QuestKind] ?? r.progress,
-      ),
+      progress: Math.min(r.target, progress[r.kind as QuestKind] ?? r.progress),
       xpReward: r.xpReward,
       completed: r.completed,
     }));

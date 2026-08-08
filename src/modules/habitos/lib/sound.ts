@@ -20,7 +20,9 @@ export function setMuted(m: boolean) {
   mutedCache = m;
   if (typeof window !== "undefined") {
     window.localStorage.setItem("untap:muted", m ? "1" : "0");
-    window.dispatchEvent(new CustomEvent("untap:muteChange", { detail: { muted: m } }));
+    window.dispatchEvent(
+      new CustomEvent("untap:muteChange", { detail: { muted: m } }),
+    );
   }
 }
 
@@ -80,9 +82,7 @@ export function playChime() {
 
 export function playMinimalChime() {
   // softer single note — minimum viable
-  playSequence([
-    { freq: 440, duration: 0.12, type: "sine", gain: 0.08 },
-  ]);
+  playSequence([{ freq: 440, duration: 0.12, type: "sine", gain: 0.08 }]);
 }
 
 export function playFanfare() {
@@ -96,9 +96,7 @@ export function playFanfare() {
 }
 
 export function playClick() {
-  playSequence([
-    { freq: 1200, duration: 0.03, type: "square", gain: 0.04 },
-  ]);
+  playSequence([{ freq: 1200, duration: 0.03, type: "square", gain: 0.04 }]);
 }
 
 export function playUndo() {

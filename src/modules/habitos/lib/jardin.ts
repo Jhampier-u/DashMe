@@ -9,7 +9,6 @@ import { diasQueCuentan } from "./cantidad";
 import type { PlantSpecies } from "./garden";
 import type { HabitoHistorico } from "./historia";
 
-
 /*
   Guardar la colocación del jardín.
 
@@ -111,7 +110,8 @@ export async function getJardinHistorico(db: Db): Promise<HabitoHistorico[]> {
       Los mismos días que cuentan para el jardín vivo —`diasQueCuentan` respeta
       lo parcial y el objetivo numérico—. Si aquí se contara cualquier registro,
       HOY se vería distinto según lo miraras desde el jardín o desde su memoria,
-      y no habría forma de saber cuál de los dos miente.
+      y no habría forma de saber cuál de los dos miente. Desde que el clima usa
+      esta misma regla, esta lista sirve también para él.
     */
     cumplidos: [
       ...diasQueCuentan(
@@ -123,15 +123,6 @@ export async function getJardinHistorico(db: Db): Promise<HabitoHistorico[]> {
         h.targetCount,
       ),
     ],
-    /*
-      Y aparte, los días con registro NO parcial, que es lo que cuenta
-      `getDiasCumplidos` para el clima. Son dos definiciones distintas y ya lo
-      eran antes de este bloque; traerlas las dos es lo que permite que el clima
-      de la memoria salga idéntico al del presente.
-    */
-    plenos: (porId.get(h.id) ?? [])
-      .filter((l) => !l.partial)
-      .map((l) => normalizeDayKey(l.date).getTime()),
   }));
 }
 
