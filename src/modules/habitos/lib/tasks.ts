@@ -74,15 +74,36 @@ export type NodoArbol = {
   completedAt: Date | null;
 };
 
+/**
+ * El filtro del tablero.
+ *
+ * Listas y no valores sueltos: **O dentro de un grupo, Y entre grupos**. Es el
+ * estándar documentado del filtrado por facetas —«(Ocio O Casa) Y (Urgente)»— y
+ * antes solo se podía tener un valor de cada tipo.
+ */
 export type TaskFilter = {
-  categoriaId: string | null;
-  prioridad: Prioridad | null;
+  categoriaIds: string[];
+  prioridades: Prioridad[];
 };
 
-/** Un parámetro repetido en la URL llega como lista; vale el primero. */
-function primero(v: string | string[] | undefined): string | null {
-  if (Array.isArray(v)) return v[0] ?? null;
-  return v ?? null;
+/**
+ * Lee una lista de la URL.
+ *
+ * Acepta las dos formas que puede tomar —repetida (`?cat=a&cat=b`) o separada
+ * por comas (`?cat=a,b`)— porque los enlaces que genera la barra usan la segunda
+ * y no hay motivo para rechazar la primera.
+ */
+function lista(v: string | string[] | undefined): string[] {
+  const crudo = Array.isArray(v) ? v : v === undefined ? [] : [v];
+  const fuera: string[] = [];
+  for (const parte of crudo) {
+    for (const x of parte.split(",")) {
+      const limpio = x.trim();
+      // Sin vacíos y sin repetidos: `?cat=a,,a` no debe filtrar dos veces.
+      if (limpio && !fuera.includes(limpio)) fuera.push(limpio);
+    }
+  }
+  return fuera;
 }
 
 /**
@@ -94,10 +115,32 @@ function primero(v: string | string[] | undefined): string | null {
 export function parseTaskFilter(sp: {
   [k: string]: string | string[] | undefined;
 }): TaskFilter {
-  return {
-    categoriaId: primero(sp.cat),
-    prioridad: resolvePrioridad(primero(sp.pri)),
-  };
+  const prioridades: Prioridad[] = [];
+  for (const p of lista(sp.pri)) {
+    // Se descarta lo que no sea una prioridad conocida en vez de caer a una
+    // media: un parámetro corrupto no debe inventar un filtro que no pusiste.
+    const r = resolvePrioridad(p);
+    if (r && !prioridades.includes(r)) prioridades.push(r);
+  }
+  return { categoriaIds: lista(sp.cat), prioridades };
+}
+
+/** Si una tarea pasa el filtro. O dentro de cada grupo, Y entre los dos. */
+export function pasaElFiltro(
+  t: { categoryId: string | null; priority: string | null },
+  filtro: TaskFilter,
+): boolean {
+  if (
+    filtro.categoriaIds.length > 0 &&
+    (t.categoryId === null || !filtro.categoriaIds.includes(t.categoryId))
+  ) {
+    return false;
+  }
+  if (filtro.prioridades.length > 0) {
+    const p = resolvePrioridad(t.priority);
+    if (p === null || !filtro.prioridades.includes(p)) return false;
+  }
+  return true;
 }
 
 export type TaskRow = {
@@ -116,7 +159,7 @@ export type TaskRow = {
   arbol: TaskTreeNode<NodoArbol>[];
 };
 
-const SIN_FILTRO: TaskFilter = { categoriaId: null, prioridad: null };
+export const SIN_FILTRO: TaskFilter = { categoriaIds: [], prioridades: [] };
 
 /**
  * Las tareas del tablero, agrupadas por estado.
@@ -188,9 +231,8 @@ export async function getTasksGrouped(
     if (t.parentId && existentes.has(t.parentId)) continue;
     const s = (t.status as TaskStatus) ?? "TODO";
     if (!(s in grouped)) continue;
-    if (filtro.categoriaId && t.categoryId !== filtro.categoriaId) continue;
+    if (!pasaElFiltro(t, filtro)) continue;
     const prioridad = resolvePrioridad(t.priority);
-    if (filtro.prioridad && prioridad !== filtro.prioridad) continue;
     grouped[s].push({
       id: t.id,
       title: t.title,
@@ -332,4 +374,83 @@ export async function getTask(db: Db, id: string): Promise<TaskDetalle | null> {
     completedAt: propia.completedAt,
     arbol,
   };
+}
+
+/** Cuántas tareas dejaría ver cada opción del filtro. */
+export type Conteos = {
+  categorias: Record<string, number>;
+  prioridades: Record<string, number>;
+  /** Raíces sin categoría. Hoy no se puede filtrar por esto; se enseña. */
+  sinCategoria: number;
+};
+
+/**
+ * El recuento de cada opción, para poder enseñar «Ocio (7)».
+ *
+ * Baymard lo llama «una de las mejoras de mayor impacto» del filtrado, y aquí
+ * sale gratis: las tareas ya están en memoria.
+ *
+ * CADA GRUPO SE CUENTA IGNORÁNDOSE A SÍ MISMO. Los recuentos de categoría se
+ * calculan con el filtro de prioridad puesto pero sin el de categoría, y al
+ * revés. Es lo que hace que el número diga «lo que verías si marcas esto» en vez
+ * de «lo que ves ahora», que sería cero para todo lo no seleccionado.
+ *
+ * Solo cuenta RAÍCES, que es lo que el tablero enseña.
+ */
+export function contarFacetas(
+  filas: {
+    parentId: string | null;
+    categoryId: string | null;
+    priority: string | null;
+    id: string;
+  }[],
+  filtro: TaskFilter,
+): Conteos {
+  const existentes = new Set(filas.map((t) => t.id));
+  const raices = filas.filter(
+    (t) => !(t.parentId && existentes.has(t.parentId)),
+  );
+
+  const soloPrioridad: TaskFilter = {
+    categoriaIds: [],
+    prioridades: filtro.prioridades,
+  };
+  const soloCategoria: TaskFilter = {
+    categoriaIds: filtro.categoriaIds,
+    prioridades: [],
+  };
+
+  const categorias: Record<string, number> = {};
+  const prioridades: Record<string, number> = {};
+  let sinCategoria = 0;
+
+  for (const t of raices) {
+    if (pasaElFiltro(t, soloPrioridad)) {
+      if (t.categoryId)
+        categorias[t.categoryId] = (categorias[t.categoryId] ?? 0) + 1;
+      else sinCategoria += 1;
+    }
+    if (pasaElFiltro(t, soloCategoria)) {
+      const p = resolvePrioridad(t.priority);
+      if (p) prioridades[p] = (prioridades[p] ?? 0) + 1;
+    }
+  }
+
+  return { categorias, prioridades, sinCategoria };
+}
+
+/** Los recuentos del filtro, leyendo la tabla una vez. */
+export async function getConteosDeFacetas(
+  db: Db,
+  filtro: TaskFilter = SIN_FILTRO,
+): Promise<Conteos> {
+  const filas = await db
+    .select({
+      id: tasks.id,
+      parentId: tasks.parentId,
+      categoryId: tasks.categoryId,
+      priority: tasks.priority,
+    })
+    .from(tasks);
+  return contarFacetas(filas, filtro);
 }

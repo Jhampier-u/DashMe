@@ -1,5 +1,10 @@
 import { db } from "@/modules/core/db";
-import { getTasksGrouped, getTaskMetrics, listCategorias } from "@/modules/habitos";
+import {
+  getTasksGrouped,
+  getTaskMetrics,
+  listCategorias,
+  getConteosDeFacetas,
+} from "@/modules/habitos";
 import { parseTaskFilter } from "@/modules/habitos/lib/tasks";
 import { Card } from "@/modules/core/ui/Card";
 import { TasksBoard } from "@/modules/habitos/components/tasks/TasksBoard";
@@ -20,8 +25,9 @@ export default async function TasksPage({
   searchParams: Promise<{ [k: string]: string | string[] | undefined }>;
 }) {
   const filtro = parseTaskFilter(await searchParams);
-  const [grouped, metrics, categorias] = await Promise.all([
+  const [grouped, conteos, metrics, categorias] = await Promise.all([
     getTasksGrouped(db, filtro),
+    getConteosDeFacetas(db, filtro),
     getTaskMetrics(db),
     listCategorias(db),
   ]);
@@ -30,7 +36,8 @@ export default async function TasksPage({
   // resultados enseñe un mensaje en vez de tres columnas vacías sin explicar.
   const total =
     grouped.TODO.length + grouped.IN_PROGRESS.length + grouped.DONE.length;
-  const filtrando = filtro.categoriaId !== null || filtro.prioridad !== null;
+  const filtrando =
+    filtro.categoriaIds.length > 0 || filtro.prioridades.length > 0;
 
   return (
     // Se cae `.m-root`: la pantalla pone ya su propio papel.
@@ -53,7 +60,7 @@ export default async function TasksPage({
         }}
       >
         <TasksHeader total={total} categorias={categorias} />
-        <FilterBar categorias={categorias} filtro={filtro} />
+        <FilterBar categorias={categorias} filtro={filtro} conteos={conteos} />
 
         {total === 0 ? (
           <Card style={{ textAlign: "center", padding: 40 }}>

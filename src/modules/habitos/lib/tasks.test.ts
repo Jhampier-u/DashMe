@@ -7,6 +7,8 @@ import {
   FLOW_WEEKS,
   buildTaskTree,
   parseTaskFilter,
+  contarFacetas,
+  SIN_FILTRO,
   getTask,
 } from "./tasks";
 
@@ -58,17 +60,15 @@ describe("getTasksGrouped", () => {
 
   it("ordena por order y desempata por fecha de creación", async () => {
     const db = createTestDb();
-    await db
-      .insert(tasks)
-      .values([
-        makeTask({ id: "tarde", order: 1, createdAt: new Date("2026-07-02") }),
-        makeTask({
-          id: "primera",
-          order: 0,
-          createdAt: new Date("2026-07-03"),
-        }),
-        makeTask({ id: "empate", order: 1, createdAt: new Date("2026-07-01") }),
-      ]);
+    await db.insert(tasks).values([
+      makeTask({ id: "tarde", order: 1, createdAt: new Date("2026-07-02") }),
+      makeTask({
+        id: "primera",
+        order: 0,
+        createdAt: new Date("2026-07-03"),
+      }),
+      makeTask({ id: "empate", order: 1, createdAt: new Date("2026-07-01") }),
+    ]);
 
     const g = await getTasksGrouped(db);
 
@@ -170,13 +170,13 @@ describe("buildTaskTree", () => {
 describe("parseTaskFilter", () => {
   it("lee la categoría y la prioridad de la URL", () => {
     expect(parseTaskFilter({ cat: "c1", pri: "URGENT" })).toEqual({
-      categoriaId: "c1",
-      prioridad: "URGENT",
+      categoriaIds: ["c1"],
+      prioridades: ["URGENT"],
     });
   });
 
   it("sin parámetros no filtra nada", () => {
-    expect(parseTaskFilter({})).toEqual({ categoriaId: null, prioridad: null });
+    expect(parseTaskFilter({})).toEqual({ categoriaIds: [], prioridades: [] });
   });
 
   /*
@@ -184,11 +184,39 @@ describe("parseTaskFilter", () => {
     dejar el tablero vacío sin explicación: se ignora.
   */
   it("una prioridad que no existe se ignora", () => {
-    expect(parseTaskFilter({ pri: "CRITICAL" }).prioridad).toBeNull();
+    expect(parseTaskFilter({ pri: "CRITICAL" }).prioridades).toEqual([]);
   });
 
-  it("un parámetro repetido se queda con el primero", () => {
-    expect(parseTaskFilter({ cat: ["c1", "c2"] }).categoriaId).toBe("c1");
+  it("un parámetro repetido filtra por TODOS, no por el primero", () => {
+    /*
+      Cambió a propósito: dentro de un grupo los filtros suman (O), que es el
+      estándar del filtrado por facetas. Antes se quedaba con el primero y no
+      había forma de pedir «Ocio o Casa».
+    */
+    expect(parseTaskFilter({ cat: ["c1", "c2"] }).categoriaIds).toEqual([
+      "c1",
+      "c2",
+    ]);
+  });
+
+  it("también acepta la forma separada por comas, que es la que genera la barra", () => {
+    expect(parseTaskFilter({ cat: "c1,c2" }).categoriaIds).toEqual([
+      "c1",
+      "c2",
+    ]);
+    expect(parseTaskFilter({ pri: "URGENT,LOW" }).prioridades).toEqual([
+      "URGENT",
+      "LOW",
+    ]);
+  });
+
+  it("descarta vacíos y repetidos", () => {
+    // `?cat=a,,a` no debe filtrar dos veces por lo mismo ni por la nada.
+    expect(parseTaskFilter({ cat: "a,,a" }).categoriaIds).toEqual(["a"]);
+  });
+
+  it("sin parámetros, no filtra nada", () => {
+    expect(parseTaskFilter({})).toEqual({ categoriaIds: [], prioridades: [] });
   });
 });
 
@@ -235,8 +263,8 @@ describe("getTasksGrouped con árbol y filtro", () => {
       { ...base, id: "sin", priority: null },
     ]);
     const g = await getTasksGrouped(db, {
-      categoriaId: null,
-      prioridad: "URGENT",
+      categoriaIds: [],
+      prioridades: ["URGENT"],
     });
     expect(g.TODO.map((t) => t.id)).toEqual(["u"]);
   });
@@ -253,7 +281,10 @@ describe("getTasksGrouped con árbol y filtro", () => {
       { ...base, id: "casa", categoryId: "c1" },
       { ...base, id: "otra", categoryId: "c2" },
     ]);
-    const g = await getTasksGrouped(db, { categoriaId: "c1", prioridad: null });
+    const g = await getTasksGrouped(db, {
+      categoriaIds: ["c1"],
+      prioridades: [],
+    });
     expect(g.TODO.map((t) => t.id)).toEqual(["casa"]);
   });
 
@@ -269,8 +300,8 @@ describe("getTasksGrouped con árbol y filtro", () => {
       { ...base, id: "h1", parentId: "padre", priority: "LOW" },
     ]);
     const g = await getTasksGrouped(db, {
-      categoriaId: null,
-      prioridad: "URGENT",
+      categoriaIds: [],
+      prioridades: ["URGENT"],
     });
     expect(g.TODO[0].hijos).toEqual({ total: 1, hechos: 0 });
   });
@@ -365,5 +396,64 @@ describe("getTask", () => {
     const db = createTestDb();
     await db.insert(tasks).values({ ...base, id: "t", priority: "CRITICAL" });
     expect((await getTask(db, "t"))!.priority).toBeNull();
+  });
+});
+
+describe("contarFacetas", () => {
+  const t = (
+    id: string,
+    categoryId: string | null,
+    priority: string | null,
+    parentId: string | null = null,
+  ) => ({ id, parentId, categoryId, priority });
+
+  const filas = [
+    t("1", "ocio", "URGENT"),
+    t("2", "ocio", "LOW"),
+    t("3", "casa", "URGENT"),
+    t("4", null, null),
+    t("5", "ocio", "URGENT", "1"), // subtarea: NO se cuenta
+  ];
+
+  it("cuenta solo las raíces, que es lo que enseña el tablero", () => {
+    const c = contarFacetas(filas, SIN_FILTRO);
+    expect(c.categorias).toEqual({ ocio: 2, casa: 1 });
+    expect(c.prioridades).toEqual({ URGENT: 2, LOW: 1 });
+    expect(c.sinCategoria).toBe(1);
+  });
+
+  it("CADA GRUPO SE CUENTA IGNORÁNDOSE A SÍ MISMO", () => {
+    /*
+      Es la decisión que hace útiles los números. Con «ocio» puesto, la cuenta de
+      «casa» debe decir cuántas verías si la marcas —1—, no cuántas ves ahora,
+      que sería 0 para todo lo no seleccionado y el número no serviría de nada.
+    */
+    const c = contarFacetas(filas, { categoriaIds: ["ocio"], prioridades: [] });
+    expect(c.categorias).toEqual({ ocio: 2, casa: 1 });
+    // La prioridad SÍ se cuenta con el filtro de categoría puesto.
+    expect(c.prioridades).toEqual({ URGENT: 1, LOW: 1 });
+  });
+
+  it("y al revés: la categoría se cuenta con la prioridad puesta", () => {
+    const c = contarFacetas(filas, {
+      categoriaIds: [],
+      prioridades: ["URGENT"],
+    });
+    expect(c.categorias).toEqual({ ocio: 1, casa: 1 });
+    expect(c.prioridades).toEqual({ URGENT: 2, LOW: 1 });
+  });
+
+  it("una huérfana cuenta como raíz", () => {
+    // Misma política que el tablero: si su padre no existe, no se pierde.
+    const c = contarFacetas([t("9", "ocio", null, "fantasma")], SIN_FILTRO);
+    expect(c.categorias).toEqual({ ocio: 1 });
+  });
+
+  it("sin tareas no inventa ceros", () => {
+    expect(contarFacetas([], SIN_FILTRO)).toEqual({
+      categorias: {},
+      prioridades: {},
+      sinCategoria: 0,
+    });
   });
 });
