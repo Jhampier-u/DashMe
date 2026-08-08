@@ -4,9 +4,26 @@
     {
       "name": "dashboard-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "url": "http://127.0.0.1:3000"
+    },
+    {
+      "name": "dashboard-prod",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "next",
+        "start",
+        "-H",
+        "127.0.0.1",
+        "-p",
+        "3100"
+      ],
+      "port": 3100,
+      "url": "http://127.0.0.1:3100"
     }
   ]
 }
