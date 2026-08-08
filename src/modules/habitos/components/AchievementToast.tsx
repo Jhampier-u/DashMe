@@ -12,6 +12,7 @@ type Toast =
       days: number;
       bonus: number;
     }
+  | { kind: "regreso"; key: number; habit: string; bonus: number }
   | { kind: "shield"; key: number }
   | { kind: "quest"; key: number; label: string; xp: number; emoji: string }
   | { kind: "anchor"; key: number };
@@ -81,6 +82,9 @@ export function AchievementToast() {
           bonus: d.bonus,
         }),
       ),
+      on("untap:regreso", (d) =>
+        push({ kind: "regreso", habit: d.habit, bonus: d.bonus }),
+      ),
       on("untap:shield", () => push({ kind: "shield" })),
       on("untap:anchor", () => push({ kind: "anchor" })),
       on("untap:quest", (d) =>
@@ -147,6 +151,24 @@ export function AchievementToast() {
             <div style={ROTULO}>Racha de {top.days} días</div>
             <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 12 }}>
               {top.habit}
+            </div>
+            <div style={PREMIO}>+{top.bonus} XP</div>
+          </>
+        ) : top.kind === "regreso" ? (
+          /*
+            El aviso de volver. Dice «has vuelto», no «rompiste la racha»: la
+            evidencia sobre recaída es clara en que el daño lo hace la atribución
+            —«soy débil, siempre fallo»— y no el fallo. Recordarlo aquí sería
+            fabricar exactamente eso en el momento en que la persona acaba de
+            hacer lo correcto.
+          */
+          <>
+            <div style={ROTULO}>Has vuelto</div>
+            <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 4 }}>
+              {top.habit}
+            </div>
+            <div style={{ fontSize: 14, marginBottom: 12 }}>
+              Retomarlo es la parte difícil.
             </div>
             <div style={PREMIO}>+{top.bonus} XP</div>
           </>

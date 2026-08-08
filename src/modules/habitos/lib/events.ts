@@ -22,11 +22,13 @@ export type XpDetail = {
 
 export type LevelUpDetail = { level: number };
 export type MilestoneDetail = { habit: string; days: number; bonus: number };
+export type RegresoDetail = { habit: string; bonus: number };
 
 export type UntapEvents = {
   "untap:xp": XpDetail;
   "untap:levelup": LevelUpDetail;
   "untap:milestone": MilestoneDetail;
+  "untap:regreso": RegresoDetail;
   "untap:shield": null;
   "untap:anchor": null;
   "untap:quest": QuestCompletion;
@@ -71,6 +73,12 @@ export function emitToggleResult(result: ToggleResult) {
       habit: result.milestone.habitName,
       days: result.milestone.days,
       bonus: result.milestone.bonus,
+    });
+  }
+  if (result.regreso) {
+    emit("untap:regreso", {
+      habit: result.regreso.habitName,
+      bonus: result.regreso.bonus,
     });
   }
   for (const q of result.questsCompleted) emit("untap:quest", q);

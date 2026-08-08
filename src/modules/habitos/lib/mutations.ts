@@ -28,7 +28,8 @@ import {
 import { TASK_STATUSES, type TaskStatus } from "./tasks";
 import { planCascada } from "./cascada";
 import { diasQueCuentan } from "./cantidad";
-import { cal, estaProgramado, type Rango } from "./calendario";
+import { cal, estaProgramado, type Calendario, type Rango } from "./calendario";
+import { XP_REGRESO, esRegreso } from "./regreso";
 import { pausasDeHabito } from "./pausas";
 import { borrarDeDisco, storedNamesOfTasks } from "./adjuntos";
 import { resolvePrioridad } from "./prioridad";
@@ -238,6 +239,8 @@ export type ToggleResult = {
   shieldUsed: boolean;
   anchorTriggered: boolean;
   milestone: { habitName: string; days: number; bonus: number } | null;
+  /** Si este día fue una vuelta tras fallar, y cuánto pagó. Nulo si no lo fue. */
+  regreso: { habitName: string; bonus: number } | null;
   questsCompleted: QuestCompletion[];
 };
 
@@ -256,6 +259,7 @@ async function emptyToggle(
     shieldUsed: false,
     anchorTriggered: false,
     milestone: null,
+    regreso: null,
     questsCompleted: [],
   };
 }
@@ -306,6 +310,7 @@ export async function toggleHabitDay(
   let shieldUsed = false;
   let anchorTriggered = false;
   let milestone: ToggleResult["milestone"] = null;
+  let regreso: ToggleResult["regreso"] = null;
 
   if (existing) {
     await db.delete(habitLogs).where(eq(habitLogs.id, existing.id));
@@ -333,7 +338,7 @@ export async function toggleHabitDay(
 
     // Hito: se calcula sobre la racha real (respetando el calendario) y su
     // bonus queda grabado en el propio registro para poder devolverlo.
-    const streak = await currentStreakOf(
+    const { streak, keys, calendario } = await rachaDelHabito(
       db,
       habitId,
       schedule,
@@ -349,6 +354,25 @@ export async function toggleHabitDay(
         .where(eq(habitLogs.id, created.id));
       milestone = { habitName: habit.name, days: m.days, bonus: m.bonus };
     }
+    /*
+      VOLVER TRAS FALLAR PAGA. Es la mecánica con mejor respaldo de todo el
+      estudio del sector: entre 54 intervenciones probadas sobre 61.293 personas
+      (Milkman et al., Nature 2021), la ganadora premiaba volver después de una
+      sesión perdida.
+
+      El bonus se graba en `xpAwarded` igual que el del hito, y por el mismo
+      motivo: al desmarcar se devuelve exactamente lo concedido. Si se sumara
+      solo al delta, marcar y desmarcar en bucle sería una máquina de XP.
+    */
+    if (esRegreso(calendario, keys, key)) {
+      awarded += XP_REGRESO;
+      regreso = { habitName: habit.name, bonus: XP_REGRESO };
+      await db
+        .update(habitLogs)
+        .set({ xpAwarded: awarded })
+        .where(eq(habitLogs.id, created.id));
+    }
+
     logXpDelta = awarded;
 
     if (isToday && !partial) {
@@ -370,6 +394,7 @@ export async function toggleHabitDay(
     shieldUsed,
     anchorTriggered,
     milestone,
+    regreso,
     questsCompleted: quests.completed,
   };
 }
@@ -381,13 +406,20 @@ export async function toggleHabitDay(
  * objetivo, un día corto NO cuenta. Traer solo la fecha —como hacía antes— no
  * daría error con la cantidad: contaría días que no debe, y en silencio.
  */
-async function currentStreakOf(
+/**
+ * La racha del hábito y, con ella, los días que la sostienen.
+ *
+ * Devuelve las claves y el calendario además del número porque quien la llama
+ * necesita las tres cosas: el hito mira la racha y el regreso mira si el día
+ * programado anterior se falló. Sacarlas de aquí evita repetir la consulta.
+ */
+async function rachaDelHabito(
   db: Db,
   habitId: string,
   schedule: string,
   today: Date,
   targetCount: number | null,
-): Promise<number> {
+): Promise<{ streak: number; keys: Set<number>; calendario: Calendario }> {
   const logs = await db
     .select({
       date: habitLogs.date,
@@ -409,7 +441,8 @@ async function currentStreakOf(
   // hitos, y pasarlas por la cadena obligaría a tocar tres firmas más para
   // ahorrar una consulta que solo corre al marcar.
   const pausas: Rango[] = await pausasDeHabito(db, habitId);
-  return computeStreak(cal(schedule, pausas), keys, today);
+  const calendario = cal(schedule, pausas);
+  return { streak: computeStreak(calendario, keys, today), keys, calendario };
 }
 
 /**
@@ -432,6 +465,7 @@ async function soloContador(db: Db, partial: boolean): Promise<ToggleResult> {
     shieldUsed: false,
     anchorTriggered: false,
     milestone: null,
+    regreso: null,
     questsCompleted: [],
   };
 }
