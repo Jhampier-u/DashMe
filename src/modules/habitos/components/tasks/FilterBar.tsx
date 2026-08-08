@@ -39,6 +39,18 @@ export function FilterBar({
 }) {
   const hayFiltro = filtro.categoriaId !== null || filtro.prioridad !== null;
 
+  /*
+    Estos botones FILTRAN. No reordenan nada, y la lista sigue saliendo por su
+    orden manual pase lo que pase con las prioridades.
+
+    Es deliberado y no una carencia. Bellotti et al. (CHI 2004) concluyen que la
+    gente prioriza bien por su cuenta, y Zhu et al. (2018) demuestran que
+    cualquier señal de urgencia secuestra la decisión por encima de la
+    importancia. Ordenar por urgencia sería automatizar un sesgo documentado.
+
+    Lo que sí era un fallo es que la interfaz no lo dijera: marcar algo como
+    «Urgente» y ver que no pasa nada parece que la aplicación no funciona.
+  */
   return (
     <div
       style={{
@@ -104,6 +116,16 @@ export function FilterBar({
       ) : null}
 
       <CategoriesPanel categorias={categorias} />
+
+      {/*
+        Dicho en voz alta, porque no se puede deducir mirando: la prioridad
+        etiqueta y filtra, y no cambia el orden de la lista. Sin esta frase,
+        marcar algo como «Urgente» y ver que no se mueve parece un fallo.
+      */}
+      <p style={{ width: "100%", fontSize: 12, margin: "2px 0 0" }}>
+        La prioridad <b>etiqueta y filtra</b>; no reordena la lista. El orden lo
+        pones tú.
+      </p>
     </div>
   );
 }

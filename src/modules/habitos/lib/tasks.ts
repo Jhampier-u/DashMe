@@ -163,13 +163,29 @@ export async function getTasksGrouped(
     ).map((r) => [r.id, r.children]),
   );
 
+  /*
+    Los ids que existen de verdad, para distinguir «tiene padre» de «apunta a un
+    padre que ya no está».
+
+    `buildTaskTree`, unas líneas más arriba en este mismo archivo, documenta que
+    un hijo huérfano debe salir como raíz porque «perderlo en silencio sería
+    peor». Aquí se hacía lo contrario: `if (t.parentId) continue` sin comprobar
+    nada, así que la misma tarea aparecía en el árbol y desaparecía del tablero.
+    Dos políticas opuestas ante el mismo caso, en el mismo archivo.
+
+    Y el caso es alcanzable: en la base que se pone al día `parent_id` no tiene
+    clave foránea —lo dice `migrar.ts`—, así que nada impide que quede colgando.
+  */
+  const existentes = new Set(all.map((t) => t.id));
+
   const grouped: Record<TaskStatus, TaskRow[]> = {
     TODO: [],
     IN_PROGRESS: [],
     DONE: [],
   };
   for (const t of all) {
-    if (t.parentId) continue;
+    // Solo se salta si el padre EXISTE. Una huérfana se trata como raíz.
+    if (t.parentId && existentes.has(t.parentId)) continue;
     const s = (t.status as TaskStatus) ?? "TODO";
     if (!(s in grouped)) continue;
     if (filtro.categoriaId && t.categoryId !== filtro.categoriaId) continue;

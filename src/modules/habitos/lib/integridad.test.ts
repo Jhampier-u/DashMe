@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@/modules/core/db/schema";
@@ -199,5 +200,49 @@ describe("borrar una tarea con adjuntos", () => {
     await expect(deleteTaskById(db, "sola", dir)).resolves.not.toThrow();
 
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+/*
+  HALLAZGO 4 DE LA AUDITORÍA. Una tarea huérfana —con `parent_id` apuntando a una
+  fila que ya no está— desaparecía del tablero de `/tareas` mientras seguía
+  saliendo en el árbol.
+
+  `getTasksGrouped` hacía `if (t.parentId) continue` sin comprobar si ese padre
+  existe, mientras `buildTaskTree`, en el mismo archivo, documenta que una
+  huérfana debe salir como raíz porque «perderlo en silencio sería peor». Dos
+  políticas opuestas ante el mismo caso.
+
+  Va aquí y no en `tasks.test.ts` por un motivo concreto: en esta base, que es la
+  del usuario, `parent_id` NO tiene clave foránea, así que el estado huérfano es
+  alcanzable de verdad. En una base nueva el motor lo impediría y el test estaría
+  probando algo que no puede pasar.
+*/
+describe("una tarea huérfana no se pierde", () => {
+  it("sale en el tablero como si fuera raíz", async () => {
+    const db = basePuestaAlDia();
+    await db
+      .insert(tasks)
+      .values([tarea("padre"), tarea("hija", { parentId: "padre" })]);
+
+    // Se borra el padre POR SQL, saltándose el borrado en cascada del código:
+    // es la forma de llegar al estado que la base real sí permite.
+    await db.delete(tasks).where(eq(tasks.id, "padre"));
+
+    const grouped = await getTasksGrouped(db);
+    const ids = grouped.TODO.map((t) => t.id);
+    expect(ids).toContain("hija");
+  });
+
+  it("y una hija con padre vivo sigue SIN salir en el tablero", async () => {
+    // La otra mitad: rescatar huérfanas no puede convertir el tablero en una
+    // lista plana con todas las subtareas sueltas.
+    const db = basePuestaAlDia();
+    await db
+      .insert(tasks)
+      .values([tarea("padre"), tarea("hija", { parentId: "padre" })]);
+
+    const grouped = await getTasksGrouped(db);
+    expect(grouped.TODO.map((t) => t.id)).toEqual(["padre"]);
   });
 });
