@@ -8,12 +8,10 @@ import { Tienda } from "@/modules/habitos/components/Tienda";
 import { Sprite } from "@/modules/core/ui/pixel/Sprite";
 import { spriteDe } from "@/modules/habitos/lib/sprites";
 import { db } from "@/modules/core/db";
-import { getByDate } from "@/modules/musica";
 import {
   climaDe,
   dayKey,
   isoFromDayKey,
-  dayKeyFromISO,
   getDiasCumplidos,
   getJardinHistorico,
   getHabitsWithTodayStatus,
@@ -61,31 +59,12 @@ export default async function GardenPage() {
   const tiempo = climaDe(dias.cumplidos.size, dias.fallados.size);
 
   /*
-    La fauna se compone AQUÍ y no dentro de un módulo, por el mismo motivo que el
-    cruce de la portada: la música y los hábitos no se conocen, y ponerlo en uno
-    obligaría a ese a importar el otro. Esta página es de los pocos sitios que
-    conoce legítimamente las dos interfaces públicas.
-
-    Acotado al tramo al que llega la barra de tiempo. Hay casi tres mil días con
-    escuchas guardadas, y mandarlos todos sería pagar por un pasado al que no se
-    puede llegar.
+    Las mariposas salen de las tareas cerradas, y de nada más. El módulo de
+    música vive aparte: el jardín ya no sabe que Spotify existe.
   */
   const primero = await primerDiaDeRegistro(db);
   const fauna = primero
-    ? mezclarFauna(
-        (
-          await getByDate(db, {
-            fromDate: isoFromDayKey(primero),
-            toDate: isoFromDayKey(dayKey(hoy)),
-            label: "jardín",
-            preset: "custom",
-          })
-        ).map((e) => ({
-          dia: dayKeyFromISO(e.date)?.getTime() ?? 0,
-          ms: e.ms ?? 0,
-        })),
-        await diasConTareaCerrada(db, primero),
-      ).filter((d) => d.dia > 0)
+    ? mezclarFauna(await diasConTareaCerrada(db, primero))
     : [];
 
   const total = habits.length;

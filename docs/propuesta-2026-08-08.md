@@ -232,7 +232,16 @@ uno por día, **una semana por lado de un marco**.
 
 ---
 
-# Parte 4 · Música
+# Parte 4 · Música — DESCARTADA
+
+> **Nota del 8 de agosto de 2026.** El usuario decidió que música quede
+> **aislada**: no se cruza con hábitos, tareas ni jardín. Todo el cruce se ha
+> retirado del código —los pájaros del jardín y el panel de la portada—, así que
+> lo que sigue en esta sección **ya no se propone**. Se conserva porque el
+> análisis del hueco de mercado sigue siendo cierto; simplemente no es para este
+> proyecto.
+
+
 
 **Nadie ha modelado la música como algo más que un contador.** Exist.io, el único
 producto capaz de cruzar música con ánimo poniendo un p-valor al lado, la reduce a

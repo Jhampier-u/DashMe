@@ -27,7 +27,6 @@ import type { Decoracion } from "@/modules/habitos/lib/decoraciones";
 import {
   faunaEn,
   fraseDeFauna,
-  haySeñalDeMusica,
   type DiaDeFauna,
 } from "@/modules/habitos/lib/fauna";
 import { GardenScene } from "./GardenScene";
@@ -150,14 +149,14 @@ export function MemoriaDelJardin({
         tiempo={reconstruido ? reconstruido.tiempo : tiempoHoy}
         soloLectura={enElPasado}
         decoraciones={decoraciones}
-        fauna={dia ? faunaEn(fauna, dia) : { pajaros: 0, mariposas: 0 }}
+        fauna={dia ? faunaEn(fauna, dia) : { mariposas: 0 }}
       />
       {/*
         El recuento en TEXTO. La fauna es el adorno de un dato que se puede leer,
         no la única forma de saberlo.
       */}
       <p style={{ fontSize: 12, marginTop: 8 }}>
-        {dia ? fraseDeFauna(fauna, dia, !haySeñalDeMusica(fauna)) : null}
+        {dia ? fraseDeFauna(fauna, dia) : null}
       </p>
       {hayMemoria ? (
         <BarraDeTiempo

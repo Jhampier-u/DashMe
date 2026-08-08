@@ -29,7 +29,7 @@ import {
 } from "@/modules/habitos/lib/disposicion";
 import { TIENDA, type Decoracion } from "@/modules/habitos/lib/decoraciones";
 import type { Fauna } from "@/modules/habitos/lib/fauna";
-import { MARIPOSA, PAJARO } from "@/modules/habitos/lib/sprites/fauna";
+import { MARIPOSA } from "@/modules/habitos/lib/sprites/fauna";
 import { moverPlanta, toggleToday } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useSparkleBurst, SparkleLayer } from "./Sparkle";
@@ -48,10 +48,10 @@ type Props = {
   /** Lo comprado en la tienda. Vacío = la escena se ve exactamente como antes. */
   decoraciones?: Decoracion[];
   /**
-   * Los bichos de ese día: pájaros por la música, mariposas por las tareas.
+   * Los bichos de ese día: mariposas por las tareas cerradas.
    *
-   * Cero de algo es cero de eso. No se rellena para que la escena no parezca
-   * vacía: si el día estuvo vacío, la escena lo dice.
+   * Cero es cero. No se rellena para que la escena no parezca vacía: si el día
+   * estuvo vacío, la escena lo dice.
    */
   fauna?: Fauna;
 };
@@ -156,7 +156,7 @@ export function GardenScene({
   tiempo,
   soloLectura = false,
   decoraciones = [],
-  fauna = { pajaros: 0, mariposas: 0 },
+  fauna = { mariposas: 0 },
 }: Props) {
   const hour = useLocalHour();
   const phase: SkyPhase = hour === null ? "night" : phaseFor(hour);
@@ -471,31 +471,10 @@ export function GardenScene({
       })}
 
       {/*
-        Los pájaros cruzan el cielo con la misma deriva que las nubes, y las
-        mariposas revolotean entre las plantas. Los dos son `aria-hidden`: lo que
-        se lee es la frase del recuento, debajo de la escena. Un bicho pequeño y
-        en movimiento es de lo peor que se le puede pedir a la vista.
+        Las mariposas revolotean entre las plantas. Son `aria-hidden`: lo que se
+        lee es la frase del recuento, debajo de la escena. Un bicho pequeño y en
+        movimiento es de lo peor que se le puede pedir a la vista.
       */}
-      {Array.from({ length: fauna.pajaros }, (_, i) => (
-        <span
-          key={`ave-${i}`}
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: `${6 + i * 21}%`,
-            top: `${12 + i * 7}%`,
-            zIndex: 8,
-            animation: `cloud-drift ${52 + i * 9}s linear infinite`,
-            animationDelay: `-${i * 11}s`,
-            pointerEvents: "none",
-            userSelect: "none",
-            opacity: isDark ? 0.5 : 0.9,
-          }}
-        >
-          <Sprite grid={PAJARO} size={20} label="" />
-        </span>
-      ))}
-
       {Array.from({ length: fauna.mariposas }, (_, i) => (
         <span
           key={`mariposa-${i}`}

@@ -1,13 +1,11 @@
 /*
-  La fauna del jardín: lo que hiciste ese día y no es un hábito.
+  La fauna del jardín: las tareas que cerraste ese día, en mariposas.
 
-  Las plantas son los hábitos. Los pájaros son la música y las mariposas las
-  tareas cerradas.
+  Las plantas son los hábitos. Las mariposas son las tareas.
 
-  QUÉ NO ES ESTO, porque se confunde fácil: no afirma ninguna relación entre la
-  música y los hábitos. Esa pregunta ya tiene su sitio —`compararGrupos`, en la
-  portada— y su regla de negarse a contestar con pocos datos. Un pájaro no dice
-  que escuchar te ayude a cumplir; dice que ese día escuchaste.
+  ANTES HABÍA TAMBIÉN PÁJAROS, por los minutos de música escuchada, y se han
+  quitado enteros: el módulo de música vive aparte y no se cruza con el resto del
+  dashboard. Esta parte ya no sabe que Spotify existe.
 
   Todo esto es puro: recibe números y devuelve números.
 */
@@ -16,46 +14,12 @@
 export type DiaDeFauna = {
   /** `getTime()` de la clave de día. */
   dia: number;
-  minutos: number;
   tareas: number;
 };
 
-export type Fauna = { pajaros: number; mariposas: number };
+export type Fauna = { mariposas: number };
 
-/**
- * Los pájaros que salen cuando hubo música. Siempre los mismos.
- *
- * ANTES ERAN CUATRO TRAMOS por minutos escuchados, y se cambió a propósito.
- *
- * Etkin (2016), *Journal of Consumer Research*, seis experimentos: medir una
- * actividad placentera aumenta cuánto la haces **y reduce cuánto la disfrutas**,
- * porque la atención se va al resultado medible y la cosa «se parece más a
- * trabajo». El efecto aparece SIN recompensa externa: medir por sí solo ya opera
- * como una.
- *
- * La música es probablemente lo único de este dashboard que no se pide como
- * deber. Un cielo con escalones —tres pájaros a los 90 minutos, cuatro a los
- * 180— convierte escuchar en algo que se supera. Con presencia no hay nada que
- * batir: o hubo música o no.
- *
- * La CANTIDAD no se pierde: sigue escrita debajo de la escena, que es un
- * registro y no una recompensa.
- */
-export const MAX_PAJAROS = 3;
 export const MAX_MARIPOSAS = 5;
-
-/**
- * Si hubo música, salen pájaros. Si no, no.
- *
- * Cero minutos son CERO pájaros, y eso sigue siendo deliberado: un día sin
- * música no se rellena para que el cielo no parezca vacío. Y un número imposible
- * —infinito, negativo— también da cero: un dato roto no es «escuchaste
- * muchísimo».
- */
-export function pajarosPara(minutos: number): number {
-  if (!Number.isFinite(minutos) || minutos <= 0) return 0;
-  return MAX_PAJAROS;
-}
 
 /** Una mariposa por tarea cerrada, con techo: veinte mariposas tapan el jardín. */
 export function mariposasPara(tareas: number): number {
@@ -65,84 +29,32 @@ export function mariposasPara(tareas: number): number {
 
 /** La fauna de un día. Un día del que no se sabe nada no tiene ninguna. */
 export function faunaEn(dias: DiaDeFauna[], dia: Date): Fauna {
-  const t = dia.getTime();
-  const encontrado = dias.find((d) => d.dia === t);
-  if (!encontrado) return { pajaros: 0, mariposas: 0 };
-  return {
-    pajaros: pajarosPara(encontrado.minutos),
-    mariposas: mariposasPara(encontrado.tareas),
-  };
+  const encontrado = dias.find((d) => d.dia === dia.getTime());
+  return { mariposas: mariposasPara(encontrado?.tareas ?? 0) };
 }
 
 /**
- * Si la fuente de música ha traído algo en todo el tramo.
+ * Lo que cerraste ese día, en una frase.
  *
- * Sirve para distinguir «ese día no escuchaste» de «no lo sé». Si no hay ni un
- * minuto en semanas de historial, lo que falla es la conexión con Spotify, no tu
- * semana — y pintar cero pájaros en silencio afirmaría lo segundo.
+ * Habla del REGISTRO y no de tu día —«registradas»—, que es lo único que el
+ * dashboard puede saber.
  */
-export function haySeñalDeMusica(dias: DiaDeFauna[]): boolean {
-  return dias.some((d) => d.minutos > 0);
+export function fraseDeFauna(dias: DiaDeFauna[], dia: Date): string {
+  const tareas = dias.find((x) => x.dia === dia.getTime())?.tareas ?? 0;
+  if (tareas === 0) return "Sin tareas cerradas registradas.";
+  return tareas === 1 ? "1 tarea cerrada" : `${tareas} tareas cerradas`;
 }
-
-/** Lo que hiciste ese día, en una frase. Es lo que se lee cuando no se ven los bichos. */
-export function fraseDeFauna(
-  dias: DiaDeFauna[],
-  dia: Date,
-  sinSeñal = false,
-): string {
-  const d = dias.find((x) => x.dia === dia.getTime());
-  const minutos = d?.minutos ?? 0;
-  const tareas = d?.tareas ?? 0;
-
-  const partes: string[] = [];
-  if (minutos > 0) partes.push(`${Math.round(minutos)} min de música`);
-  if (tareas > 0) {
-    partes.push(tareas === 1 ? "1 tarea cerrada" : `${tareas} tareas cerradas`);
-  }
-  /*
-    «Registradas», no «hubo». Es una afirmación sobre el REGISTRO, no sobre tu
-    día, y es lo único que el dashboard puede saber.
-
-    Skog et al. (InfoVis 2003) rompían su plantilla artística a propósito
-    —cuadrados en negro— cuando el servidor caía, para que se notara. Aquí el
-    equivalente es no dejar que «cero pájaros» signifique dos cosas distintas:
-    «no escuchaste» y «no tengo datos» se veían idénticos.
-  */
-  if (partes.length === 0) {
-    return sinSeñal
-      ? "Sin datos de música. Puede que Spotify no esté conectado."
-      : "Sin música ni tareas registradas.";
-  }
-  return partes.join(" · ");
-}
-
-/** Un día de escuchas tal y como lo da el módulo de música. */
-export type EscuchasDeUnDia = { dia: number; ms: number };
 
 /**
- * Junta las escuchas y las tareas en un día por fila.
+ * Agrupa las tareas cerradas por día.
  *
- * Vive aquí y no en una consulta A PROPÓSITO. La música y los hábitos son dos
- * módulos que no se conocen —y no deben: lo dice el comentario de la portada,
- * donde se compone el otro cruce—. Lo que cruza la frontera es esta función,
- * que no sabe de dónde salen los números.
+ * Recibe claves de día en bruto —una por tarea— porque quien las cuenta debe ser
+ * una función pura y no una consulta.
  */
-export function mezclarFauna(
-  escuchas: EscuchasDeUnDia[],
-  diasConTarea: number[],
-): DiaDeFauna[] {
-  const porDia = new Map<number, DiaDeFauna>();
-  const slot = (t: number): DiaDeFauna => {
-    const ya = porDia.get(t);
-    if (ya) return ya;
-    const nuevo = { dia: t, minutos: 0, tareas: 0 };
-    porDia.set(t, nuevo);
-    return nuevo;
-  };
-
-  for (const e of escuchas) slot(e.dia).minutos += Math.max(0, e.ms) / 60_000;
-  for (const t of diasConTarea) slot(t).tareas += 1;
-
-  return [...porDia.values()].sort((a, b) => a.dia - b.dia);
+export function mezclarFauna(diasConTarea: number[]): DiaDeFauna[] {
+  const porDia = new Map<number, number>();
+  for (const t of diasConTarea) porDia.set(t, (porDia.get(t) ?? 0) + 1);
+  return [...porDia.entries()]
+    .map(([dia, tareas]) => ({ dia, tareas }))
+    .sort((a, b) => a.dia - b.dia);
 }
