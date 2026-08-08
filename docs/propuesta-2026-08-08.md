@@ -450,6 +450,67 @@ significativamente más rumiación.**
 El semáforo rojo/verde es el patrón malo. Merece la pena revisar cómo pintamos los
 días fallados en `last30` y en las gráficas de cumplimiento.
 
+---
+
+# Parte 7 · El fallo de la racha, dicho por dentro
+
+## 7.1 La foto del techo
+
+La demanda del estado de Nuevo México contra Snap (2024) cita **70 veces** la
+palabra «streak» y reproduce correos internos de la empresa de enero de 2017:
+
+> *«Vaya, deberíamos tener más funciones adictivas como esta.»*
+
+> *«Si abro Snapchat, **hago una foto del techo** para mantener mis rachas y no
+> interactúo con el resto de la app, ¿es ese el comportamiento que queremos
+> fomentar?»*
+
+Esa segunda frase es el fallo de la racha en una línea: **produce cumplimiento
+vacío**. Alguien de la propia empresa lo vio en 2017 y se publicó en 2024.
+
+*(Dato de contraste, verificado por búsqueda en el PDF de 233 páginas: la demanda
+de los 41 estados contra Meta **no menciona las rachas ni una sola vez**. Quien
+las nombra es la de Snap.)*
+
+**Qué significa para nosotros.** Nuestra racha ya perdona un día y lo dice. Pero la
+foto del techo es un riesgo estructural de cualquier racha, y la defensa no es
+más generosidad: es que **marcar cueste lo mismo que hacer**. Ahí ayuda el
+objetivo numérico, que ya distingue «2 de 8» de «hecho».
+
+## 7.2 Las herramientas de bienestar que no sirven
+
+En febrero de 2026 la Comisión Europea acusó preliminarmente a TikTok de
+incumplir el DSA por diseño adictivo, y en julio a Meta. Lo interesante no es la
+acusación: es que **rechazó sus herramientas de bienestar existentes** por ser
+*«fáciles de descartar y con poca fricción»*.
+
+El caso de estudio de esa crítica es de Instagram: en julio de 2018 lanzó **«Ya
+estás al día»**, una señal explícita de parada. En agosto de 2020 la enterró bajo
+un flujo infinito de publicaciones sugeridas. **La señal de parar se convirtió en
+una señal de seguir.**
+
+Y Brasil ya lo ha prohibido: el Decreto 12.880/2026 veta *«recompensas basadas en
+tiempo»*, con multas de hasta el 10 % de la facturación del grupo.
+
+## 7.3 La asimetría, otra vez, en dos sitios más
+
+Aparece el mismo patrón que el horizonte de akrasia de Beeminder:
+
+- **Monzo** (2018): activar el bloqueo de apuestas es instantáneo; **desactivarlo
+  exige 48 horas** de espera —después ampliadas hasta un año—. Casi 100.000
+  personas lo usaron y bloqueó más de 200.000 transacciones.
+- **Oura, Rest Mode**: al activarlo **suspende su propia puntuación de actividad y
+  el objetivo diario**. El producto apaga su capa de gamificación cuando el cuerpo
+  lo necesita.
+
+**Protegerse es inmediato; desprotegerse tarda.** Es la forma general de «puedes
+bajar el listón sin que sea una excusa», y encaja tal cual con nuestras pausas y
+con el estado interiorizado.
+
+Un hueco honesto: **no existe evidencia pública sobre el coste en uso de estas
+funciones de descanso.** Ni Oura, ni Whoop, ni Garmin publican nada. La pregunta
+«¿decirle al usuario que descanse te cuesta enganche?» está sin responder.
+
 # Orden sugerido
 
 1. **La barra de filtros** (parte 1). Es lo que molesta hoy, es pequeño y todo
