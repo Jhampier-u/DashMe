@@ -70,8 +70,23 @@ export function faunaEn(dias: DiaDeFauna[], dia: Date): Fauna {
   };
 }
 
+/**
+ * Si la fuente de música ha traído algo en todo el tramo.
+ *
+ * Sirve para distinguir «ese día no escuchaste» de «no lo sé». Si no hay ni un
+ * minuto en semanas de historial, lo que falla es la conexión con Spotify, no tu
+ * semana — y pintar cero pájaros en silencio afirmaría lo segundo.
+ */
+export function haySeñalDeMusica(dias: DiaDeFauna[]): boolean {
+  return dias.some((d) => d.minutos > 0);
+}
+
 /** Lo que hiciste ese día, en una frase. Es lo que se lee cuando no se ven los bichos. */
-export function fraseDeFauna(dias: DiaDeFauna[], dia: Date): string {
+export function fraseDeFauna(
+  dias: DiaDeFauna[],
+  dia: Date,
+  sinSeñal = false,
+): string {
   const d = dias.find((x) => x.dia === dia.getTime());
   const minutos = d?.minutos ?? 0;
   const tareas = d?.tareas ?? 0;
@@ -81,9 +96,20 @@ export function fraseDeFauna(dias: DiaDeFauna[], dia: Date): string {
   if (tareas > 0) {
     partes.push(tareas === 1 ? "1 tarea cerrada" : `${tareas} tareas cerradas`);
   }
-  // Decirlo es mejor que callarlo: un hueco en blanco parece un fallo de carga.
-  // Sin «ese día» ni «hoy»: la misma frase sirve para el presente y el pasado.
-  if (partes.length === 0) return "Ni música ni tareas cerradas.";
+  /*
+    «Registradas», no «hubo». Es una afirmación sobre el REGISTRO, no sobre tu
+    día, y es lo único que el dashboard puede saber.
+
+    Skog et al. (InfoVis 2003) rompían su plantilla artística a propósito
+    —cuadrados en negro— cuando el servidor caía, para que se notara. Aquí el
+    equivalente es no dejar que «cero pájaros» signifique dos cosas distintas:
+    «no escuchaste» y «no tengo datos» se veían idénticos.
+  */
+  if (partes.length === 0) {
+    return sinSeñal
+      ? "Sin datos de música. Puede que Spotify no esté conectado."
+      : "Sin música ni tareas registradas.";
+  }
   return partes.join(" · ");
 }
 

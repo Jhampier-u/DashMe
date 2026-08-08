@@ -27,6 +27,7 @@ import type { Decoracion } from "@/modules/habitos/lib/decoraciones";
 import {
   faunaEn,
   fraseDeFauna,
+  haySeñalDeMusica,
   type DiaDeFauna,
 } from "@/modules/habitos/lib/fauna";
 import { GardenScene } from "./GardenScene";
@@ -153,7 +154,7 @@ export function MemoriaDelJardin({
         no la única forma de saberlo.
       */}
       <p style={{ fontSize: 12, marginTop: 8 }}>
-        {dia ? fraseDeFauna(fauna, dia) : null}
+        {dia ? fraseDeFauna(fauna, dia, !haySeñalDeMusica(fauna)) : null}
       </p>
       {hayMemoria ? (
         <BarraDeTiempo

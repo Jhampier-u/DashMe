@@ -9,6 +9,7 @@ import {
   mariposasPara,
   pajarosPara,
   mezclarFauna,
+  haySeñalDeMusica,
   type DiaDeFauna,
 } from "./fauna";
 
@@ -117,12 +118,28 @@ describe("fraseDeFauna", () => {
     expect(fraseDeFauna([dia(1, 43, 0)], D(1))).toBe("43 min de música");
   });
 
-  it("dice que no hubo nada, en vez de dejar el hueco en blanco", () => {
-    // Un hueco vacío parece un fallo de carga; la frase dice que el día fue así.
-    expect(fraseDeFauna([dia(1, 0, 0)], D(1))).toBe(
-      "Ni música ni tareas cerradas.",
+  it("habla del REGISTRO, no de tu día", () => {
+    /*
+      «Registradas» y no «hubo». Es lo único que el dashboard puede saber, y la
+      diferencia importa: un hueco vacío parece un fallo de carga, y una
+      afirmación sobre tu día que no podemos sostener es peor todavía.
+    */
+    expect(fraseDeFauna([dia(1, 30, 0)], D(9))).toBe(
+      "Sin música ni tareas registradas.",
     );
-    expect(fraseDeFauna([], D(5))).toBe("Ni música ni tareas cerradas.");
+  });
+
+  it("distingue «no escuchaste» de «no tengo datos»", () => {
+    /*
+      LA DEGRADACIÓN ELEGANTE. Skog et al. rompían su plantilla artística a
+      propósito cuando el servidor caía, para que se notara. Aquí «cero
+      pájaros» significaba dos cosas distintas —no escuchaste, y no lo sé— y se
+      veían idénticas. Ahora, sin una sola señal de música en todo el tramo, se
+      dice que el problema puede ser la conexión.
+    */
+    expect(fraseDeFauna([dia(1, 0, 2)], D(9), true)).toBe(
+      "Sin datos de música. Puede que Spotify no esté conectado.",
+    );
   });
 
   it("redondea los minutos en vez de enseñar decimales", () => {
@@ -184,5 +201,17 @@ describe("mezclarFauna", () => {
       [],
     );
     expect(r[0].minutos).toBe(10);
+  });
+});
+
+describe("haySeñalDeMusica", () => {
+  it("es falso cuando no hay un solo minuto en todo el tramo", () => {
+    expect(haySeñalDeMusica([dia(1, 0, 3), dia(2, 0, 1)])).toBe(false);
+    expect(haySeñalDeMusica([])).toBe(false);
+  });
+
+  it("basta un día con música para no dar la alarma", () => {
+    // Dejar de escuchar una temporada es normal y NO es un fallo de conexión.
+    expect(haySeñalDeMusica([dia(1, 12, 0), dia(2, 0, 0)])).toBe(true);
   });
 });
