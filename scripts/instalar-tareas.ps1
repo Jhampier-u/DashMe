@@ -96,19 +96,16 @@ Nueva-Tarea `
     -Limite      'PT0S' `
     -Script      'servidor.cmd'
 
-# Repeticion sin <Duration>, que en este formato significa indefinida.
-Nueva-Tarea `
-    -Nombre      'Juampi captura' `
-    -Descripcion 'Dashboard: dispara una captura de escuchas recientes cada 20 minutos. Sin ventana.' `
-    -Disparador  '<TimeTrigger><Repetition><Interval>PT20M</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition><StartBoundary>2026-07-28T12:00:00</StartBoundary><Enabled>true</Enabled></TimeTrigger>' `
-    -Limite      'PT10M' `
-    -Script      'capture.cmd'
+# 'Juampi captura' ya no se instala: disparaba /api/cron/capture cada 20
+# minutos y esa ruta salio del dashboard con el modulo de musica. Se retira
+# abajo junto con las del proyecto viejo, porque dejarla instalada seria una
+# tarea fallando en silencio cada 20 minutos contra un 404.
 
 Write-Host ''
-Write-Host 'Retirando las tareas del proyecto viejo...' -ForegroundColor Cyan
+Write-Host 'Retirando las tareas que ya no aplican...' -ForegroundColor Cyan
 
 $pendientes = @()
-foreach ($vieja in 'Voidtify servidor', 'Voidtify captura') {
+foreach ($vieja in 'Voidtify servidor', 'Voidtify captura', 'Juampi captura') {
     if (-not (Get-ScheduledTask -TaskName $vieja -ErrorAction SilentlyContinue)) {
         Write-Host "  $vieja : ya no existe"
         continue

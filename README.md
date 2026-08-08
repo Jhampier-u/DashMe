@@ -1,13 +1,17 @@
 # Dashboard personal
 
-Un solo lugar para mis apps, hábitos y música.
+Hábitos, tareas, proyectos y un jardín que crece con ellos.
 
-Fusiona cuatro proyectos que antes vivían por separado:
+Nació de fusionar cuatro proyectos que vivían por separado:
 [Untap](https://github.com/Jhampier-u/Untap) (hábitos, tareas y proyectos),
 [Voidtify](https://github.com/Jhampier-u/Voidtify) (organizador de Spotify),
 [Portafolio](https://github.com/Jhampier-u/Portafolio) y
 [SpotifyCalificar](https://github.com/Jhampier-u/SpotifyCalificar).
-Esos cuatro repos quedan congelados como archivo: el desarrollo ocurre aquí.
+
+**Música volvió a salir.** El 8 de agosto de 2026 se retiró del dashboard y
+vuelve a ser una app aparte; puede que algún día regrese. Su código sigue en el
+historial, en la etiqueta `musica-antes-de-salir`, y sus tablas siguen en la
+base de datos sin tocar — retirarlas del esquema no borró ninguna fila.
 
 ## Arranque
 

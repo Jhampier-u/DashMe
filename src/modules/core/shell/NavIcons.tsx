@@ -61,13 +61,3 @@ export function IconProjects({ className }: IconProps) {
     </svg>
   );
 }
-
-export function IconMusic({ className }: IconProps) {
-  return (
-    <svg {...SHARED} className={className}>
-      <path d="M9 18V5l12-2v13" />
-      <path d="M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-      <path d="M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-    </svg>
-  );
-}

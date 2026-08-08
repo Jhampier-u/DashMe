@@ -3,4 +3,3 @@
   a nivel de datos.
 */
 export * from "@/modules/habitos/schema";
-export * from "@/modules/musica/schema";

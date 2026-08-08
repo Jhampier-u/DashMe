@@ -8,7 +8,6 @@ import {
   IconGarden,
   IconHabits,
   IconHome,
-  IconMusic,
   IconProjects,
   IconTasks,
 } from "./NavIcons";
@@ -25,7 +24,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/jardin", label: "Jardín", Icon: IconGarden },
   { href: "/tareas", label: "Tareas", Icon: IconTasks },
   { href: "/proyectos", label: "Proyectos", Icon: IconProjects },
-  { href: "/musica", label: "Música", Icon: IconMusic },
 ];
 
 /*

@@ -177,29 +177,6 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/*
-          Un ENLACE, y nada más. Música vive aparte y no se cruza con hábitos,
-          tareas ni jardín: aquí no se lee ni un dato suyo.
-        */}
-        <section style={seccion}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-            }}
-          >
-            <h2 style={tituloSeccion}>Música</h2>
-            <Link href="/musica" style={{ fontSize: 13, fontWeight: 700 }}>
-              Ver todo
-            </Link>
-          </div>
-
-          <p style={{ fontSize: 14 }}>
-            Tu biblioteca y tu historial de escucha, en su propia sección. Los
-            datos cruzados con el resto del dashboard llegan más adelante.
-          </p>
-        </section>
       </div>
     </main>
   );

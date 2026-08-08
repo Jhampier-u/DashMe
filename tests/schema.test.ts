@@ -8,76 +8,76 @@ function tablas(sqlite: ReturnType<typeof createTestDb>["sqlite"]): string[] {
   return filas.map((f) => f.name);
 }
 
+/*
+  Este fichero probaba las tablas de música. El módulo salió del dashboard el 8
+  de agosto de 2026 y el fichero se reapuntó a lo que queda en vez de borrarse:
+  su trabajo de verdad es vigilar que `createTestDb()` levanta el esquema
+  COMPLETO, y ese trabajo sigue haciendo falta.
+
+  Lo que NO comprueba: que las tablas de música hayan desaparecido de la base
+  del usuario. No han desaparecido, y es a propósito — sus filas siguen ahí,
+  solo que este esquema ya no las crea en una base nueva.
+*/
+const TABLAS = [
+  "habits",
+  "habit_logs",
+  "habit_notes",
+  "habit_pauses",
+  "player",
+  "daily_quests",
+  "projects",
+  "task_categories",
+  "tasks",
+  "task_attachments",
+  "garden_decorations",
+];
+
 describe("esquema", () => {
-  it("crea las tablas nuevas", () => {
+  it("crea todas las tablas del dashboard", () => {
     const { sqlite } = createTestDb();
     const nombres = tablas(sqlite);
-    expect(nombres).toContain("streams");
-    expect(nombres).toContain("spotify_credentials");
-    expect(nombres).toContain("capture_state");
-    expect(nombres).toContain("import_batches");
-    expect(nombres).toContain("artist_resolution");
-    expect(nombres).toContain("top_snapshots");
+    for (const t of TABLAS) expect(nombres).toContain(t);
   });
 
-  it("conserva las tablas existentes", () => {
+  it("no arrastra tablas del módulo de música", () => {
     const { sqlite } = createTestDb();
     const nombres = tablas(sqlite);
-    expect(nombres).toContain("artists");
-    expect(nombres).toContain("tags");
-    expect(nombres).toContain("liked_tracks");
-    expect(nombres).toContain("smart_playlists");
+    for (const t of ["streams", "spotify_credentials", "artists", "tags"]) {
+      expect(nombres).not.toContain(t);
+    }
   });
 
-  it("rechaza dos streams con el mismo dedup_key", () => {
+  it("trata «Casa» y «casa» como la misma categoría", () => {
     const { sqlite } = createTestDb();
-    const insertar = sqlite.prepare(`
-      INSERT INTO streams
-        (ts, ms_played, track_name, artist_name, track_key, artist_key,
-         local_date, local_hour, source, dedup_key)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const fila = [
-      1_700_000_000_000, 210_000, "Alison", "Slowdive",
-      "slowdivealison", "slowdive", "2023-11-14", 15, "live", "clave-1",
-    ];
+    const insertar = sqlite.prepare(
+      "INSERT INTO task_categories (id, name, color, created_at) VALUES (?, ?, ?, ?)",
+    );
+    insertar.run("a", "Casa", "acid", Date.now());
 
-    insertar.run(...fila);
-    expect(() => insertar.run(...fila)).toThrow(/UNIQUE/);
+    // NOCASE en el índice único. El código comprueba lo mismo antes de
+    // insertar para dar un mensaje, pero la base es quien lo garantiza.
+    expect(() => insertar.run("b", "casa", "acid", Date.now())).toThrow(
+      /UNIQUE/,
+    );
   });
 
-  it("permite varias filas de spotify_credentials solo con id = 1", () => {
+  it("se lleva las subtareas al borrar la tarea padre", () => {
     const { sqlite } = createTestDb();
-    const insertar = sqlite.prepare(`
-      INSERT INTO spotify_credentials (id, spotify_user_id, refresh_token, updated_at)
-      VALUES (?, ?, ?, ?)
-    `);
-    insertar.run(1, "usuario", "token", Date.now());
-    expect(() => insertar.run(2, "otro", "token", Date.now())).toThrow(/CHECK/);
-  });
+    sqlite.pragma("foreign_keys = ON");
+    const insertar = sqlite.prepare(
+      "INSERT INTO tasks (id, title, status, created_at, updated_at, parent_id)" +
+        " VALUES (?, ?, ?, ?, ?, ?)",
+    );
+    const ahora = Date.now();
+    insertar.run("padre", "Mudanza", "TODO", ahora, ahora, null);
+    insertar.run("hija", "Cajas", "TODO", ahora, ahora, "padre");
 
-  it("rechaza un valor de source fuera de 'live' e 'import'", () => {
-    const { sqlite } = createTestDb();
-    const insertar = sqlite.prepare(`
-      INSERT INTO streams
-        (ts, ms_played, track_name, artist_name, track_key, artist_key,
-         local_date, local_hour, source, dedup_key)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const fila = (source: string, dedup: string) => [
-      1_700_000_000_000, 210_000, "Alison", "Slowdive",
-      "slowdivealison", "slowdive", "2023-11-14", 15, source, dedup,
-    ];
+    sqlite.prepare("DELETE FROM tasks WHERE id = ?").run("padre");
 
-    // Los dos valores legítimos entran.
-    expect(() => insertar.run(...fila("live", "a"))).not.toThrow();
-    expect(() => insertar.run(...fila("import", "b"))).not.toThrow();
-
-    // El borrado de la regla "el dump manda" busca source = 'live' exacto.
-    // Una variante de mayúsculas o con espacios rompería la deduplicación en
-    // silencio, así que la base tiene que rechazarla.
-    expect(() => insertar.run(...fila("Live", "c"))).toThrow(/CHECK/);
-    expect(() => insertar.run(...fila("live ", "d"))).toThrow(/CHECK/);
-    expect(() => insertar.run(...fila("", "e"))).toThrow(/CHECK/);
+    // CASCADE, no SET NULL: una subtarea sin padre no significa nada.
+    const quedan = sqlite
+      .prepare("SELECT count(*) c FROM tasks")
+      .get() as { c: number };
+    expect(quedan.c).toBe(0);
   });
 });

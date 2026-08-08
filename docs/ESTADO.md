@@ -6,30 +6,34 @@ Este archivo existe para que retomar no dependa de la memoria de nadie. Los dos
 documentos largos son [la auditoría](auditoria-2026-08-07.md) y
 [la propuesta](propuesta-2026-08-08.md).
 
-## En marcha: sacar música del dashboard
+## Música salió del dashboard
 
-Decidido el 8 de agosto de 2026. Música **vuelve a ser una app aparte**; puede que
-algún día regrese. Esto es el reconocimiento previo, ya medido, no una suposición.
+8 de agosto de 2026. Vuelve a ser una app aparte; puede que algún día regrese.
 
-**Los datos no se tocan.** En la base hay **272.395 filas en `streams`** más
-`artists`, `tags`, `track_tags`, `liked_tracks`, `smart_playlists`,
-`spotify_credentials`, `capture_state`, `import_batches`, `artist_resolution`,
-`top_snapshots` y `artist_genres`. `SCHEMA_SQL` usa `CREATE TABLE IF NOT EXISTS`,
-así que **retirar las declaraciones no borra ninguna tabla**: las filas siguen en
-el fichero. No se escribe ningún `DROP` en ningún paso.
+**Tus datos no se tocaron.** Siguen en la base las **272.395 filas de `streams`**
+y las once tablas restantes (`artists`, `tags`, `track_tags`, `liked_tracks`,
+`smart_playlists`, `spotify_credentials`, `capture_state`, `import_batches`,
+`artist_resolution`, `top_snapshots`, `artist_genres`). Cada sentencia del
+esquema era `CREATE TABLE IF NOT EXISTS`, así que quitarlas solo hace que una
+base **nueva** no las cree. No se ejecutó ningún `DROP` en ningún paso.
 
-**Qué sale:** `src/app/musica/`, `src/modules/musica/`, `src/app/api/card/`,
-`src/app/api/cron/capture/`, el re-export en `core/db/schema.ts` y el enlace de
-`src/app/page.tsx`.
+**Qué se retiró:** `src/modules/musica/`, `src/app/musica/`, las rutas
+`api/card`, `api/cron` y `api/auth`, `src/modules/core/auth/` entera (solo
+existía para Spotify), el icono y la entrada de navegación, el bloque de música
+del esquema, la sección de la portada, la dependencia `next-auth`,
+`.env.local.example` (era todo variables de Spotify), `scripts/capture.cmd`,
+`scripts/migrar-ledger.mjs` y 23 ficheros de test.
 
-**Un cabo que hay que mirar antes de cortar:** fuera de música, lo único que usa
-`core/auth` son `src/app/api/auth/[...nextauth]/route.ts` y
-`src/app/api/card/[tipo]/route.tsx`. Los dos son de música. Si `auth` se queda sin
-consumidores, decidir si se retira también o se conserva para cuando vuelva.
+**Cómo vuelve:** todo está en la etiqueta `musica-antes-de-salir`.
 
-**Cómo se recupera:** basta con el historial de git. Antes de borrar, dejar una
-etiqueta en el commit anterior para que volver sea un `git checkout` y no una
-arqueología.
+**Te queda una cosa por hacer a ti.** La tarea programada **«Juampi captura»**
+sigue instalada en Windows y cada 20 minutos llamaría a un endpoint que ya no
+existe. El instalador ya no la crea y la retira si la encuentra, pero yo no
+toco el Programador de tareas:
+
+```
+schtasks /End /TN "Juampi captura" & schtasks /Delete /TN "Juampi captura" /F
+```
 
 ## Hecho
 
@@ -40,7 +44,6 @@ arqueología.
 | **Tareas** | Hallazgos 3 y 4, barra de filtros por grupos con recuentos y chips activos, bolita de estado en las tarjetas |
 | **Inicio** | Arreglada de rebote por los hallazgos 1 y 2; sin panel de música |
 | **Proyectos** | Auditado en su lógica de datos. **Su interfaz no se ha revisado** |
-| **Música** | **Aislada por decisión del usuario.** No se cruza con nada. Sin auditar |
 
 ## Pendiente, en orden
 
