@@ -96,6 +96,7 @@ export default async function HabitsPage() {
                   streak={habit.streak}
                   doneToday={habit.doneToday}
                   registradoHoy={habit.registradoHoy}
+                  rachaPerdonados={habit.rachaPerdonados}
                   partialToday={habit.partialToday}
                   targetCount={habit.targetCount}
                   countToday={habit.countToday}

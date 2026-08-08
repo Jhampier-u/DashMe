@@ -3,6 +3,7 @@ import { dayKeyFromISO } from "./day";
 import {
   computeBestStreak,
   computeStreak,
+  rachaDetallada,
   countScheduledDays,
   isCriticalDay,
   isScheduledOn,
@@ -62,13 +63,28 @@ describe("computeStreak · hábito diario", () => {
     ).toBe(2);
   });
 
-  it("se corta en el primer hueco", () => {
+  it("aguanta UN hueco: el 26 falta y la racha sigue", () => {
+    /*
+      La regla cambió a propósito. Lally et al. (2010) dicen que saltarse una
+      oportunidad suelta no deteriora la formación del hábito, así que ponerla a
+      cero por un día representaba como catástrofe algo inocuo.
+
+      El día perdonado NO suma: cumplidos el 27, 25 y 24 son 3, y el 26 se
+      absorbe sin contarse.
+    */
     expect(
       computeStreak(
         cal(DAILY),
         doneSet("2026-07-27", "2026-07-25", "2026-07-24"),
         today,
       ),
+    ).toBe(3);
+  });
+
+  it("pero se corta con DOS huecos seguidos", () => {
+    // Faltan el 25 y el 26. El segundo fallo sí rompe.
+    expect(
+      computeStreak(cal(DAILY), doneSet("2026-07-27", "2026-07-24"), today),
     ).toBe(1);
   });
 
@@ -85,10 +101,15 @@ describe("computeStreak · hábito L-M-V", () => {
     expect(computeStreak(cal(MWF), done, key("2026-07-26"))).toBe(3);
   });
 
-  it("solo se rompe cuando se falla un día programado", () => {
-    // Falta el miércoles 22.
+  it("perdona el miércoles 22 que falta, y cuenta los otros dos", () => {
     const done = doneSet("2026-07-20", "2026-07-24");
-    expect(computeStreak(cal(MWF), done, key("2026-07-25"))).toBe(1);
+    expect(computeStreak(cal(MWF), done, key("2026-07-25"))).toBe(2);
+  });
+
+  it("y se rompe si faltan DOS días programados seguidos", () => {
+    // Faltan el miércoles 22 y el viernes 24; solo queda el lunes 20.
+    const done = doneSet("2026-07-20");
+    expect(computeStreak(cal(MWF), done, key("2026-07-27"))).toBe(0);
   });
 
   it("sigue viva el lunes siguiente mientras no acabe el día", () => {
@@ -221,5 +242,58 @@ describe("las pausas no rompen la racha", () => {
   it("sin la pausa, ese mismo hueco corta", () => {
     const hechos = doneSet("2026-07-25", "2026-07-28");
     expect(computeStreak(cal(DAILY), hechos, key("2026-07-28"))).toBe(1);
+  });
+});
+
+describe("rachaDetallada dice cuántos fallos ha absorbido", () => {
+  const today = key("2026-07-27");
+
+  it("cero cuando la racha está limpia", () => {
+    const done = doneSet("2026-07-27", "2026-07-26", "2026-07-25");
+    expect(rachaDetallada(cal(DAILY), done, today)).toEqual({
+      dias: 3,
+      perdonados: 0,
+    });
+  });
+
+  it("uno cuando ha absorbido un fallo", () => {
+    /*
+      Esto es lo que hace honesta la gracia. La racha dice 3 y ha perdonado 1, y
+      la pantalla puede decir las dos cosas. Enseñar un 3 limpio sería
+      exactamente la mentira de representación que Silverman y Barasch (2022)
+      miden: el efecto de la racha depende de lo que el registro ENSEÑA, no de lo
+      que hiciste.
+    */
+    const done = doneSet("2026-07-27", "2026-07-25", "2026-07-24");
+    expect(rachaDetallada(cal(DAILY), done, today)).toEqual({
+      dias: 3,
+      perdonados: 1,
+    });
+  });
+
+  it("no anuncia un perdón si no hay racha que sostener", () => {
+    // Sin un solo día cumplido, `perdonados` tiene que ser 0: perdonar algo que
+    // nunca empezó sería inventarse un mérito.
+    expect(rachaDetallada(cal(DAILY), doneSet(), today)).toEqual({
+      dias: 0,
+      perdonados: 0,
+    });
+  });
+
+  it("la mejor racha histórica usa la MISMA gracia", () => {
+    /*
+      Si la actual perdonara y la histórica no, la racha de hoy podría superar a
+      la «mejor de siempre». Sería una incoherencia visible en pantalla y sin
+      explicación posible.
+    */
+    const done = doneSet("2026-07-20", "2026-07-22", "2026-07-23");
+    const actual = computeStreak(cal(DAILY), done, key("2026-07-23"));
+    const mejor = computeBestStreak(
+      cal(DAILY),
+      done,
+      key("2026-07-01"),
+      key("2026-07-23"),
+    );
+    expect(mejor).toBeGreaterThanOrEqual(actual);
   });
 });

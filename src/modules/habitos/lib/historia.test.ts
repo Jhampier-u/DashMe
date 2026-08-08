@@ -35,14 +35,23 @@ describe("rachaEn", () => {
     expect(rachaEn(TODOS_LOS_DIAS, hechos, D(10), D(20))).toBe(3);
   });
 
-  it("un día pasado y fallado deja la racha a cero, sin la gracia de hoy", () => {
+  it("un día pasado y fallado NO se juzga con la gracia de hoy", () => {
     /*
-      ESTA ES LA DECISIÓN DEL BLOQUE. `computeStreak` perdona el día en curso
-      porque tienes hasta medianoche, y eso es correcto para hoy. Para el 10 de
-      julio visto desde el 20 no lo es: ese día ya se cerró fallado, y pintar
-      una racha de 2 sería contar una versión favorable del pasado.
+      La decisión original de este bloque sigue en pie: `computeStreak` perdona
+      el día en curso porque tienes hasta medianoche, y para el 10 de julio visto
+      desde el 20 eso no aplica — ese día ya se cerró.
+
+      Lo que cambió es OTRA cosa: la racha ahora absorbe un fallo. Así que el 10
+      fallado no se cuenta —sigue sin sumar— pero tampoco corta: quedan los dos
+      días del 8 y el 9. Las dos reglas conviven y hacen cosas distintas.
     */
     const hechos = new Set([T(8), T(9)]);
+    expect(rachaEn(TODOS_LOS_DIAS, hechos, D(10), D(20))).toBe(2);
+  });
+
+  it("y con DOS días fallados seguidos sí llega a cero", () => {
+    // Cumplió el 8, falló el 9 y el 10. El segundo fallo rompe.
+    const hechos = new Set([T(8)]);
     expect(rachaEn(TODOS_LOS_DIAS, hechos, D(10), D(20))).toBe(0);
   });
 
@@ -82,9 +91,22 @@ describe("jardinEn", () => {
     expect(jardinEn([h], D(10), D(20))[0].streak).toBe(2);
   });
 
-  it("marchita la planta de un día programado y fallado", () => {
-    // Criterio 2.
+  it("UN día fallado ya no marchita la planta", () => {
+    /*
+      Consecuencia directa de que la racha absorba un fallo, y era el objetivo:
+      la planta dejaba de morir por un solo mal día. `isPlantWilted` marchita
+      cuando la racha es cero, así que perdonar el fallo la mantiene viva sin
+      tocar una línea del jardín.
+    */
     const h = habito({ cumplidos: [T(8), T(9)] });
+    const p = jardinEn([h], D(10), D(20))[0];
+    expect(p.streak).toBe(2);
+    expect(p.marchita).toBe(false);
+  });
+
+  it("pero dos días fallados seguidos sí la marchitan", () => {
+    // La señal no desaparece: se retrasa hasta que significa algo.
+    const h = habito({ cumplidos: [T(8)] });
     const p = jardinEn([h], D(10), D(20))[0];
     expect(p.streak).toBe(0);
     expect(p.marchita).toBe(true);

@@ -22,6 +22,7 @@ type Props = {
   color: string;
   streak: number;
   doneToday: boolean;
+  rachaPerdonados: number;
   /** Si hay registro hoy. El botón de marcar lo BORRA, así que decide él. */
   registradoHoy: boolean;
   partialToday: boolean;
@@ -254,6 +255,13 @@ export function HabitRow(p: Props) {
               }}
             >
               {p.streak === 1 ? "1 día de racha" : `${p.streak} días de racha`}
+              {/*
+                La racha aguanta un fallo, y cuando lo ha usado hay que DECIRLO.
+                Enseñar un número limpio que no lo es sería la misma mentira de
+                representación que mueve la conducta en el estudio de Silverman y
+                Barasch: cuenta lo que el registro enseña, no lo que hiciste.
+              */}
+              {p.rachaPerdonados > 0 ? " · 1 día perdonado" : ""}
             </span>
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 6 }}>

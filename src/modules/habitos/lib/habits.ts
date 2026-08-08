@@ -21,7 +21,7 @@ import {
   normalizeDayKey,
 } from "./day";
 import {
-  computeStreak,
+  rachaDetallada,
   DEFAULT_SCHEDULE,
   isCriticalDay,
   isScheduledOn,
@@ -70,6 +70,8 @@ export type HabitWithStatus = {
   scheduledToday: boolean;
   criticalToday: boolean;
   streak: number;
+  /** Fallos que esa racha ha absorbido. 0 o 1. Se dice en pantalla. */
+  rachaPerdonados: number;
   hasEverBeenDone: boolean;
   last30: boolean[];
 };
@@ -151,6 +153,7 @@ export async function getHabitsWithTodayStatus(
       (l) => normalizeDayKey(l.date).getTime() === today.getTime(),
     );
     const hasEverBeenDone = (totalPorHabito.get(h.id) ?? 0) > 0;
+    const racha = rachaDetallada(calendario, doneKeys, today);
 
     const last30: boolean[] = [];
     for (let i = 0; i < 30; i++) {
@@ -200,7 +203,14 @@ export async function getHabitsWithTodayStatus(
         today,
         hasEverBeenDone,
       ),
-      streak: computeStreak(calendario, doneKeys, today),
+      streak: racha.dias,
+      /*
+        Se expone para que el cartel pueda decir que la racha ha perdonado un
+        día. Enseñar un número limpio que no lo es sería la misma mentira de
+        representación que Silverman y Barasch (2022) miden en las rachas: lo que
+        mueve la conducta es lo que el registro ENSEÑA, no lo que hiciste.
+      */
+      rachaPerdonados: racha.perdonados,
       hasEverBeenDone,
       last30,
     };

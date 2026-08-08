@@ -88,6 +88,8 @@ function comoHabito(p: PlantaEn, slot: number | null): HabitWithStatus {
     scheduledToday: p.programadoEseDia,
     criticalToday: false,
     streak: p.streak,
+    // La memoria no pinta carteles de racha, así que este dato no se usa allí.
+    rachaPerdonados: 0,
     hasEverBeenDone: p.algunaVezCumplido,
     last30: [],
   };
