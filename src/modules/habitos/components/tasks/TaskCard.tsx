@@ -15,6 +15,47 @@ const NEXT: Record<TaskStatus, TaskStatus | null> = {
   IN_PROGRESS: "DONE",
   DONE: null,
 };
+/*
+  LA BOLITA. El mismo ciclo, el mismo vocabulario y los mismos colores que la de
+  las subtareas en `TaskTreeItem`: círculo vacío, medio y lleno.
+
+  Las flechas siguen ahí y hacen falta —son las que dejan retroceder—, pero
+  completar una tarea con ellas son dos pulsaciones desde «por hacer». La bolita
+  es el camino corto, y sobre todo es el que ya conocías de las subtareas: no
+  tiene sentido que el mismo gesto exista arriba y no abajo.
+*/
+const STATUS_CYCLE: Record<TaskStatus, TaskStatus> = {
+  TODO: "IN_PROGRESS",
+  IN_PROGRESS: "DONE",
+  DONE: "TODO",
+};
+
+const STATUS_MARK: Record<TaskStatus, string> = {
+  TODO: "○",
+  IN_PROGRESS: "◐",
+  DONE: "●",
+};
+
+// La forma ya dice el estado, así que el color no es la única señal. El relleno
+// es el mismo que en las subtareas y que el sello de la fila de hábito.
+const STATUS_FILL: Record<TaskStatus, string> = {
+  TODO: "var(--color-paper)",
+  IN_PROGRESS: "var(--color-pink)",
+  DONE: "var(--color-tinta)",
+};
+
+const STATUS_INK: Record<TaskStatus, string> = {
+  TODO: "var(--color-tinta)",
+  IN_PROGRESS: "var(--color-tinta)",
+  DONE: "var(--color-paper)",
+};
+
+const STATUS_NAME: Record<TaskStatus, string> = {
+  TODO: "por hacer",
+  IN_PROGRESS: "en proceso",
+  DONE: "hecha",
+};
+
 const PREV: Record<TaskStatus, TaskStatus | null> = {
   TODO: null,
   IN_PROGRESS: "TODO",
@@ -86,6 +127,21 @@ export function TaskCard({
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => move(STATUS_CYCLE[task.status])}
+          disabled={pending}
+          className={`${MOVE_BUTTON}`}
+          style={{
+            background: STATUS_FILL[task.status],
+            color: STATUS_INK[task.status],
+            fontSize: 13,
+            flexShrink: 0,
+          }}
+          aria-label={`${task.title}: ${STATUS_NAME[task.status]}. Pulsa para cambiar de estado`}
+        >
+          {STATUS_MARK[task.status]}
+        </button>
         {task.priority ? <PriorityDot prioridad={task.priority} /> : null}
         <div style={{ minWidth: 0 }}>
           {/* Lo hecho se tacha en vez de apagarse de color: sobre papel, bajar
