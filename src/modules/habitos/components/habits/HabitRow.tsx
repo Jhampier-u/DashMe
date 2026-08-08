@@ -7,6 +7,7 @@ import {
   setHabitAnchor,
   apuntarCantidad,
   guardarNota,
+  updateHabitIntention,
 } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
@@ -367,9 +368,40 @@ export function HabitRow(p: Props) {
         </button>
       </div>
 
-      {p.intention ? (
-        <div style={{ fontSize: 12.5, marginTop: 10, fontStyle: "italic" }}>
-          {p.intention}
+      {/*
+        LA INTENCIÓN, ARRIBA Y EDITABLE.
+
+        Estaba al fondo de la fila, en cursiva y solo de lectura — y
+        `updateHabitIntention` existía como server action sin que nada la
+        llamara, así que un hábito creado sin intención no podía ganarla nunca.
+
+        Sube aquí porque es LA SEÑAL: Stawarz et al. (CHI 2015) midieron que
+        anclar la conducta a un evento que ya ocurre aumenta la automaticidad,
+        mientras que apoyarse en recordatorios por hora la DIFICULTA. Revisaron
+        115 apps de hábitos y ninguna soportaba señales de este tipo. Este campo
+        es exactamente eso, y estaba escondido.
+
+        El aviso de cuando falta no lleva color de alarma ni signo de admiración:
+        es una sugerencia, no una regañina. Todo el rediseño va en contra de
+        castigar, y castigar por no rellenar un campo opcional sería lo mismo con
+        otra ropa.
+      */}
+      <input
+        defaultValue={p.intention ?? ""}
+        maxLength={140}
+        placeholder="Cuando… entonces…"
+        onBlur={(e) => {
+          const v = e.target.value;
+          if (v.trim() === (p.intention ?? "")) return;
+          startTransition(() => updateHabitIntention(p.id, v));
+        }}
+        aria-label={`Intención de ${p.name}: cuándo y dónde lo harás`}
+        className="w-full mt-2 bg-paper-2 text-tinta font-cuerpo text-[12.5px] italic border-3 border-line rounded-control px-2 py-1 placeholder:text-tinta-2 outline-none focus:outline-3 focus:outline-offset-2 focus:outline-line"
+      />
+      {!p.intention ? (
+        <div style={{ fontSize: 11.5, marginTop: 4 }}>
+          Atarlo a algo que ya haces —«cuando me siente a desayunar»— funciona
+          mejor que proponerse una hora.
         </div>
       ) : null}
 

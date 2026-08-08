@@ -224,6 +224,12 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
         </p>
       </div>
 
+      {/*
+        El campo con más respaldo de todo el formulario, y por eso lleva su
+        explicación al lado. Los ejemplos van anclados a EVENTOS y ninguno a una
+        hora: Stawarz et al. (CHI 2015) midieron que la señal de evento aumenta
+        la automaticidad mientras que el recordatorio por hora la dificulta.
+      */}
       <Field
         label="Intención (opcional)"
         value={intention}
@@ -231,6 +237,11 @@ export function NewHabitForm({ onDone }: { onDone: () => void }) {
         placeholder="Cuando me sirva el café, 5 sentadillas"
         maxLength={140}
       />
+      <p style={{ fontSize: 11.5, marginTop: -2 }}>
+        Atarlo a algo que <b>ya haces</b> funciona mejor que proponerse una
+        hora: «cuando cierre el portátil», «al salir de la ducha», «después de
+        comer».
+      </p>
       {/*
         Un hábito con objetivo se apunta con un contador y no con el botón de
         modo mínimo. Los dos campos se ofrecen igual porque son alternativas: el
