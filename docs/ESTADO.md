@@ -6,6 +6,31 @@ Este archivo existe para que retomar no dependa de la memoria de nadie. Los dos
 documentos largos son [la auditoría](auditoria-2026-08-07.md) y
 [la propuesta](propuesta-2026-08-08.md).
 
+## En marcha: sacar música del dashboard
+
+Decidido el 8 de agosto de 2026. Música **vuelve a ser una app aparte**; puede que
+algún día regrese. Esto es el reconocimiento previo, ya medido, no una suposición.
+
+**Los datos no se tocan.** En la base hay **272.395 filas en `streams`** más
+`artists`, `tags`, `track_tags`, `liked_tracks`, `smart_playlists`,
+`spotify_credentials`, `capture_state`, `import_batches`, `artist_resolution`,
+`top_snapshots` y `artist_genres`. `SCHEMA_SQL` usa `CREATE TABLE IF NOT EXISTS`,
+así que **retirar las declaraciones no borra ninguna tabla**: las filas siguen en
+el fichero. No se escribe ningún `DROP` en ningún paso.
+
+**Qué sale:** `src/app/musica/`, `src/modules/musica/`, `src/app/api/card/`,
+`src/app/api/cron/capture/`, el re-export en `core/db/schema.ts` y el enlace de
+`src/app/page.tsx`.
+
+**Un cabo que hay que mirar antes de cortar:** fuera de música, lo único que usa
+`core/auth` son `src/app/api/auth/[...nextauth]/route.ts` y
+`src/app/api/card/[tipo]/route.tsx`. Los dos son de música. Si `auth` se queda sin
+consumidores, decidir si se retira también o se conserva para cuando vuelva.
+
+**Cómo se recupera:** basta con el historial de git. Antes de borrar, dejar una
+etiqueta en el commit anterior para que volver sea un `git checkout` y no una
+arqueología.
+
 ## Hecho
 
 | Sección | Estado |
