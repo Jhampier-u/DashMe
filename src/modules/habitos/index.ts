@@ -57,6 +57,9 @@ export {
   listProjects,
   getProjectWithTree,
   getProjectMetrics,
+  fraseDeMovimiento,
+  progresoDe,
+  estaTerminado,
   type ProjectSummary,
   type ProjectItemNode,
 } from "./lib/projects";

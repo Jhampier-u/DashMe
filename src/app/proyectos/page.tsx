@@ -1,5 +1,5 @@
 import { db } from "@/modules/core/db";
-import { listProjects, getProjectMetrics } from "@/modules/habitos";
+import { listProjects, getProjectMetrics, estaTerminado } from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
 import { ProjectsHeader } from "@/modules/habitos/components/projects/ProjectsHeader";
 import { ProjectCard } from "@/modules/habitos/components/projects/ProjectCard";
@@ -32,7 +32,10 @@ export default async function ProjectsPage() {
           gap: 20,
         }}
       >
-        <ProjectsHeader total={projects.length} />
+        <ProjectsHeader
+          total={projects.length}
+          terminados={projects.filter(estaTerminado).length}
+        />
 
         {projects.length === 0 ? (
           <Card style={{ textAlign: "center", padding: 40 }}>

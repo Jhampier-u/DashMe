@@ -29,7 +29,14 @@ export function AdvancePanel({ metrics }: { metrics: ProjectMetrics }) {
         >
           {change.current}
         </span>
-        <span style={{ fontSize: 12.5 }}>subtareas en 12 semanas</span>
+        {/*
+          Decía «subtareas». `getProjectMetrics` cuenta toda tarea completada
+          que tenga proyecto, y las raíces de un proyecto también lo tienen: la
+          palabra dejaba fuera justo la mitad de lo que el número suma.
+        */}
+        <span style={{ fontSize: 12.5 }}>
+          tareas y subtareas en 12 semanas
+        </span>
         {change.changePercent === null ? null : change.changePercent === 0 ? (
           <span style={{ fontSize: 12.5 }}>sin cambio</span>
         ) : (
@@ -51,7 +58,7 @@ export function AdvancePanel({ metrics }: { metrics: ProjectMetrics }) {
           values={weeks.map((w) => w.count)}
           startLabel={weeks.length ? formatDayLabel(weeks[0].week) : ""}
           endLabel="esta semana"
-          ariaLabel={`Subtareas completadas por semana en las últimas ${weeks.length} semanas.`}
+          ariaLabel={`Tareas y subtareas completadas por semana en las últimas ${weeks.length} semanas.`}
           renderTooltip={(i) => (
             <>
               <strong style={{ fontSize: 12.5 }}>
@@ -61,8 +68,8 @@ export function AdvancePanel({ metrics }: { metrics: ProjectMetrics }) {
               {/* El tooltip ya fija su tinta. */}
               <span>
                 {weeks[i].count === 1
-                  ? "1 subtarea"
-                  : `${weeks[i].count} subtareas`}
+                  ? "1 tarea o subtarea"
+                  : `${weeks[i].count} tareas y subtareas`}
               </span>
             </>
           )}

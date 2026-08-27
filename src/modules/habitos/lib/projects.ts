@@ -65,6 +65,46 @@ export function movementOf(
   return { days: daysSince(last, today), from: "completion" };
 }
 
+/**
+ * Cómo se dice el último movimiento de un proyecto.
+ *
+ * Estaba escrita dos veces —en la tarjeta y en el detalle— y las dos no decían
+ * lo mismo: el detalle se quedaba en «sin avances todavía» y perdía los días,
+ * que es justo el dato que convierte el aviso en información. La pantalla con
+ * más sitio decía menos.
+ *
+ * Y las dos escribían «hace 1 días».
+ */
+export function fraseDeMovimiento(m: {
+  days: number;
+  from: "completion" | "creation";
+}): string {
+  const dias = m.days === 1 ? "1 día" : `${m.days} días`;
+  if (m.from === "creation") {
+    return m.days === 0
+      ? "creado hoy, sin avances"
+      : `sin avances desde que se creó, hace ${dias}`;
+  }
+  return m.days === 0 ? "avanzaste hoy" : `último avance hace ${dias}`;
+}
+
+/** Fracción de 0 a 1. Un proyecto sin tareas es 0, y nunca NaN. */
+export function progresoDe(doneItems: number, totalItems: number): number {
+  return totalItems === 0 ? 0 : doneItems / totalItems;
+}
+
+/**
+ * Terminado es tener tareas y tenerlas todas hechas. Un proyecto recién creado
+ * NO lo está: si lo estuviera, crearlo lo daría por cerrado antes de escribir
+ * la primera tarea, y la cabecera contaría como acabado lo que no ha empezado.
+ */
+export function estaTerminado(p: {
+  totalItems: number;
+  doneItems: number;
+}): boolean {
+  return p.totalItems > 0 && p.doneItems === p.totalItems;
+}
+
 export async function listProjects(db: Db): Promise<ProjectSummary[]> {
   const today = dayKey();
 

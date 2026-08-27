@@ -6,6 +6,9 @@ import {
   getProjectWithTree,
   getProjectMetrics,
   ADVANCE_WEEKS,
+  fraseDeMovimiento,
+  progresoDe,
+  estaTerminado,
 } from "./projects";
 
 const T0 = new Date("2026-07-01T12:00:00Z");
@@ -140,5 +143,60 @@ describe("getProjectMetrics", () => {
     const m = await getProjectMetrics(db);
 
     expect(m.weeks.reduce((s, w) => s + w.count, 0)).toBe(0);
+  });
+});
+
+describe("fraseDeMovimiento", () => {
+  it("distingue no haber empezado de haber parado", () => {
+    expect(fraseDeMovimiento({ days: 5, from: "creation" })).toBe(
+      "sin avances desde que se creó, hace 5 días",
+    );
+    expect(fraseDeMovimiento({ days: 5, from: "completion" })).toBe(
+      "último avance hace 5 días",
+    );
+  });
+
+  it("hoy se dice hoy, no «hace 0 días»", () => {
+    expect(fraseDeMovimiento({ days: 0, from: "creation" })).toBe(
+      "creado hoy, sin avances",
+    );
+    expect(fraseDeMovimiento({ days: 0, from: "completion" })).toBe(
+      "avanzaste hoy",
+    );
+  });
+
+  it("concuerda el singular", () => {
+    // Decía «hace 1 días» en las dos ramas.
+    expect(fraseDeMovimiento({ days: 1, from: "creation" })).toBe(
+      "sin avances desde que se creó, hace 1 día",
+    );
+    expect(fraseDeMovimiento({ days: 1, from: "completion" })).toBe(
+      "último avance hace 1 día",
+    );
+  });
+});
+
+describe("progresoDe", () => {
+  it("un proyecto sin tareas está a cero y no a NaN", () => {
+    expect(progresoDe(0, 0)).toBe(0);
+  });
+
+  it("va de 0 a 1", () => {
+    expect(progresoDe(0, 4)).toBe(0);
+    expect(progresoDe(1, 4)).toBe(0.25);
+    expect(progresoDe(4, 4)).toBe(1);
+  });
+});
+
+describe("estaTerminado", () => {
+  it("terminado es tener tareas y tenerlas todas hechas", () => {
+    expect(estaTerminado({ totalItems: 3, doneItems: 3 })).toBe(true);
+    expect(estaTerminado({ totalItems: 3, doneItems: 2 })).toBe(false);
+  });
+
+  it("un proyecto vacío NO está terminado", () => {
+    // Si contara como terminado, crear un proyecto lo daría por cerrado antes
+    // de escribir la primera tarea.
+    expect(estaTerminado({ totalItems: 0, doneItems: 0 })).toBe(false);
   });
 });

@@ -5,7 +5,11 @@ import { useTransition } from "react";
 import { deleteProject } from "@/modules/habitos/actions";
 import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { ProgressBar } from "@/modules/core/ui/ProgressBar";
-import type { ProjectSummary } from "@/modules/habitos/lib/projects";
+import {
+  fraseDeMovimiento,
+  progresoDe,
+  type ProjectSummary,
+} from "@/modules/habitos/lib/projects";
 
 /** Cuánto tiempo parado empieza a ser señal de aviso. */
 const STALE_DAYS = 14;
@@ -14,8 +18,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
   const [pending, startTransition] = useTransition();
   const { confirm, dialog } = useConfirm();
 
-  const percent =
-    project.totalItems === 0 ? 0 : project.doneItems / project.totalItems;
+  const percent = progresoDe(project.doneItems, project.totalItems);
   const stale = project.lastMovement.days >= STALE_DAYS;
 
   async function remove(e: React.MouseEvent) {
@@ -31,14 +34,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
     startTransition(() => deleteProject(fd));
   }
 
-  const movement =
-    project.lastMovement.from === "creation"
-      ? project.lastMovement.days === 0
-        ? "creado hoy, sin avances"
-        : `sin avances desde que se creó, hace ${project.lastMovement.days} días`
-      : project.lastMovement.days === 0
-        ? "avanzaste hoy"
-        : `último avance hace ${project.lastMovement.days} días`;
+  const movement = fraseDeMovimiento(project.lastMovement);
 
   return (
     <div
@@ -58,8 +54,19 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
         <span style={{ fontSize: 20 }} aria-hidden>
           {project.icon}
         </span>
+        {/*
+          El enlace se estira sobre toda la tarjeta con `after:inset-0`. Antes
+          solo el título llevaba, así que la tarjeta parecía pulsable y no lo
+          era: pinchar en la descripción o en la barra no hacía nada.
+
+          Se hace con un pseudoelemento y no metiendo la tarjeta dentro de un
+          `<a>` porque dentro hay un botón, y un botón dentro de un enlace es
+          HTML inválido. Así el enlace sigue siendo un enlace —abrir en otra
+          pestaña, copiar dirección— y el botón se queda por encima con `z-10`.
+        */}
         <Link
           href={`/proyectos/${project.id}`}
+          className="after:absolute after:inset-0 after:content-['']"
           style={{
             flex: 1,
             minWidth: 0,
@@ -75,6 +82,7 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
           onClick={remove}
           disabled={pending}
           className={
+            "relative z-10 " +
             "w-[26px] h-[26px] shrink-0 inline-flex items-center justify-center " +
             "rounded-control border-3 border-line bg-peach text-tinta text-[11px] leading-none " +
             "cursor-pointer font-cuerpo " +
@@ -119,10 +127,15 @@ export function ProjectCard({ project }: { project: ProjectSummary }) {
         <span>{Math.round(percent * 100)}%</span>
       </div>
 
-      <ProgressBar
-        value={percent}
-        label={`${project.name}: ${project.doneItems} de ${project.totalItems} tareas y subtareas`}
-      />
+      {/*
+        Sin `label`, igual que en DiagnosisPanel, QuestList y el detalle: el
+        recuento y el porcentaje van escritos justo encima, así que con rol de
+        `progressbar` un lector de pantalla los decía dos veces seguidas.
+
+        Se lo puse en la pasada anterior y contradecía la regla escrita en el
+        propio componente. Aquí la barra es refuerzo, no información.
+      */}
+      <ProgressBar value={percent} />
 
       {/* El aviso iba en ámbar. Ahora lo dicen el ▲ que ya llevaba y el grosor:
           el pastel es fondo, nunca texto. */}

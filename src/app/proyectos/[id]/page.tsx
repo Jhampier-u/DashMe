@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/modules/core/db";
-import { getProjectWithTree } from "@/modules/habitos";
+import {
+  getProjectWithTree,
+  fraseDeMovimiento,
+  progresoDe,
+} from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
 import { ProgressBar } from "@/modules/core/ui/ProgressBar";
 import { TaskTree } from "@/modules/habitos/components/tasks/TaskTree";
@@ -16,14 +20,8 @@ export default async function ProjectDetailPage({
   if (!result) notFound();
 
   const { project, roots, totalItems, doneItems, lastMovement } = result;
-  const percent = totalItems === 0 ? 0 : doneItems / totalItems;
-
-  const movement =
-    lastMovement.from === "creation"
-      ? "sin avances todavía"
-      : lastMovement.days === 0
-        ? "último avance hoy"
-        : `último avance hace ${lastMovement.days} días`;
+  const percent = progresoDe(doneItems, totalItems);
+  const movement = fraseDeMovimiento(lastMovement);
 
   return (
     <main
@@ -92,7 +90,14 @@ export default async function ProjectDetailPage({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {doneItems} de {totalItems} · {Math.round(percent * 100)}%
+              {doneItems} de {totalItems}{" "}
+              {/* Las mismas palabras que en la tarjeta, por lo mismo: el
+                  tablero de /tareas enseña solo las raíces y sin decirlo
+                  parecía que una de las dos pantallas mentía. */}
+              <span style={{ fontFamily: "var(--font-cuerpo)", fontSize: 12 }}>
+                tareas y subtareas
+              </span>{" "}
+              · {Math.round(percent * 100)}%
             </span>
             <span style={{ fontSize: 11.5 }}>{movement}</span>
           </div>
