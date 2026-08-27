@@ -70,8 +70,8 @@ schtasks /End /TN "Juampi captura" & schtasks /Delete /TN "Juampi captura" /F
 - **Si la intención se guarda al salir del campo.** El panel del navegador de la
   herramienta no propaga eventos de foco, así que la ruta interfaz→acción quedó
   sin comprobar. La mutación sí está probada.
-- **Un 401 en consola** visto una vez. Solo lo puede devolver el endpoint de
-  tarjetas de música, que exige sesión de Spotify; no se pudo reproducir.
+- ~~Un 401 en consola.~~ **Cerrado el 8 de agosto de 2026**: solo lo podia
+  devolver el endpoint de tarjetas de musica, que ya no existe.
 
 ## Cómo se trabaja aquí
 
