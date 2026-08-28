@@ -28,7 +28,11 @@ import {
   disposicionDelJardin,
 } from "@/modules/habitos/lib/disposicion";
 import { TIENDA, type Decoracion } from "@/modules/habitos/lib/decoraciones";
-import type { Fauna } from "@/modules/habitos/lib/fauna";
+import {
+  MAX_MARIPOSAS_MEMORIA,
+  type Fauna,
+  type SemanaRecordada,
+} from "@/modules/habitos/lib/fauna";
 import { MARIPOSA } from "@/modules/habitos/lib/sprites/fauna";
 import { moverPlanta, toggleToday } from "@/modules/habitos/actions";
 import { emitToggleResult } from "@/modules/habitos/lib/events";
@@ -54,6 +58,13 @@ type Props = {
    * estuvo vacío, la escena lo dice.
    */
   fauna?: Fauna;
+  /**
+   * Las tres semanas anteriores, en mariposas pequeñas. La memoria de UbiFit:
+   * un mes de historia en la misma escena, sin ejes.
+   */
+  memoria?: SemanaRecordada[];
+  /** La semana en curso: la mariposa grande contra la que se leen las otras. */
+  semanaActual?: SemanaRecordada;
 };
 
 type SkyPhase = "dawn" | "morning" | "midday" | "afternoon" | "dusk" | "night";
@@ -157,6 +168,8 @@ export function GardenScene({
   soloLectura = false,
   decoraciones = [],
   fauna = { mariposas: 0 },
+  memoria = [],
+  semanaActual,
 }: Props) {
   const hour = useLocalHour();
   const phase: SkyPhase = hour === null ? "night" : phaseFor(hour);
@@ -493,6 +506,66 @@ export function GardenScene({
           <Sprite grid={MARIPOSA} size={16} label="" />
         </span>
       ))}
+
+      {/*
+        LA FRANJA DE MEMORIA: las tres semanas anteriores, abajo del todo.
+
+        Van en una fila fija y NO revoloteando, para que se lean como pasado y
+        no se confundan con las de esta semana. Separadas en tres grupos, de la
+        más vieja a la más reciente, con un hueco entre semanas: sin el hueco,
+        cinco mariposas seguidas no dicen de cuántas semanas salen.
+
+        Una semana vacía deja su hueco vacío en vez de desaparecer. Si se
+        colapsara, tres mariposas juntas podrían ser semanas no consecutivas.
+
+        `aria-hidden`, como las otras: lo que se lee es la frase de debajo.
+      */}
+      {memoria.length > 0 && (semanaActual?.mariposas || memoria.some((s) => s.mariposas > 0)) ? (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            left: "6%",
+            bottom: 6,
+            zIndex: 11,
+            display: "flex",
+            gap: 12,
+            alignItems: "flex-end",
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
+          {[...memoria, semanaActual].map((s, i) =>
+            !s ? null : (
+            <span
+              key={s.lunes}
+              style={{
+                display: "flex",
+                gap: 2,
+                alignItems: "flex-end",
+                // La semana en curso se separa mas y va en el tamano normal:
+                // es el presente contra el que se leen las tres pequenas.
+                marginLeft: i === memoria.length ? 8 : 0,
+                minWidth:
+                  i === memoria.length ? 0 : 10 * MAX_MARIPOSAS_MEMORIA,
+              }}
+            >
+              {Array.from(
+                { length: s.mariposas },
+                (_, j) => (
+                  <Sprite
+                    key={j}
+                    grid={MARIPOSA}
+                    size={i === memoria.length ? 16 : 10}
+                    label=""
+                  />
+                ),
+              )}
+            </span>
+            ),
+          )}
+        </div>
+      ) : null}
 
       {clouds.map((c, i) => (
         <span

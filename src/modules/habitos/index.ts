@@ -31,7 +31,14 @@ export { intercambiarHuecos, getJardinHistorico } from "./lib/jardin";
 export { decoracionesTuyas } from "./lib/tienda";
 export { getConteosDeFacetas, type Conteos } from "./lib/tasks";
 export { primerDiaDeRegistro, diasConTareaCerrada } from "./lib/jardin";
-export { mezclarFauna, type DiaDeFauna } from "./lib/fauna";
+export {
+  mezclarFauna,
+  memoriaDeFauna,
+  semanaDeFauna,
+  fraseDeMemoria,
+  type DiaDeFauna,
+  type SemanaRecordada,
+} from "./lib/fauna";
 export {
   CATALOGO,
   TIENDA,

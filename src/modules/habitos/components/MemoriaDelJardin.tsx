@@ -27,6 +27,9 @@ import type { Decoracion } from "@/modules/habitos/lib/decoraciones";
 import {
   faunaEn,
   fraseDeFauna,
+  memoriaDeFauna,
+  semanaDeFauna,
+  fraseDeMemoria,
   type DiaDeFauna,
 } from "@/modules/habitos/lib/fauna";
 import { GardenScene } from "./GardenScene";
@@ -150,6 +153,8 @@ export function MemoriaDelJardin({
         soloLectura={enElPasado}
         decoraciones={decoraciones}
         fauna={dia ? faunaEn(fauna, dia) : { mariposas: 0 }}
+        memoria={dia ? memoriaDeFauna(fauna, dia) : []}
+        semanaActual={dia ? semanaDeFauna(fauna, dia) : undefined}
       />
       {/*
         El recuento en TEXTO. La fauna es el adorno de un dato que se puede leer,
@@ -158,6 +163,22 @@ export function MemoriaDelJardin({
       <p style={{ fontSize: 12, marginTop: 8 }}>
         {dia ? fraseDeFauna(fauna, dia) : null}
       </p>
+      {/*
+        La memoria, tambien en texto y por lo mismo. Y solo si hay algo que
+        recordar: una linea que dice «0, 0 y 0» no es memoria, es ruido.
+      */}
+      {(() => {
+        if (!dia) return null;
+        // Se calcula UNA vez: antes se llamaba dos veces a lo mismo, en la
+        // condicion y en el cuerpo.
+        const frase = fraseDeMemoria(
+          memoriaDeFauna(fauna, dia),
+          semanaDeFauna(fauna, dia),
+        );
+        return frase ? (
+          <p style={{ fontSize: 11.5, marginTop: 2 }}>{frase}</p>
+        ) : null;
+      })()}
       {hayMemoria ? (
         <BarraDeTiempo
           indice={indice}
