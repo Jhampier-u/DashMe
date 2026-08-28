@@ -55,9 +55,6 @@ implementadas. Lo que queda son decisiones tuyas, aquí abajo.
 
 - **El repositorio es público** y dos planes de `docs/superpowers/plans/` nombran
   tus hábitos reales.
-- **Tres dudas de los sprites**: el hongo no tiene nada de verde, los cinco
-  estados marchitos se parecen entre sí, y la hierba en etapa 1 puede quedar casi
-  invisible a 30 px.
 
 ## Sin verificar
 
