@@ -5,6 +5,7 @@ import {
   getHabitDiagnosis,
   getTodayQuests,
   estadoSrbai,
+  contarTodo,
   dayKey,
 } from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
@@ -14,16 +15,18 @@ import { DayStatus } from "@/modules/habitos/components/habits/DayStatus";
 import { CriticalBanner } from "@/modules/habitos/components/habits/CriticalBanner";
 import { HabitRow } from "@/modules/habitos/components/habits/HabitRow";
 import { DiagnosisPanel } from "@/modules/habitos/components/habits/DiagnosisPanel";
+import { ExportarPanel } from "@/modules/habitos/components/habits/ExportarPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function HabitsPage() {
-  const [habits, player, quests, diagnosis, srbai] = await Promise.all([
+  const [habits, player, quests, diagnosis, srbai, volcado] = await Promise.all([
     getHabitsWithTodayStatus(db),
     getPlayerLevelInfo(db),
     getTodayQuests(db),
     getHabitDiagnosis(db),
     estadoSrbai(db),
+    contarTodo(db),
   ]);
 
   // El día se calcula AQUÍ, en el servidor, y viaja a las filas. La fecha del
@@ -120,6 +123,13 @@ export default async function HabitsPage() {
             </div>
 
             <DiagnosisPanel diagnosis={diagnosis} />
+
+            <ExportarPanel
+              recuento={Object.values(volcado).reduce(
+                (a, b) => a + b,
+                0,
+              )}
+            />
           </>
         )}
       </div>

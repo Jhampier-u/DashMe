@@ -117,3 +117,12 @@ export {
   type Sugerencia,
   type Medida,
 } from "./lib/srbai";
+export {
+  exportarTodo,
+  importarTodo,
+  contarTodo,
+  ORDEN as TABLAS_EXPORTADAS,
+  FORMATO as FORMATO_EXPORT,
+  VERSION as VERSION_EXPORT,
+  type Exportacion,
+} from "./lib/exportar";

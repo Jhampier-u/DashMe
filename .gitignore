@@ -25,3 +25,4 @@ Thumbs.db
 
 # Bocetos de las sesiones de brainstorming
 .superpowers/
+*.tmp.json
