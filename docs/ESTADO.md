@@ -39,7 +39,7 @@ schtasks /End /TN "Juampi captura" & schtasks /Delete /TN "Juampi captura" /F
 
 | Sección | Estado |
 |---|---|
-| **Jardín** | Rediseño completo (pixel art, huecos, memoria, tienda) + plantas en el suelo, cielo de un tono, fauna honesta |
+| **Jardín** | Rediseño completo (pixel art, huecos, memoria, tienda) + plantas en el suelo, cielo de un tono, fauna honesta y la memoria de UbiFit |
 | **Hábitos** | Hallazgos 1 y 2, bonus por volver, racha que perdona un fallo, intención a la vista y editable, estado «interiorizado» y el SRBAI que lo sugiere |
 | **Tareas** | Hallazgos 3 y 4, barra de filtros por grupos con recuentos y chips activos, bolita de estado en las tarjetas |
 | **Inicio** | Arreglada de rebote por los hallazgos 1 y 2; sin panel de música |
@@ -47,9 +47,7 @@ schtasks /End /TN "Juampi captura" & schtasks /Delete /TN "Juampi captura" /F
 
 ## Pendiente, en orden
 
-1. **La memoria de UbiFit** (propuesta 3.3): mariposa grande esta semana,
-   pequeñas las tres anteriores.
-2. **La exportación honesta** (propuesta 5.3).
+1. **La exportación honesta** (propuesta 5.3).
 
 ## Decisiones tuyas, sin resolver
 
