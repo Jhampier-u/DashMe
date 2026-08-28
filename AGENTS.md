@@ -39,8 +39,11 @@ singleton y llama a `refresh()`.
 - Fechas como `integer({ mode: "timestamp_ms" })`, booleanos como
   `integer({ mode: "boolean" })`.
 - Rutas en español.
-- `legacy/` es la zona de aterrizaje de los repos absorbidos. Se vacía conforme
-  avanzan los sub-proyectos y desaparecerá. No se compila ni se lintea.
+- **`legacy/` ya no existe.** Era la zona de aterrizaje de los repos absorbidos
+  y se vació el 28 de agosto de 2026, como decía que haría. Lo que quedaba
+  —`portafolio` y `spotify-calificar`— entró con `git subtree add` y nadie lo
+  tocó desde entonces, así que sigue entero en sus repos de origen, en el
+  historial y en la etiqueta `legacy-antes-de-vaciar`.
 
 ## Documentación
 

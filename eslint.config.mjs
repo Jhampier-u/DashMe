@@ -12,9 +12,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Zona de aterrizaje de los repos absorbidos: código todavía sin migrar,
-    // se vacía conforme avanzan los sub-proyectos. Desaparece con ella.
-    "legacy/**",
   ]),
 ]);
 

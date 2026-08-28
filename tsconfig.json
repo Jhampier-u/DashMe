@@ -31,5 +31,5 @@
     "**/*.mts",
     "scripts/**/*.mjs"
   ],
-  "exclude": ["node_modules", "legacy"]
+  "exclude": ["node_modules"]
 }

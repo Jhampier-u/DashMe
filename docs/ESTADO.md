@@ -58,8 +58,6 @@ implementadas. Lo que queda son decisiones tuyas, aquí abajo.
 - **Tres dudas de los sprites**: el hongo no tiene nada de verde, los cinco
   estados marchitos se parecen entre sí, y la hierba en etapa 1 puede quedar casi
   invisible a 30 px.
-- **`legacy/`**: 15 MB y 34 archivos versionados de dos repos absorbidos a
-  medias. `AGENTS.md` dice que debe vaciarse y desaparecer.
 
 ## Sin verificar
 
