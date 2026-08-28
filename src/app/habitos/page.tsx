@@ -4,6 +4,7 @@ import {
   getPlayerLevelInfo,
   getHabitDiagnosis,
   getTodayQuests,
+  estadoSrbai,
   dayKey,
 } from "@/modules/habitos";
 import { Card } from "@/modules/core/ui/Card";
@@ -17,11 +18,12 @@ import { DiagnosisPanel } from "@/modules/habitos/components/habits/DiagnosisPan
 export const dynamic = "force-dynamic";
 
 export default async function HabitsPage() {
-  const [habits, player, quests, diagnosis] = await Promise.all([
+  const [habits, player, quests, diagnosis, srbai] = await Promise.all([
     getHabitsWithTodayStatus(db),
     getPlayerLevelInfo(db),
     getTodayQuests(db),
     getHabitDiagnosis(db),
+    estadoSrbai(db),
   ]);
 
   // El día se calcula AQUÍ, en el servidor, y viaja a las filas. La fecha del
@@ -112,6 +114,7 @@ export default async function HabitsPage() {
                   plantSpecies={habit.plantSpecies}
                   hasEverBeenDone={habit.hasEverBeenDone}
                   minimalGoal={habit.minimalGoal}
+                  srbai={srbai.get(habit.id)}
                 />
               ))}
             </div>

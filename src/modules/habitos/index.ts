@@ -99,3 +99,14 @@ export {
 
 // Escrituras: los server actions, ya con la conexión inyectada.
 export * from "./actions";
+export {
+  estadoSrbai,
+  guardarMedida,
+  sugerirInteriorizado,
+  puntuacion,
+  ITEMS as ITEMS_SRBAI,
+  MIN_DIAS as MIN_DIAS_SRBAI,
+  type EstadoSrbai,
+  type Sugerencia,
+  type Medida,
+} from "./lib/srbai";

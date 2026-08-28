@@ -15,7 +15,9 @@ import { useConfirm } from "@/modules/habitos/components/ConfirmDialog";
 import { habitColorVar, resolveHabitColor } from "@/modules/habitos/lib/color";
 import { plantEmoji, type PlantSpecies } from "@/modules/habitos/lib/garden";
 import { DEFAULT_SCHEDULE } from "@/modules/habitos/lib/streak";
+import type { EstadoSrbai } from "@/modules/habitos/lib/srbai";
 import { HabitDetail } from "./HabitDetail";
+import { AutomaticidadPanel } from "./AutomaticidadPanel";
 
 type Props = {
   id: string;
@@ -26,6 +28,7 @@ type Props = {
   doneToday: boolean;
   rachaPerdonados: number;
   interiorizadoEl: Date | null;
+  srbai?: EstadoSrbai;
   /** Si hay registro hoy. El botón de marcar lo BORRA, así que decide él. */
   registradoHoy: boolean;
   partialToday: boolean;
@@ -436,6 +439,25 @@ export function HabitRow(p: Props) {
           Ya no necesito que me lo pidas
         </button>
       )}
+
+      {/*
+        El SRBAI va justo aquí, pegado al botón de darlo por hecho, porque mide
+        exactamente eso. Solo aparece si el hábito NO está ya interiorizado: a
+        uno que ya diste por hecho no tiene sentido preguntarle si es
+        automático.
+      */}
+      {p.srbai && !p.interiorizadoEl ? (
+        <AutomaticidadPanel
+          habitId={p.id}
+          nombre={p.name}
+          sugerencia={p.srbai.sugerencia}
+          tocaPreguntar={p.srbai.tocaPreguntar}
+          medidas={p.srbai.medidas}
+          onInteriorizar={() =>
+            startTransition(() => marcarInteriorizado(p.id, true))
+          }
+        />
+      ) : null}
 
       {!p.intention ? (
         <div style={{ fontSize: 11.5, marginTop: 4 }}>

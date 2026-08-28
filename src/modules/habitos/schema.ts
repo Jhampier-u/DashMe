@@ -172,6 +172,39 @@ export const habitNotes = sqliteTable(
 );
 
 export type HabitNoteRow = typeof habitNotes.$inferSelect;
+/**
+ * Una medida semanal de automaticidad: el SRBAI de Gardner, Abraham, Lally y
+ * de Bruijn (2012), cuatro ítems de 1 a 7.
+ *
+ * Se guardan los cuatro ítems y no su media. La media es un derivado y se
+ * calcula al leer; guardar solo el resumen tiraría la posibilidad de mirar
+ * después si algún ítem se comporta distinto que los otros tres.
+ */
+export const habitAutomaticity = sqliteTable(
+  "habit_automaticity",
+  {
+    id: text("id").primaryKey(),
+    habitId: text("habit_id")
+      .notNull()
+      .references(() => habits.id, { onDelete: "cascade" }),
+    /** Clave de día del lunes de esa semana. */
+    week: integer("week", { mode: "timestamp_ms" }).notNull(),
+    i1: integer("i1").notNull(),
+    i2: integer("i2").notNull(),
+    i3: integer("i3").notNull(),
+    i4: integer("i4").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => ({
+    unqHabitWeek: uniqueIndex("habit_automaticity_habit_week_unq").on(
+      t.habitId,
+      t.week,
+    ),
+  }),
+);
+
+export type HabitAutomaticityRow = typeof habitAutomaticity.$inferSelect;
+
 
 /**
  * Pausas de un hábito: rangos de días que no cuentan para nada.

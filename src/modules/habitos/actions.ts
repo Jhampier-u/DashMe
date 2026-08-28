@@ -16,6 +16,7 @@ import { refresh } from "next/cache";
 import { db } from "@/modules/core/db";
 import type { TaskStatus } from "./lib/tasks";
 import * as m from "./lib/mutations";
+import { guardarMedida } from "./lib/srbai";
 import * as c from "./lib/categorias";
 import * as adj from "./lib/adjuntos";
 import * as n from "./lib/notas";
@@ -306,5 +307,20 @@ export async function marcarInteriorizado(
   interiorizado: boolean,
 ) {
   await m.marcarInteriorizado(db, habitId, interiorizado);
+  refresh();
+}
+
+/**
+ * Guarda la medida de automaticidad de esta semana.
+ *
+ * Las cuatro respuestas llegan del navegador, así que `guardarMedida` las
+ * valida contra la escala antes de escribir: la base tiene su CHECK, pero un
+ * error a medio camino es mejor que una excepción de SQLite.
+ */
+export async function guardarAutomaticidad(
+  habitId: string,
+  respuestas: [number, number, number, number],
+) {
+  await guardarMedida(db, habitId, respuestas);
   refresh();
 }

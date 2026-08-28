@@ -68,6 +68,37 @@ CREATE INDEX IF NOT EXISTS habit_pauses_habit_idx ON habit_pauses(habit_id);
 --
 -- from_day y to_day son claves de dia normalizadas, y los dos extremos ENTRAN.
 
+CREATE TABLE IF NOT EXISTS habit_automaticity (
+  id         TEXT PRIMARY KEY,
+  habit_id   TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  week       INTEGER NOT NULL,
+  i1         INTEGER NOT NULL,
+  i2         INTEGER NOT NULL,
+  i3         INTEGER NOT NULL,
+  i4         INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  CHECK (i1 BETWEEN 1 AND 7),
+  CHECK (i2 BETWEEN 1 AND 7),
+  CHECK (i3 BETWEEN 1 AND 7),
+  CHECK (i4 BETWEEN 1 AND 7)
+);
+-- El SRBAI de Gardner, Abraham, Lally y de Bruijn (2012): cuatro items que
+-- miden AUTOMATICIDAD, que no es lo mismo que frecuencia. La racha cuenta dias
+-- seguidos; esto pregunta si ya no tienes que querer hacerlo.
+--
+-- Una medida por habito y semana, y la columna week es la clave de dia del
+-- lunes. El indice unico impide contestar dos veces la misma semana y falsear
+-- la curva a base de repetir.
+--
+-- Los cuatro items se guardan por separado y NO su media: la media se calcula
+-- al leer. Guardar solo el resumen impediria revisar despues si un item se
+-- comporta distinto, y el numero derivado siempre puede recalcularse.
+--
+-- El CHECK del 1 al 7 es el rango de la escala. Sin el, un fallo de la interfaz
+-- entraria como dato valido y ensuciaria la curva en silencio.
+CREATE UNIQUE INDEX IF NOT EXISTS habit_automaticity_habit_week_unq
+  ON habit_automaticity(habit_id, week);
+
 CREATE TABLE IF NOT EXISTS player (
   id              TEXT PRIMARY KEY,
   xp              INTEGER NOT NULL DEFAULT 0,
