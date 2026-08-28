@@ -42,12 +42,14 @@ schtasks /End /TN "Juampi captura" & schtasks /Delete /TN "Juampi captura" /F
 | **Jardín** | Rediseño completo (pixel art, huecos, memoria, tienda) + plantas en el suelo, cielo de un tono, fauna honesta y la memoria de UbiFit |
 | **Hábitos** | Hallazgos 1 y 2, bonus por volver, racha que perdona un fallo, intención a la vista y editable, estado «interiorizado» y el SRBAI que lo sugiere |
 | **Tareas** | Hallazgos 3 y 4, barra de filtros por grupos con recuentos y chips activos, bolita de estado en las tarjetas |
+| **Datos** | Exportación honesta y reimportable: `/api/exportar`, formato en [formato-export.md](formato-export.md) |
 | **Inicio** | Arreglada de rebote por los hallazgos 1 y 2; sin panel de música |
 | **Proyectos** | Auditado en datos e interfaz: cabecera honesta, frases unificadas, tarjeta pulsable |
 
-## Pendiente, en orden
+## Pendiente
 
-1. **La exportación honesta** (propuesta 5.3).
+**Nada del informe.** Las cinco secciones auditadas y las cuatro propuestas
+implementadas. Lo que queda son decisiones tuyas, aquí abajo.
 
 ## Decisiones tuyas, sin resolver
 
