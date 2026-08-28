@@ -72,3 +72,94 @@ describe("spriteDe", () => {
     expect(new Set(maduras).size).toBe(PLANT_SPECIES.length);
   });
 });
+
+/*
+  LAS TRES DUDAS DE LOS SPRITES, CONVERTIDAS EN GUARDAS.
+
+  Eran tres pegas de aspecto —«el hongo no tiene verde», «las marchitas se
+  parecen», «la hierba no se ve»— y una pega de aspecto no se puede discutir a
+  ojo dos veces seguidas sin acabar donde empezaste. Medidas, se arreglan una
+  vez y ya no vuelven.
+*/
+describe("lo que no puede volver a torcerse", () => {
+  const celdas = (s: string) => {
+    const m: Record<string, number> = {};
+    for (const f of parseSprite(s).celdas)
+      for (const c of f) if (c) m[c] = (m[c] ?? 0) + 1;
+    return m;
+  };
+  const verde = (s: string) => {
+    const c = celdas(s);
+    return (c.g ?? 0) + (c.t ?? 0);
+  };
+  const sinSuelo = (s: string) => {
+    const c = celdas(s);
+    const total = Object.values(c).reduce((a, b) => a + b, 0);
+    return total - (c.m ?? 0) - (c.M ?? 0);
+  };
+  const distancia = (a: string, b: string) => {
+    const A = parseSprite(a).celdas;
+    const B = parseSprite(b).celdas;
+    let d = 0;
+    for (let y = 0; y < Math.max(A.length, B.length); y++)
+      for (let x = 0; x < 16; x++)
+        if ((A[y]?.[x] ?? null) !== (B[y]?.[x] ?? null)) d++;
+    return d;
+  };
+
+  it("ninguna especie se queda sin nada de verde", () => {
+    // El hongo tenía CERO en las cinco etapas. Ahora lleva musgo al pie: sigue
+    // siendo el único sin verde en el cuerpo —que es lo que lo distingue de
+    // lejos— pero ya no es lo único del jardín ajeno al verde.
+    // Desde la etapa 1: la 0 es la semilla y ahí no ha brotado nada en
+    // ninguna especie, que es justo lo que debe pasar.
+    for (const [especie, s] of Object.entries(SPRITES)) {
+      expect(verde(s.etapas[0]), `${especie} semilla`).toBe(0);
+      for (let i = 1; i < s.etapas.length; i++) {
+        expect(verde(s.etapas[i]), `${especie} etapa ${i}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("dos marchitas nunca se confunden", () => {
+    /*
+      Hierba, cactus y hongo marchitos eran el MISMO garabato coral en diagonal:
+      hierba contra hongo difería en 14 celdas de 256, y casi todo lo que
+      compartían era el suelo. Marchitarse cambia la postura y el color, no la
+      identidad, así que cada una conserva ahora su silueta.
+    */
+    const especies = Object.keys(SPRITES) as (keyof typeof SPRITES)[];
+    for (let i = 0; i < especies.length; i++) {
+      for (let j = i + 1; j < especies.length; j++) {
+        const d = distancia(
+          SPRITES[especies[i]].marchita,
+          SPRITES[especies[j]].marchita,
+        );
+        expect(d, `${especies[i]} contra ${especies[j]}`).toBeGreaterThanOrEqual(
+          25,
+        );
+      }
+    }
+  });
+
+  it("ninguna etapa 1 desaparece a tamaño pequeño", () => {
+    // La hierba eran tres briznas de UN píxel de ancho: 6 celdas. Y el hongo,
+    // 4 — peor que la hierba, aunque la duda solo nombrara a la hierba.
+    for (const especie of Object.keys(SPRITES) as (keyof typeof SPRITES)[]) {
+      expect(sinSuelo(spriteDe(especie, 1, false)), especie).toBeGreaterThanOrEqual(10);
+    }
+  });
+
+  it("cada etapa dibuja más que la anterior", () => {
+    // El crecimiento tiene que verse. Si una etapa encoge, la planta parece
+    // marchitarse justo cuando avanza.
+    for (const [especie, s] of Object.entries(SPRITES)) {
+      for (let i = 1; i < s.etapas.length; i++) {
+        expect(
+          sinSuelo(s.etapas[i]),
+          `${especie}: etapa ${i} contra ${i - 1}`,
+        ).toBeGreaterThanOrEqual(sinSuelo(s.etapas[i - 1]));
+      }
+    }
+  });
+});
